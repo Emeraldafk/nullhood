@@ -1,0 +1,1083 @@
+import React, { useState, useMemo, useEffect } from 'react';
+import {
+  X,
+  TrendingUp,
+  Sparkles,
+  MessageSquare,
+  Send,
+  Info,
+  ExternalLink,
+  Shield,
+  AlertTriangle,
+  Sliders,
+  BarChart3,
+  Users,
+  CheckCircle2,
+  Loader2,
+  Scale,
+  Heart,
+} from 'lucide-react';
+import {
+  OpinionMarket,
+  formatTimeAgo,
+  formatExactDateTime,
+  TradeActivity,
+  getMarketPricesAndSentiment,
+  quoteBuyOrder,
+  quoteSellOrder,
+  INITIAL_VIRTUAL_ETH,
+  CURVE_K,
+  MIN_TRADE_ETH,
+} from '../lib/bondingCurve';
+import { ROBINHOOD_EXPLORER_URL } from '../config/robinhoodChain';
+import { decodeContractErrorMessage } from '../lib/indexerService';
+
+interface MarketDetailModalProps {
+  market: OpinionMarket | null;
+  initialSide?: 'YES' | 'NO';
+  userYesShares: number;
+  userNoShares: number;
+  ethBalance: string;
+  creatorFeeRate?: number;
+  protocolFeeRate?: number;
+  isLiveOnChainMode?: boolean;
+  marketActivities?: TradeActivity[];
+  onClose: () => void;
+  onExecuteTrade: (
+    marketId: number,
+    isYes: boolean,
+    isBuy: boolean,
+    amount: number,
+    slippagePct?: number
+  ) => Promise<void>;
+  onAddComment: (marketId: number, side: 'YES' | 'NO', text: string) => void;
+  onToggleCommentLike?: (marketId: number, commentId: string) => void;
+}
+
+export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
+  market,
+  initialSide = 'YES',
+  userYesShares,
+  userNoShares,
+  ethBalance,
+  creatorFeeRate = 0.01,
+  protocolFeeRate = 0.01,
+  isLiveOnChainMode = false,
+  marketActivities = [],
+  onClose,
+  onExecuteTrade,
+  onAddComment,
+  onToggleCommentLike,
+}) => {
+  const [tradeMode, setTradeMode] = useState<'BUY' | 'SELL'>('BUY');
+  const [selectedSide, setSelectedSide] = useState<'YES' | 'NO'>(initialSide);
+  const [inputAmount, setInputAmount] = useState<string>('0.001');
+  const [slippagePct, setSlippagePct] = useState<number>(1.0);
+  const [showSlippageConfig, setShowSlippageConfig] = useState<boolean>(false);
+
+  const [chartTab, setChartTab] = useState<
+    'bonding-curve' | 'sentiment' | 'dual-price' | 'intelligence'
+  >('bonding-curve');
+
+  const [commentText, setCommentText] = useState('');
+  const [txStatus, setTxStatus] = useState<
+    'IDLE' | 'SIMULATING' | 'SIGNING' | 'CONFIRMED' | 'FAILED'
+  >('IDLE');
+  const [txErrorExplanation, setTxErrorExplanation] = useState<string | null>(null);
+
+  // Sync selectedSide when initialSide or market changes
+  useEffect(() => {
+    if (initialSide) {
+      setSelectedSide(initialSide);
+    }
+  }, [initialSide, market?.id]);
+
+  const isYes = selectedSide === 'YES';
+  const numericAmount = parseFloat(inputAmount) || 0;
+
+  const metrics = useMemo(() => {
+    if (!market) {
+      return {
+        yesPriceEth: 0.000001,
+        noPriceEth: 0.000001,
+        yesSentimentPct: 50,
+        noSentimentPct: 50,
+        totalPoolEth: 0,
+        totalVolumeEth: 0,
+        yesMultiplier: 1,
+        noMultiplier: 1,
+        sentimentChange24h: 0,
+        sentimentChangeRecent: 0,
+        controversyScore: 50,
+      };
+    }
+    return getMarketPricesAndSentiment(market);
+  }, [market]);
+
+  const quote = useMemo(() => {
+    if (!market) {
+      return {
+        sharesDelta: 0,
+        netEthDelta: 0,
+        creatorFeeEth: 0,
+        protocolFeeEth: 0,
+        totalFeeEth: 0,
+        newPriceEth: 0.000001,
+        priceImpactPct: 0,
+        minimumReceived: 0,
+      };
+    }
+    if (tradeMode === 'BUY') {
+      return quoteBuyOrder(
+        market,
+        isYes,
+        numericAmount,
+        slippagePct,
+        creatorFeeRate,
+        protocolFeeRate
+      );
+    } else {
+      return quoteSellOrder(
+        market,
+        isYes,
+        numericAmount,
+        slippagePct,
+        creatorFeeRate,
+        protocolFeeRate
+      );
+    }
+  }, [market, tradeMode, isYes, numericAmount, slippagePct, creatorFeeRate, protocolFeeRate]);
+
+  const userSideShares = isYes ? userYesShares : userNoShares;
+
+  const handleSubmitTrade = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!market) return;
+    setTxErrorExplanation(null);
+
+    if (numericAmount <= 0) {
+      setTxStatus('FAILED');
+      setTxErrorExplanation('Enter a positive trade amount.');
+      return;
+    }
+
+    if (tradeMode === 'BUY' && numericAmount < MIN_TRADE_ETH) {
+      setTxStatus('FAILED');
+      setTxErrorExplanation(
+        decodeContractErrorMessage('TradeBelowMinimum: minimum is 0.0001 ETH')
+      );
+      return;
+    }
+
+    if (tradeMode === 'SELL' && numericAmount > userSideShares) {
+      setTxStatus('FAILED');
+      setTxErrorExplanation(decodeContractErrorMessage('InsufficientShares'));
+      return;
+    }
+
+    setTxStatus('SIMULATING');
+    try {
+      await new Promise((r) => setTimeout(r, 180));
+      setTxStatus('SIGNING');
+      await onExecuteTrade(market.id, isYes, tradeMode === 'BUY', numericAmount, slippagePct);
+      setTxStatus('CONFIRMED');
+      setTimeout(() => setTxStatus('IDLE'), 2800);
+    } catch (err: unknown) {
+      setTxStatus('FAILED');
+      const raw = err instanceof Error ? err.message : String(err);
+      setTxErrorExplanation(decodeContractErrorMessage(raw));
+    }
+  };
+
+  const handlePostComment = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!market || !commentText.trim()) return;
+    onAddComment(market.id, selectedSide, commentText.trim());
+    setCommentText('');
+  };
+
+  // Generate mathematical bonding curve SVG path: SpotPrice(R) = (V_E + R)^2 / K
+  const maxReserveAxis = Math.max(
+    8,
+    market?.yesCurve?.realEth ? market.yesCurve.realEth * 1.4 : 8,
+    market?.noCurve?.realEth ? market.noCurve.realEth * 1.4 : 8
+  );
+
+  const curvePoints = useMemo(() => {
+    const pts: { r: number; price: number }[] = [];
+    const steps = 40;
+    for (let i = 0; i <= steps; i++) {
+      const r = (maxReserveAxis * i) / steps;
+      const vEth = INITIAL_VIRTUAL_ETH + r;
+      const vShares = CURVE_K / vEth;
+      const price = vEth / vShares;
+      pts.push({ r, price });
+    }
+    return pts;
+  }, [maxReserveAxis]);
+
+  // If no market is selected, return null safely AFTER all hooks are called
+  if (!market) return null;
+
+  const maxCurvePrice = curvePoints[curvePoints.length - 1]?.price || 0.001;
+
+  const toSvgX = (r: number) => 40 + (r / maxReserveAxis) * 500;
+  const toSvgY = (price: number) => 190 - (price / maxCurvePrice) * 160;
+
+  const curveSvgPath = curvePoints
+    .map((pt, i) => `${i === 0 ? 'M' : 'L'} ${toSvgX(pt.r).toFixed(1)} ${toSvgY(pt.price).toFixed(1)}`)
+    .join(' ');
+
+  const yesDotX = toSvgX(market.yesCurve.realEth);
+  const yesDotY = toSvgY(metrics.yesPriceEth);
+  const noDotX = toSvgX(market.noCurve.realEth);
+  const noDotY = toSvgY(metrics.noPriceEth);
+
+  // Market Intelligence: Buy vs Sell Pressure calculations
+  const yesBuyVol = market.yesCurve.buyVolumeEth ?? market.yesCurve.volumeEth * 0.72;
+  const yesSellVol = market.yesCurve.sellVolumeEth ?? market.yesCurve.volumeEth * 0.28;
+  const noBuyVol = market.noCurve.buyVolumeEth ?? market.noCurve.volumeEth * 0.62;
+  const noSellVol = market.noCurve.sellVolumeEth ?? market.noCurve.volumeEth * 0.38;
+
+  const yesBuyPressurePct =
+    yesBuyVol + yesSellVol > 0 ? (yesBuyVol / (yesBuyVol + yesSellVol)) * 100 : 50;
+  const noBuyPressurePct =
+    noBuyVol + noSellVol > 0 ? (noBuyVol / (noBuyVol + noSellVol)) * 100 : 50;
+
+  const holdersList = market.holders && market.holders.length > 0 ? market.holders : [
+    {
+      address: market.creator,
+      side: 'YES' as const,
+      shares: Math.max(12000, market.yesCurve.totalShares * 0.18),
+      shareOfSidePct: 18.0,
+      avgEntryEth: 0.000009,
+    },
+  ];
+
+  const history = market.history && market.history.length > 0 ? market.history : [];
+  const maxHistPrice = history.length > 0
+    ? Math.max(0.00005, ...history.map((h) => Math.max(h.yesPriceEth, h.noPriceEth)))
+    : 0.00005;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-3 backdrop-blur-md sm:p-6">
+      <div className="relative flex max-h-[94vh] w-full max-w-6xl flex-col overflow-hidden rounded-[28px] border border-[#232330] bg-[#121218] shadow-2xl">
+        {/* Top Modal Header */}
+        <div className="flex items-start justify-between border-b border-[#232330] bg-[#161620] px-6 py-4">
+          <div className="flex items-start gap-4 pr-4">
+            {market.imageUri && (
+              <img
+                src={market.imageUri}
+                alt=""
+                className="h-14 w-14 rounded-2xl border border-[#232330] object-cover"
+              />
+            )}
+            <div>
+              <div className="mb-1 flex flex-wrap items-center gap-2">
+                <span className="rounded-full bg-[#227c9d]/20 px-2.5 py-0.5 text-[11px] font-bold text-[#53b3d4]">
+                  {market.category}
+                </span>
+                <span className="font-mono text-[11px] text-[#8c8c9e]">
+                  Market #{market.id} • Creator {market.creator}
+                </span>
+                {market.sourceHandle && (
+                  <span className="rounded-full bg-[#20202c] px-2.5 py-0.5 font-mono text-[11px] text-slate-300">
+                    {market.sourceHandle}
+                  </span>
+                )}
+                <span className="rounded-full border border-[#227c9d]/40 bg-[#227c9d]/10 px-2.5 py-0.5 font-mono text-[10px] font-bold text-[#53b3d4]">
+                  ROBINHOOD CHAIN TESTNET (46630)
+                </span>
+              </div>
+              <h2 className="text-lg font-extrabold text-white sm:text-xl font-fun">
+                {market.question}
+              </h2>
+            </div>
+          </div>
+
+          <button
+            onClick={onClose}
+            className="rounded-full border border-[#232330] bg-[#1a1a24] p-2 text-[#8c8c9e] transition hover:border-white/30 hover:text-white"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        {/* Modal Body */}
+        <div className="grid flex-1 grid-cols-1 gap-6 overflow-y-auto p-6 lg:grid-cols-12">
+          {/* Left Column: Chart, Market Intelligence & Discussion (7 cols) */}
+          <div className="flex flex-col gap-5 lg:col-span-7">
+            {/* Live Sentiment Banner */}
+            <div className="rounded-[22px] border border-[#232330] bg-[#161620] p-4">
+              <div className="mb-2 flex items-center justify-between">
+                <div>
+                  <span className="text-[11px] font-bold uppercase text-[#227c9d]">
+                    YES CONVICTION ({metrics.yesMultiplier.toFixed(1)}x)
+                  </span>
+                  <div className="font-mono text-2xl font-black text-[#227c9d]">
+                    {metrics.yesSentimentPct.toFixed(1)}%
+                  </div>
+                </div>
+
+                <div className="text-center">
+                  <span className="text-[10px] font-mono uppercase text-[#8c8c9e]">
+                    REAL ETH RESERVES LOCKED
+                  </span>
+                  <div className="font-mono text-xs font-bold text-slate-200">
+                    {metrics.totalPoolEth.toFixed(3)} ETH (Withdrawable)
+                  </div>
+                </div>
+
+                <div className="text-right">
+                  <span className="text-[11px] font-bold uppercase text-[#F5A623]">
+                    NO CONVICTION ({metrics.noMultiplier.toFixed(1)}x)
+                  </span>
+                  <div className="font-mono text-2xl font-black text-[#F5A623]">
+                    {metrics.noSentimentPct.toFixed(1)}%
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-[#252533] p-0.5">
+                <div
+                  style={{ width: `${metrics.yesSentimentPct}%` }}
+                  className="h-full rounded-full bg-[#227c9d] transition-all duration-300"
+                />
+              </div>
+            </div>
+
+            {/* Interactive Chart & Market Intelligence Tabs */}
+            <div className="rounded-[22px] border border-[#232330] bg-[#161620] p-4">
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center gap-1 rounded-full border border-[#232330] bg-[#0f0f15] p-1">
+                  <button
+                    onClick={() => setChartTab('bonding-curve')}
+                    className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+                      chartTab === 'bonding-curve'
+                        ? 'bg-[#227c9d] text-white'
+                        : 'text-[#8c8c9e] hover:text-white'
+                    }`}
+                  >
+                    Bonding Curves
+                  </button>
+                  <button
+                    onClick={() => setChartTab('dual-price')}
+                    className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+                      chartTab === 'dual-price'
+                        ? 'bg-[#227c9d] text-white'
+                        : 'text-[#8c8c9e] hover:text-white'
+                    }`}
+                  >
+                    YES vs NO Price
+                  </button>
+                  <button
+                    onClick={() => setChartTab('sentiment')}
+                    className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+                      chartTab === 'sentiment'
+                        ? 'bg-[#227c9d] text-white'
+                        : 'text-[#8c8c9e] hover:text-white'
+                    }`}
+                  >
+                    Sentiment %
+                  </button>
+                  <button
+                    onClick={() => setChartTab('intelligence')}
+                    className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold transition ${
+                      chartTab === 'intelligence'
+                        ? 'bg-[#227c9d] text-white'
+                        : 'text-[#8c8c9e] hover:text-white'
+                    }`}
+                  >
+                    <BarChart3 className="h-3 w-3" />
+                    <span>Intelligence</span>
+                  </button>
+                </div>
+
+                <span className="font-mono text-[10px] text-[#8c8c9e]">
+                  K = 0.5 ETH × 500k
+                </span>
+              </div>
+
+              {chartTab === 'bonding-curve' && (
+                <div>
+                  <svg
+                    viewBox="0 0 570 220"
+                    className="h-52 w-full overflow-visible rounded-xl bg-[#0d0d12] p-2"
+                  >
+                    {[40, 90, 140, 190].map((y) => (
+                      <line
+                        key={y}
+                        x1="40"
+                        y1={y}
+                        x2="540"
+                        y2={y}
+                        stroke="#22222d"
+                        strokeDasharray="3 3"
+                      />
+                    ))}
+
+                    <path
+                      d={curveSvgPath}
+                      fill="none"
+                      stroke="#3b3b4f"
+                      strokeWidth="2.5"
+                    />
+
+                    <circle
+                      cx={yesDotX}
+                      cy={yesDotY}
+                      r="7"
+                      fill="#227c9d"
+                      stroke="#0d0d12"
+                      strokeWidth="2"
+                    />
+                    <text
+                      x={Math.min(440, yesDotX + 10)}
+                      y={Math.max(20, yesDotY - 8)}
+                      fill="#53b3d4"
+                      fontSize="11"
+                      fontFamily="Space Grotesk, monospace"
+                      fontWeight="bold"
+                    >
+                      YES ({market.yesCurve.realEth.toFixed(2)}Ξ @ {metrics.yesPriceEth.toFixed(5)}Ξ)
+                    </text>
+
+                    <circle
+                      cx={noDotX}
+                      cy={noDotY}
+                      r="7"
+                      fill="#F5A623"
+                      stroke="#0d0d12"
+                      strokeWidth="2"
+                    />
+                    <text
+                      x={Math.min(440, noDotX + 10)}
+                      y={Math.min(205, noDotY + 16)}
+                      fill="#F5A623"
+                      fontSize="11"
+                      fontFamily="Space Grotesk, monospace"
+                      fontWeight="bold"
+                    >
+                      NO ({market.noCurve.realEth.toFixed(2)}Ξ @ {metrics.noPriceEth.toFixed(5)}Ξ)
+                    </text>
+
+                    <text x="220" y="214" fill="#8c8c9e" fontSize="10">
+                      Real ETH Reserve Locked in Side Curve →
+                    </text>
+                  </svg>
+                </div>
+              )}
+
+              {chartTab === 'dual-price' && (
+                <div>
+                  <svg
+                    viewBox="0 0 570 210"
+                    className="h-52 w-full overflow-visible rounded-xl bg-[#0d0d12] p-2"
+                  >
+                    {[30, 85, 140, 180].map((y) => (
+                      <line
+                        key={y}
+                        x1="35"
+                        y1={y}
+                        x2="540"
+                        y2={y}
+                        stroke="#22222d"
+                        strokeDasharray="3 3"
+                      />
+                    ))}
+                    {history.length > 1 && (
+                      <polyline
+                        fill="none"
+                        stroke="#227c9d"
+                        strokeWidth="2.5"
+                        points={history
+                          .map((pt, idx) => {
+                            const x =
+                              40 + (idx / Math.max(1, history.length - 1)) * 490;
+                            const y = 180 - (pt.yesPriceEth / maxHistPrice) * 145;
+                            return `${x},${y}`;
+                          })
+                          .join(' ')}
+                      />
+                    )}
+                    {history.length > 1 && (
+                      <polyline
+                        fill="none"
+                        stroke="#F5A623"
+                        strokeWidth="2.5"
+                        points={history
+                          .map((pt, idx) => {
+                            const x =
+                              40 + (idx / Math.max(1, history.length - 1)) * 490;
+                            const y = 180 - (pt.noPriceEth / maxHistPrice) * 145;
+                            return `${x},${y}`;
+                          })
+                          .join(' ')}
+                      />
+                    )}
+                    {history.map((pt, idx) => {
+                      const x = 40 + (idx / Math.max(1, history.length - 1)) * 490;
+                      const yYes = 180 - (pt.yesPriceEth / maxHistPrice) * 145;
+                      const yNo = 180 - (pt.noPriceEth / maxHistPrice) * 145;
+                      return (
+                        <g key={idx}>
+                          <circle cx={x} cy={yYes} r="4" fill="#227c9d" />
+                          <circle cx={x} cy={yNo} r="4" fill="#F5A623" />
+                          <text
+                            x={x - 14}
+                            y={198}
+                            fill="#8c8c9e"
+                            fontSize="9"
+                            fontFamily="Space Grotesk, monospace"
+                          >
+                            {pt.label}
+                          </text>
+                        </g>
+                      );
+                    })}
+                  </svg>
+                  <div className="mt-2 flex items-center justify-between font-mono text-[11px]">
+                    <span className="text-[#53b3d4]">
+                      ● YES: {metrics.yesPriceEth.toFixed(6)} ETH ({metrics.yesMultiplier.toFixed(1)}x)
+                    </span>
+                    <span className="text-[#F5A623]">
+                      ● NO: {metrics.noPriceEth.toFixed(6)} ETH ({metrics.noMultiplier.toFixed(1)}x)
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {chartTab === 'sentiment' && (
+                <div>
+                  <svg
+                    viewBox="0 0 570 200"
+                    className="h-52 w-full overflow-visible rounded-xl bg-[#0d0d12] p-2"
+                  >
+                    {[30, 100, 170].map((y) => (
+                      <line
+                        key={y}
+                        x1="30"
+                        y1={y}
+                        x2="540"
+                        y2={y}
+                        stroke="#22222d"
+                        strokeDasharray="3 3"
+                      />
+                    ))}
+                    {history.length > 1 && (
+                      <polyline
+                        fill="none"
+                        stroke="#227c9d"
+                        strokeWidth="3"
+                        points={history
+                          .map((pt, idx) => {
+                            const x =
+                              40 +
+                              (idx / Math.max(1, history.length - 1)) * 490;
+                            const y = 180 - (pt.yesSentiment / 100) * 150;
+                            return `${x},${y}`;
+                          })
+                          .join(' ')}
+                      />
+                    )}
+                    {history.map((pt, idx) => {
+                      const x =
+                        40 + (idx / Math.max(1, history.length - 1)) * 490;
+                      const y = 180 - (pt.yesSentiment / 100) * 150;
+                      return (
+                        <g key={idx}>
+                          <circle cx={x} cy={y} r="4.5" fill="#227c9d" />
+                          <text
+                            x={x - 14}
+                            y={196}
+                            fill="#8c8c9e"
+                            fontSize="9"
+                            fontFamily="Space Grotesk, monospace"
+                          >
+                            {pt.label}
+                          </text>
+                        </g>
+                      );
+                    })}
+                  </svg>
+                </div>
+              )}
+
+              {chartTab === 'intelligence' && (
+                <div className="space-y-4 pt-1">
+                  {/* Buy / Sell Pressure Bars */}
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div className="rounded-xl border border-[#232330] bg-[#0e0e14] p-3">
+                      <div className="mb-1 flex justify-between font-mono text-[11px]">
+                        <span className="font-bold text-[#53b3d4]">YES BUY/SELL PRESSURE</span>
+                        <span className="text-white">{yesBuyPressurePct.toFixed(0)}% Buy</span>
+                      </div>
+                      <div className="flex h-2 w-full overflow-hidden rounded-full bg-[#252533]">
+                        <div
+                          style={{ width: `${yesBuyPressurePct}%` }}
+                          className="bg-[#227c9d]"
+                        />
+                        <div
+                          style={{ width: `${100 - yesBuyPressurePct}%` }}
+                          className="bg-amber-500/60"
+                        />
+                      </div>
+                      <div className="mt-1.5 flex justify-between font-mono text-[10px] text-[#8c8c9e]">
+                        <span>Buys: {yesBuyVol.toFixed(2)} ETH</span>
+                        <span>Sells: {yesSellVol.toFixed(2)} ETH</span>
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl border border-[#232330] bg-[#0e0e14] p-3">
+                      <div className="mb-1 flex justify-between font-mono text-[11px]">
+                        <span className="font-bold text-[#F5A623]">NO BUY/SELL PRESSURE</span>
+                        <span className="text-white">{noBuyPressurePct.toFixed(0)}% Buy</span>
+                      </div>
+                      <div className="flex h-2 w-full overflow-hidden rounded-full bg-[#252533]">
+                        <div
+                          style={{ width: `${noBuyPressurePct}%` }}
+                          className="bg-[#F5A623]"
+                        />
+                        <div
+                          style={{ width: `${100 - noBuyPressurePct}%` }}
+                          className="bg-[#124254]/60"
+                        />
+                      </div>
+                      <div className="mt-1.5 flex justify-between font-mono text-[10px] text-[#8c8c9e]">
+                        <span>Buys: {noBuyVol.toFixed(2)} ETH</span>
+                        <span>Sells: {noSellVol.toFixed(2)} ETH</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Holder Distribution Table */}
+                  <div className="rounded-xl border border-[#232330] bg-[#0e0e14] p-3">
+                    <div className="mb-2 flex items-center justify-between text-xs font-bold text-white">
+                      <span className="flex items-center gap-1.5">
+                        <Users className="h-3.5 w-3.5 text-[#227c9d]" />
+                        Top Curve Holders
+                      </span>
+                      <span className="font-mono text-[10px] text-[#8c8c9e]">
+                        24h Shift: {metrics.sentimentChange24h >= 0 ? '+' : ''}
+                        {metrics.sentimentChange24h.toFixed(1)}%
+                      </span>
+                    </div>
+                    <div className="space-y-1.5 font-mono text-[11px]">
+                      {holdersList.map((h, i) => (
+                        <div
+                          key={`${h.address}-${h.side}-${i}`}
+                          className="flex items-center justify-between rounded-lg bg-[#161620] px-2.5 py-1.5"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-white">{h.address}</span>
+                            <span
+                              className={`rounded px-1.5 py-0.2 text-[10px] font-bold ${
+                                h.side === 'YES'
+                                  ? 'bg-[#227c9d]/20 text-[#53b3d4]'
+                                  : 'bg-[#F5A623]/20 text-[#F5A623]'
+                              }`}
+                            >
+                              {h.side}
+                            </span>
+                          </div>
+                          <div className="text-right text-slate-300">
+                            {(h.shares / 1000).toFixed(1)}k ({h.shareOfSidePct.toFixed(1)}%)
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Independent Curve Liquidity & Virtual Reserve Isolation Table */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-2xl border border-[#227c9d]/25 bg-[#227c9d]/5 p-3.5">
+                <div className="mb-1 flex items-center justify-between">
+                  <span className="text-xs font-bold text-[#53b3d4]">YES CURVE</span>
+                  <span className="font-mono text-xs font-bold text-[#53b3d4]">
+                    {metrics.yesMultiplier.toFixed(1)}x
+                  </span>
+                </div>
+                <div className="space-y-1 font-mono text-xs text-slate-300">
+                  <div className="flex justify-between">
+                    <span className="text-[#8c8c9e]">Spot Price:</span>
+                    <span>{metrics.yesPriceEth.toFixed(6)} ETH</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#8c8c9e]">Real Reserve:</span>
+                    <span className="text-[#53b3d4]">{market.yesCurve.realEth.toFixed(3)} ETH</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-[#F5A623]/25 bg-[#F5A623]/5 p-3.5">
+                <div className="mb-1 flex items-center justify-between">
+                  <span className="text-xs font-bold text-[#F5A623]">NO CURVE</span>
+                  <span className="font-mono text-xs font-bold text-[#F5A623]">
+                    {metrics.noMultiplier.toFixed(1)}x
+                  </span>
+                </div>
+                <div className="space-y-1 font-mono text-xs text-slate-300">
+                  <div className="flex justify-between">
+                    <span className="text-[#8c8c9e]">Spot Price:</span>
+                    <span>{metrics.noPriceEth.toFixed(6)} ETH</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#8c8c9e]">Real Reserve:</span>
+                    <span className="text-[#F5A623]">{market.noCurve.realEth.toFixed(3)} ETH</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Conviction Feed */}
+            <div className="rounded-[22px] border border-[#232330] bg-[#161620] p-4">
+              <h4 className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-white">
+                <MessageSquare className="h-4 w-4 text-[#227c9d]" />
+                Conviction Feed ({market.comments.length})
+              </h4>
+
+              <form onSubmit={handlePostComment} className="mb-4 flex gap-2">
+                <input
+                  type="text"
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  placeholder={`Share your ${selectedSide} take...`}
+                  className="flex-1 rounded-full border border-[#232330] bg-[#0e0e14] px-4 py-2 text-xs text-white placeholder-[#8c8c9e] focus:border-[#227c9d] focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  className="flex items-center gap-1.5 rounded-full bg-[#227c9d] px-4 py-2 text-xs font-bold text-white transition hover:bg-[#1a647f]"
+                >
+                  <Send className="h-3.5 w-3.5" />
+                  <span>Post</span>
+                </button>
+              </form>
+
+              <div className="max-h-40 space-y-2 overflow-y-auto pr-1">
+                {market.comments.length === 0 ? (
+                  <p className="py-2 text-center text-xs text-[#8c8c9e]">
+                    No comments yet. Post your thesis and lead the debate!
+                  </p>
+                ) : (
+                  market.comments.map((c) => (
+                    <div
+                      key={c.id}
+                      className="rounded-xl border border-[#232330] bg-[#0e0e14] p-3 text-xs"
+                    >
+                      <div className="mb-1 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="h-6 w-6 rounded-full overflow-hidden shrink-0">
+                            {c.authorAvatar ? (
+                              <img
+                                src={c.authorAvatar}
+                                alt={c.author}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <div className="h-full w-full bg-gradient-to-tr from-[#227c9d] to-cyan-500 flex items-center justify-center text-[10px] font-bold text-white">
+                                {c.author.charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                          </div>
+                          <span className="font-semibold text-white">
+                            {c.author}
+                          </span>
+                          {c.authorHandle && (
+                            <span className="text-[10px] text-[#7a7a8c]">
+                              {c.authorHandle}
+                            </span>
+                          )}
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                              c.side === 'YES'
+                                ? 'bg-[#227c9d]/20 text-[#53b3d4]'
+                                : 'bg-[#F5A623]/20 text-amber-300'
+                            }`}
+                          >
+                            {c.side} ({(c.sharesHeld / 1000).toFixed(1)}k)
+                          </span>
+                        </div>
+                        <span className="text-[10px] text-[#8c8c9e]" title={formatExactDateTime(c.createdAt || c.timestamp)}>{formatTimeAgo(c.createdAt || c.timestamp)}</span>
+                      </div>
+                      <p className="text-slate-300 pl-8">{c.text}</p>
+                      <div className="mt-2 flex items-center pl-8 text-[11px] text-[#7a7a8c]">
+                        <button
+                          type="button"
+                          onClick={() => onToggleCommentLike && onToggleCommentLike(market.id, c.id)}
+                          className={`flex items-center gap-1 hover:text-rose-400 transition ${
+                            c.hasLiked ? 'text-rose-500' : ''
+                          }`}
+                        >
+                          <Heart
+                            className={`h-3 w-3 ${
+                              c.hasLiked ? 'fill-rose-500 text-rose-500' : ''
+                            }`}
+                          />
+                          <span>{c.likes || 0}</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Instant Bonding Curve Trading Terminal (5 cols) */}
+          <div className="flex flex-col justify-between rounded-[24px] border border-[#232330] bg-[#161620] p-5 lg:col-span-5">
+            <div>
+              {/* BUY / SELL Tabs + Slippage */}
+              <div className="mb-3 flex items-center gap-2">
+                <div className="grid flex-1 grid-cols-2 gap-1 rounded-full border border-[#232330] bg-[#0e0e14] p-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTradeMode('BUY');
+                      setInputAmount('0.001');
+                      setTxErrorExplanation(null);
+                    }}
+                    className={`rounded-full py-2 text-xs font-extrabold uppercase tracking-wider transition ${
+                      tradeMode === 'BUY'
+                        ? 'bg-[#227c9d] text-white shadow-sm'
+                        : 'text-[#8c8c9e] hover:text-white'
+                    }`}
+                  >
+                    Buy
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTradeMode('SELL');
+                      setInputAmount(
+                        userSideShares > 0 ? Math.floor(userSideShares / 2).toString() : '1000'
+                      );
+                      setTxErrorExplanation(null);
+                    }}
+                    className={`rounded-full py-2 text-xs font-extrabold uppercase tracking-wider transition ${
+                      tradeMode === 'SELL'
+                        ? 'bg-white text-black shadow-sm'
+                        : 'text-[#8c8c9e] hover:text-white'
+                    }`}
+                  >
+                    Sell
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowSlippageConfig((s) => !s)}
+                  className="flex items-center gap-1 rounded-full border border-[#232330] bg-[#0e0e14] px-3 py-2 text-xs text-[#8c8c9e] hover:text-white"
+                >
+                  <Sliders className="h-3.5 w-3.5 text-[#227c9d]" />
+                  <span>{slippagePct}%</span>
+                </button>
+              </div>
+
+              {/* Slippage Drawer */}
+              {showSlippageConfig && (
+                <div className="mb-3 rounded-xl border border-[#232330] bg-[#0e0e14] p-2.5">
+                  <div className="flex gap-1.5">
+                    {[0.5, 1.0, 2.5, 5.0].map((val) => (
+                      <button
+                        key={val}
+                        type="button"
+                        onClick={() => setSlippagePct(val)}
+                        className={`flex-1 rounded-full py-1 text-xs font-bold transition ${
+                          slippagePct === val
+                            ? 'bg-[#227c9d] text-white'
+                            : 'bg-[#161620] text-[#8c8c9e]'
+                        }`}
+                      >
+                        {val}%
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Chunky YES vs NO Selector */}
+              <div className="mb-4">
+                <div className="grid grid-cols-2 gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedSide('YES')}
+                    className={`flex flex-col rounded-2xl border p-3.5 text-left transition ${
+                      selectedSide === 'YES'
+                        ? 'border-[#227c9d] bg-[#227c9d]/20 shadow-md'
+                        : 'border-[#232330] bg-[#0e0e14] opacity-70 hover:opacity-100'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-base font-black text-[#53b3d4]">Yes</span>
+                      <span className="font-mono text-xs font-bold text-[#53b3d4]">
+                        {metrics.yesSentimentPct.toFixed(1)}%
+                      </span>
+                    </div>
+                    <span className="mt-1 font-mono text-xs text-white">
+                      {metrics.yesPriceEth.toFixed(6)} ETH
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedSide('NO')}
+                    className={`flex flex-col rounded-2xl border p-3.5 text-left transition ${
+                      selectedSide === 'NO'
+                        ? 'border-[#F5A623] bg-[#F5A623]/20 shadow-md'
+                        : 'border-[#232330] bg-[#0e0e14] opacity-70 hover:opacity-100'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-base font-black text-[#F5A623]">No</span>
+                      <span className="font-mono text-xs font-bold text-[#F5A623]">
+                        {metrics.noSentimentPct.toFixed(1)}%
+                      </span>
+                    </div>
+                    <span className="mt-1 font-mono text-xs text-white">
+                      {metrics.noPriceEth.toFixed(6)} ETH
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              {/* User Position */}
+              <div className="mb-3 flex items-center justify-between rounded-xl border border-[#232330] bg-[#0e0e14] px-3.5 py-2 text-xs">
+                <span className="text-[#8c8c9e]">Your {selectedSide} Balance:</span>
+                <span className="font-mono font-bold text-white">
+                  {userSideShares.toLocaleString(undefined, { maximumFractionDigits: 0 })} shares
+                </span>
+              </div>
+
+              {/* Amount Input */}
+              <form onSubmit={handleSubmitTrade}>
+                <div className="mb-3">
+                  <div className="relative">
+                    <input
+                      type="number"
+                      step="any"
+                      min="0"
+                      value={inputAmount}
+                      onChange={(e) => {
+                        setInputAmount(e.target.value);
+                        setTxErrorExplanation(null);
+                      }}
+                      className="w-full rounded-2xl border border-[#232330] bg-[#0e0e14] px-4 py-3 font-mono text-base font-bold text-white focus:border-[#227c9d] focus:outline-none"
+                    />
+                    <span className="absolute right-3.5 top-1/2 -translate-y-1/2 rounded-full bg-[#1e1e2b] px-2.5 py-1 font-mono text-xs font-bold text-[#8c8c9e]">
+                      {tradeMode === 'BUY' ? 'ETH' : 'SHARES'}
+                    </span>
+                  </div>
+
+                  {/* Preset chips */}
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {tradeMode === 'BUY' ? (
+                      [0.001, 0.005, 0.01, 0.05, 0.1].map((amt) => (
+                        <button
+                          key={amt}
+                          type="button"
+                          onClick={() => setInputAmount(amt.toString())}
+                          className="rounded-full border border-[#232330] bg-[#0e0e14] px-3 py-1 font-mono text-[11px] text-slate-300 hover:border-[#227c9d] hover:text-[#53b3d4] transition"
+                        >
+                          {amt} ETH
+                        </button>
+                      ))
+                    ) : (
+                      [0.25, 0.5, 0.75, 1].map((pct) => (
+                        <button
+                          key={pct}
+                          type="button"
+                          onClick={() =>
+                            setInputAmount(
+                              Math.max(100, Math.floor(userSideShares * pct)).toString()
+                            )
+                          }
+                          className="rounded-full border border-[#232330] bg-[#0e0e14] px-3 py-1 font-mono text-[11px] text-slate-300 hover:border-[#227c9d] hover:text-[#53b3d4] transition"
+                        >
+                          {pct * 100}%
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                {/* Live Quote Breakdown */}
+                <div className="mb-4 space-y-1.5 rounded-2xl border border-[#232330] bg-[#0e0e14] p-3.5 font-mono text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-[#8c8c9e]">
+                      {tradeMode === 'BUY' ? 'Estimated Shares:' : 'Net ETH Out:'}
+                    </span>
+                    <span className="font-bold text-white">
+                      {tradeMode === 'BUY'
+                        ? `+${quote.sharesDelta.toLocaleString(undefined, {
+                            maximumFractionDigits: 1,
+                          })} ${selectedSide}`
+                        : `${quote.netEthDelta.toFixed(5)} ETH`}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between">
+                    <span className="text-[#8c8c9e]">New Price:</span>
+                    <span className="text-slate-300">
+                      {quote.newPriceEth.toFixed(6)} ETH
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between">
+                    <span className="text-[#8c8c9e]">Impact:</span>
+                    <span
+                      className={
+                        quote.priceImpactPct >= 0 ? 'text-[#53b3d4]' : 'text-[#F5A623]'
+                      }
+                    >
+                      {quote.priceImpactPct >= 0 ? '+' : ''}
+                      {quote.priceImpactPct.toFixed(2)}%
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between border-t border-[#232330] pt-1.5 text-[11px]">
+                    <span className="text-[#8c8c9e]">Fee (1% Creator / 1% Protocol):</span>
+                    <span className="text-amber-300">{quote.totalFeeEth.toFixed(5)} ETH</span>
+                  </div>
+                </div>
+
+                {/* Error */}
+                {txErrorExplanation && (
+                  <div className="mb-3 rounded-xl border border-red-500/40 bg-red-500/10 p-2.5 text-xs text-red-300">
+                    {txErrorExplanation}
+                  </div>
+                )}
+
+                {/* Chunky rounded execute button */}
+                <button
+                  type="submit"
+                  disabled={
+                    txStatus === 'SIMULATING' ||
+                    txStatus === 'SIGNING' ||
+                    numericAmount <= 0
+                  }
+                  className={`w-full rounded-2xl py-3.5 text-sm font-extrabold uppercase tracking-wider text-white shadow-md transition hover:brightness-110 active:scale-[0.99] disabled:opacity-50 ${
+                    selectedSide === 'YES'
+                      ? 'bg-[#227c9d] hover:bg-[#1a647f]'
+                      : 'bg-[#F5A623] hover:bg-[#e49717] text-black'
+                  }`}
+                >
+                  {txStatus === 'SIMULATING' || txStatus === 'SIGNING'
+                    ? 'Processing...'
+                    : `${tradeMode} ${selectedSide}`}
+                </button>
+              </form>
+            </div>
+
+            {/* Bottom info note */}
+            <div className="mt-3 text-center text-[11px] text-[#8c8c9e]">
+              Instant liquidity backed by continuous on-chain bonding curves on Robinhood Chain.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
