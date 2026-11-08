@@ -1,4 +1,4 @@
-// Production Infrastructure Service for Nullhood on Robinhood Chain Testnet (Chain ID 46630)
+// Production Infrastructure Service for Tired.Fun on Robinhood Chain Testnet (Chain ID 46630)
 // Includes:
 // 1. Multi-RPC failover & health telemetry
 // 2. Token-bucket API/RPC rate limiting
@@ -80,7 +80,7 @@ class TokenBucketRateLimiter {
   }
 }
 
-export class NullhoodInfrastructureManager {
+export class TiredFunInfrastructureManager {
   public readonly publicClient: PublicClient;
   private readonly rateLimiter = new TokenBucketRateLimiter(40, 8);
   private readonly seenEventIds = new Set<string>();
@@ -238,7 +238,7 @@ export class NullhoodInfrastructureManager {
 export function decodeContractErrorMessage(rawMessage: string): string {
   const lower = rawMessage.toLowerCase();
   if (lower.includes('tradebelowminimum')) {
-    return 'Trade amount is below the 0.0001 ETH minimum anti-dust threshold required by NullhoodMarkets.sol.';
+    return 'Trade amount is below the 0.0001 ETH minimum anti-dust threshold required by Tired.FunMarkets.sol.';
   }
   if (lower.includes('slippageexceeded')) {
     return 'Price moved beyond your configured slippage tolerance before execution. Increase slippage % or reduce trade size.';
@@ -247,7 +247,7 @@ export function decodeContractErrorMessage(rawMessage: string): string {
     return 'Your wallet holds fewer shares on this side of the curve than the requested sell quantity.';
   }
   if (lower.includes('contractpaused')) {
-    return 'Emergency circuit breaker is currently active on NullhoodMarkets.sol. Trading is temporarily paused.';
+    return 'Emergency circuit breaker is currently active on Tired.FunMarkets.sol. Trading is temporarily paused.';
   }
   if (lower.includes('solvencyinvariantviolated')) {
     return 'Transaction halted by the on-chain O(1) solvency invariant check protecting real ETH reserves.';
@@ -261,5 +261,5 @@ export function decodeContractErrorMessage(rawMessage: string): string {
   return 'Check Robinhood Chain Testnet (Chain ID 46630) connection or inspect parameters.';
 }
 
-export const infraManager = new NullhoodInfrastructureManager();
+export const infraManager = new TiredFunInfrastructureManager();
 

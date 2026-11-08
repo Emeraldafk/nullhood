@@ -1,4 +1,4 @@
-// EIP-4361: Sign-In with Ethereum (SIWE) & Cryptographic Discourse Verification for Nullhood
+// EIP-4361: Sign-In with Ethereum (SIWE) & Cryptographic Discourse Verification for Tired.Fun
 // Guarantees anti-Sybil reputation tracking and prevents user/creator impersonation
 
 import { verifyMessage } from 'viem';
@@ -53,7 +53,7 @@ export function createSiweMessage(params: {
   const uri = params.uri || window.location.origin;
   const statement =
     params.statement ||
-    'Sign in to Nullhood to verify your on-chain conviction reputation and sign discussion theses.';
+    'Sign in to Tired.Fun to verify your on-chain conviction reputation and sign discussion theses.';
   const issuedAt = params.issuedAt || new Date().toISOString();
 
   return `${domain} wants you to sign in with your Ethereum account:
@@ -77,7 +77,7 @@ export function createCommentSignMessage(
   text: string,
   nonce: string
 ): string {
-  return `Nullhood Opinion Thesis Verification:
+  return `Tired.Fun Opinion Thesis Verification:
 Market ID: #${marketId}
 Side: ${side}
 Thesis: "${text}"

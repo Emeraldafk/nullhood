@@ -1,12 +1,12 @@
-# NULLHOOD — Perpetual Opinion Markets on Robinhood Chain
+# Tired.Fun — Perpetual Opinion Markets on Robinhood Chain
 
-**Nullhood** is a full-stack decentralized opinion & sentiment intelligence platform built natively for **Robinhood Chain Testnet (Chain ID `46630`)**, inspired by [pov.co](https://pov.co/).
+**Tired.Fun** is a full-stack decentralized opinion & sentiment intelligence platform built natively for **Robinhood Chain Testnet (Chain ID `46630`)**, inspired by [pov.co](https://pov.co/).
 
 ---
 
 ## 1. Smart Contract Architecture & Security Audit
 
-The smart contract [`NullhoodMarkets.sol`](file:///c:/Users/JAYSOFT.TEC/Music/nullhood/contracts/NullhoodMarkets.sol) (v2 Audited) implements perpetual conviction markets with independent bonding curves and mathematical solvency guarantees:
+The smart contract [`Tired.FunMarkets.sol`](file:///c:/Users/JAYSOFT.TEC/Music/nullhood/contracts/Tired.FunMarkets.sol) (v2 Audited) implements perpetual conviction markets with independent bonding curves and mathematical solvency guarantees:
 
 * **Strict Virtual Reserve Isolation**:
   - Each side (`YES` and `NO`) initializes with virtual reserves ($E_{\text{virtual}} = 0.5\text{ ETH}$, $S_{\text{virtual}} = 500{,}000\times 10^{18}\text{ shares}$, $K = 2.5\times 10^{23}$).
@@ -25,9 +25,9 @@ The smart contract [`NullhoodMarkets.sol`](file:///c:/Users/JAYSOFT.TEC/Music/nu
 
 ---
 
-## 2. Hood Pulse (Real-Time Social & Market Intelligence)
+## 2. Tired Pulse (Real-Time Social & Market Intelligence)
 
-Hood Pulse provides a real-time conviction radar across the ecosystem:
+Tired Pulse provides a real-time conviction radar across the ecosystem:
 * **Large Conviction Flows (Whale Activity)**: Flags high-volume positions ($\ge 0.25\text{ ETH}$) with post-trade sentiment impact.
 * **Sudden Sentiment Shifts**: Tracks 24-hour sentiment acceleration to uncover emerging market narratives.
 * **50/50 Dual-Curve Heat (Most Controversial Debates)**: Ranks markets where both YES and NO curves are surging simultaneously.
@@ -38,7 +38,7 @@ Hood Pulse provides a real-time conviction radar across the ecosystem:
 
 ## 3. Opinion Reputation (Transparent & Sybil-Resistant)
 
-Because Nullhood markets measure perpetual collective conviction rather than binary oracle dates, **Reputation never equates trading profit with truth**.
+Because Tired.Fun markets measure perpetual collective conviction rather than binary oracle dates, **Reputation never equates trading profit with truth**.
 
 Reputation is computed deterministically from 4 transparent, logarithmic pillars (Max 1,000 points):
 1. **Creator Impact (0–400 pts)**: $150 \cdot \ln(1 + M_{\text{created}} \cdot U_{\text{factor}})$

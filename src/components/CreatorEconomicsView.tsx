@@ -312,8 +312,8 @@ export const CreatorEconomicsView: React.FC<CreatorEconomicsViewProps> = ({
                   </>
                 ) : (
                   <>
-                    <Lock className="h-5 w-5 text-amber-400" />
-                    <span className="text-[8px] font-bold text-amber-300 mt-0.5 text-center px-1">15d Locked</span>
+                    <Lock className="h-5 w-5 text-[#FF6B00]" />
+                    <span className="text-[8px] font-bold text-orange-300 mt-0.5 text-center px-1">15d Locked</span>
                   </>
                 )}
               </div>
@@ -332,7 +332,7 @@ export const CreatorEconomicsView: React.FC<CreatorEconomicsViewProps> = ({
                   @{profile.username}
                 </span>
                 {(!usernameCooldown.canChange || !pfpCooldown.canChange) && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 text-[10px] font-bold text-amber-400">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-[#FF6B00]/10 border border-[#FF6B00]/30 px-2 py-0.5 text-[10px] font-bold text-[#FF6B00]">
                     <Lock className="h-2.5 w-2.5" />
                     <span>15d Policy Active</span>
                   </span>
@@ -421,7 +421,7 @@ export const CreatorEconomicsView: React.FC<CreatorEconomicsViewProps> = ({
                     PFP Change Available (15d lock after update)
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-400 bg-amber-950/60 border border-amber-500/30 px-2.5 py-0.5 rounded-full">
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#FF6B00] bg-orange-950/60 border border-[#FF6B00]/30 px-2.5 py-0.5 rounded-full">
                     <Lock className="h-3 w-3" />
                     PFP Locked: {pfpCooldown.remainingDays}d {pfpCooldown.remainingHours}h remaining
                   </span>
@@ -429,8 +429,8 @@ export const CreatorEconomicsView: React.FC<CreatorEconomicsViewProps> = ({
               </div>
 
               {!pfpCooldown.canChange && (
-                <div className="mb-3 rounded-xl bg-[#14141d] border border-amber-500/30 p-2.5 text-[11px] text-amber-300 flex items-center gap-2">
-                  <Clock className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                <div className="mb-3 rounded-xl bg-[#14141d] border border-[#FF6B00]/30 p-2.5 text-[11px] text-orange-300 flex items-center gap-2">
+                  <Clock className="h-3.5 w-3.5 text-[#FF6B00] shrink-0" />
                   <span>
                     To prevent database congestion, profile pictures can only be changed once every 15 days. Next update unlocks on {pfpCooldown.nextAvailableDate?.toLocaleDateString()} at {pfpCooldown.nextAvailableDate?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.
                   </span>
@@ -480,7 +480,7 @@ export const CreatorEconomicsView: React.FC<CreatorEconomicsViewProps> = ({
                         </>
                       ) : (
                         <>
-                          <Lock className="h-3.5 w-3.5 text-amber-400" />
+                          <Lock className="h-3.5 w-3.5 text-[#FF6B00]" />
                           <span>PFP Locked (15-day rate limit)</span>
                         </>
                       )}
@@ -552,7 +552,7 @@ export const CreatorEconomicsView: React.FC<CreatorEconomicsViewProps> = ({
                       Available
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-400 bg-amber-950/60 border border-amber-500/30 px-2 py-0.5 rounded-full">
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#FF6B00] bg-orange-950/60 border border-[#FF6B00]/30 px-2 py-0.5 rounded-full">
                       <Lock className="h-2.5 w-2.5" />
                       Locked: {usernameCooldown.remainingDays}d {usernameCooldown.remainingHours}h
                     </span>
@@ -571,16 +571,16 @@ export const CreatorEconomicsView: React.FC<CreatorEconomicsViewProps> = ({
                     maxLength={24}
                     className={`w-full rounded-xl border pl-8 pr-8 py-2 text-xs font-bold transition ${
                       !usernameCooldown.canChange
-                        ? 'border-amber-500/30 bg-[#121218] text-[#8c8c9e] cursor-not-allowed'
+                        ? 'border-[#FF6B00]/30 bg-[#121218] text-[#8c8c9e] cursor-not-allowed'
                         : 'border-[#2b2b3a] bg-[#0e0e14] text-white placeholder-[#555566] focus:border-[#227c9d] focus:outline-none'
                     }`}
                   />
                   {!usernameCooldown.canChange && (
-                    <Lock className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-amber-400" />
+                    <Lock className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#FF6B00]" />
                   )}
                 </div>
                 {!usernameCooldown.canChange ? (
-                  <p className="mt-1 text-[10px] text-amber-400/90 flex items-center gap-1">
+                  <p className="mt-1 text-[10px] text-[#FF6B00]/90 flex items-center gap-1">
                     <Clock className="h-3 w-3 shrink-0" />
                     <span>Username changes locked until {usernameCooldown.nextAvailableDate?.toLocaleDateString()} to protect database health.</span>
                   </p>
@@ -697,8 +697,8 @@ export const CreatorEconomicsView: React.FC<CreatorEconomicsViewProps> = ({
               Creator Economics & Fee Reconciliation
             </h2>
             <p className="mt-1.5 text-xs leading-relaxed text-slate-300">
-              Every trade on Nullhood accrues native ETH fees to market curators. Unlike standard
-              prediction markets where market makers extract all spreads, Nullhood routes{' '}
+              Every trade on Tired.Fun accrues native ETH fees to market curators. Unlike standard
+              prediction markets where market makers extract all spreads, Tired.Fun routes{' '}
               <span className="text-[#227c9d] font-bold">1.00% of all volume</span> directly to the
               market creator and <span className="text-white font-bold">1.00%</span> to the protocol
               treasury.
@@ -756,7 +756,7 @@ export const CreatorEconomicsView: React.FC<CreatorEconomicsViewProps> = ({
           <span className="text-[11px] font-fun font-bold uppercase tracking-wider text-slate-400">
             Lifetime Creator Fees
           </span>
-          <div className="mt-1 font-fun text-2xl font-bold text-[#F5A623]">
+          <div className="mt-1 font-fun text-2xl font-bold text-[#FF6B00]">
             {(totalLifetimeEarned + 0.0425).toFixed(4)} ETH
           </div>
           <span className="font-mono text-[10px] text-slate-400">
@@ -781,7 +781,7 @@ export const CreatorEconomicsView: React.FC<CreatorEconomicsViewProps> = ({
       <div className="rounded-[28px] border border-[#232330] bg-[#161620] p-6 shadow-xl">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="flex items-center gap-2 text-sm font-fun font-bold uppercase tracking-wider text-white">
-            <Sparkles className="h-4 w-4 text-[#F5A623]" />
+            <Sparkles className="h-4 w-4 text-[#FF6B00]" />
             <span>Curated Opinion Markets & Live Conviction</span>
           </h3>
           <span className="font-mono text-xs text-[#8c8c9e]">
@@ -802,7 +802,7 @@ export const CreatorEconomicsView: React.FC<CreatorEconomicsViewProps> = ({
                     <span className="rounded-full bg-[#227c9d]/20 px-2.5 py-0.5 text-[10px] font-fun font-bold text-[#53b3d4]">
                       {m.category}
                     </span>
-                    <span className="font-mono text-[11px] font-bold text-[#F5A623]">
+                    <span className="font-mono text-[11px] font-bold text-[#FF6B00]">
                       +{m.creatorFeesEarned.toFixed(4)} ETH Fees
                     </span>
                   </div>
@@ -821,7 +821,7 @@ export const CreatorEconomicsView: React.FC<CreatorEconomicsViewProps> = ({
                   </div>
                   <div className="mt-1.5 flex items-center justify-between font-mono text-[11px] font-semibold">
                     <span className="text-[#53b3d4]">{yesSentimentPct.toFixed(1)}% YES</span>
-                    <span className="text-[#F5A623]">{noSentimentPct.toFixed(1)}% NO</span>
+                    <span className="text-[#FF6B00]">{noSentimentPct.toFixed(1)}% NO</span>
                   </div>
                   <div className="mt-2 flex items-center justify-between border-t border-[#1f1f2c] pt-2 text-[10px] text-slate-400 font-mono">
                     <span>Pool: {totalPoolEth.toFixed(3)} ETH</span>
@@ -839,7 +839,7 @@ export const CreatorEconomicsView: React.FC<CreatorEconomicsViewProps> = ({
         <div className="rounded-[28px] border border-[#232330] bg-[#161620] p-6 shadow-xl lg:col-span-7">
           <h3 className="mb-3.5 flex items-center gap-2 text-sm font-fun font-bold uppercase tracking-wider text-white">
             <Percent className="h-4 w-4 text-[#227c9d]" />
-            Fee Calculation Specification (contracts/NullhoodMarkets.sol)
+            Fee Calculation Specification (contracts/Tired.FunMarkets.sol)
           </h3>
           <div className="space-y-3 text-xs leading-relaxed text-slate-300 font-sans">
             <p>
@@ -853,7 +853,7 @@ export const CreatorEconomicsView: React.FC<CreatorEconomicsViewProps> = ({
               <div>creatorFee = (ethIn * creatorFeeBps) / 10000;  // 1.00%</div>
               <div>protocolFee = (ethIn * protocolFeeBps) / 10000; // 1.00%</div>
               <div>netEthToCurve = ethIn - creatorFee - protocolFee;</div>
-              <div className="mt-3 text-[#F5A623] font-bold">// On Sell Execution:</div>
+              <div className="mt-3 text-[#FF6B00] font-bold">// On Sell Execution:</div>
               <div>grossEthFromCurve = curve.virtualEth - newVirtualEth;</div>
               <div>creatorFee = (grossEthFromCurve * creatorFeeBps) / 10000;</div>
               <div>protocolFee = (grossEthFromCurve * protocolFeeBps) / 10000;</div>
@@ -895,7 +895,7 @@ export const CreatorEconomicsView: React.FC<CreatorEconomicsViewProps> = ({
               </div>
               <div>
                 <span className="text-slate-400">Pending Creator Fees:</span>
-                <div className="font-bold text-[#F5A623] text-xs">
+                <div className="font-bold text-[#FF6B00] text-xs">
                   {solvencyReport?.pendingCreatorFees || '0.000'} ETH
                 </div>
               </div>
@@ -907,7 +907,7 @@ export const CreatorEconomicsView: React.FC<CreatorEconomicsViewProps> = ({
         <div className="rounded-[28px] border border-[#232330] bg-[#161620] p-6 shadow-xl lg:col-span-5">
           <h3 className="mb-3.5 flex items-center justify-between text-sm font-fun font-bold uppercase tracking-wider text-white">
             <span className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-[#F5A623]" />
+              <Clock className="h-4 w-4 text-[#FF6B00]" />
               Fee Claim History
             </span>
             <span className="font-mono text-[10px] text-slate-400">

@@ -34,7 +34,7 @@ export const LiveTicker: React.FC<LiveTickerProps> = ({ activities, onSelectMark
                   className={`inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[10px] font-black ${
                     act.isYes
                       ? 'bg-[#227c9d]/20 text-[#53b3d4]'
-                      : 'bg-[#F5A623]/20 text-amber-300'
+                      : 'bg-[#FF6B00]/20 text-orange-300'
                   }`}
                 >
                   {act.isBuy ? (

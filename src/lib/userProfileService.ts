@@ -111,7 +111,7 @@ export function checkPfpCooldown(profile: UserProfile): CooldownStatus {
 }
 
 const DEFAULT_AVATAR_GRADIENTS = [
-  'from-amber-400 to-orange-500',
+  'from-[#FF6B00] to-orange-500',
   'from-teal-400 to-emerald-600',
   'from-sky-400 to-blue-600',
   'from-rose-400 to-pink-600',
@@ -152,8 +152,8 @@ export function getUserProfile(address?: string | null): UserProfile {
 
   const defaultProfile: UserProfile = {
     address: normAddr,
-    username: address ? `trader_${normAddr.slice(2, 8)}` : 'nullhood_og',
-    displayName: address ? `${normAddr.slice(0, 6)}...${normAddr.slice(-4)}` : 'Nullhood Curator',
+    username: address ? `trader_${normAddr.slice(2, 8)}` : 'tired_og',
+    displayName: address ? `${normAddr.slice(0, 6)}...${normAddr.slice(-4)}` : 'Tired.Fun Curator',
     bio: 'Perpetual conviction trader on Robinhood Chain (46630). No oracles, no expiry.',
     avatarGradient: gradient,
     createdAt: Date.now(),

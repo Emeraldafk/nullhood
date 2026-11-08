@@ -160,13 +160,13 @@ export const HoodPulseView: React.FC<HoodPulseViewProps> = ({
           <div>
             <div className="mb-2.5 inline-flex items-center gap-2 rounded-full border border-[#227c9d]/30 bg-[#227c9d]/15 px-3.5 py-1 text-xs font-fun font-bold text-[#53b3d4]">
               <Activity className="h-3.5 w-3.5 text-[#227c9d]" />
-              <span>HOOD PULSE • LIVE CONVICTION & ANOMALY RADAR</span>
+              <span>TIRED PULSE • LIVE CONVICTION & ANOMALY RADAR</span>
             </div>
             <h2 className="text-2xl font-fun font-bold text-white sm:text-3xl">
               Real-Time Opinion Activity & Whale Feeds
             </h2>
             <p className="mt-1.5 max-w-2xl text-xs text-slate-300">
-              Every event displayed in Hood Pulse originates from either a verified Robinhood
+              Every event displayed in Tired Pulse originates from either a verified Robinhood
               Chain Testnet transaction (<code className="font-mono text-[#53b3d4]">Chain ID 46630</code>) or an explicitly tagged Sandbox
               simulation—transparent and verifiable.
             </p>
@@ -176,7 +176,7 @@ export const HoodPulseView: React.FC<HoodPulseViewProps> = ({
             className={`flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-fun font-bold ${
               isLiveOnChainMode
                 ? 'border-[#227c9d]/40 bg-[#227c9d]/15 text-[#53b3d4]'
-                : 'border-amber-400/40 bg-amber-500/15 text-amber-300'
+                : 'border-[#FF6B00]/40 bg-[#FF6B00]/15 text-orange-300'
             }`}
           >
             {isLiveOnChainMode ? (
@@ -186,7 +186,7 @@ export const HoodPulseView: React.FC<HoodPulseViewProps> = ({
               </>
             ) : (
               <>
-                <AlertCircle className="h-4 w-4 text-amber-400" />
+                <AlertCircle className="h-4 w-4 text-[#FF6B00]" />
                 <span>FEED: SANDBOX SIMULATION</span>
               </>
             )}
@@ -227,7 +227,7 @@ export const HoodPulseView: React.FC<HoodPulseViewProps> = ({
                     className={`shrink-0 rounded-full px-2.5 py-1 font-mono text-xs font-bold ${
                       isPos
                         ? 'bg-[#227c9d]/20 text-[#53b3d4] border border-[#227c9d]/30'
-                        : 'bg-[#F5A623]/20 text-[#fbbf24] border border-[#F5A623]/30'
+                        : 'bg-[#FF6B00]/20 text-[#FF8A33] border border-[#FF6B00]/30'
                     }`}
                   >
                     {isPos ? '+' : ''}
@@ -242,7 +242,7 @@ export const HoodPulseView: React.FC<HoodPulseViewProps> = ({
         {/* Most Controversial Markets (50/50 Dual-Curve Heat) */}
         <div className="rounded-[24px] border border-[#232330] bg-[#161620] p-5 shadow-lg">
           <div className="mb-3.5 flex items-center justify-between">
-            <span className="flex items-center gap-1.5 text-xs font-fun font-bold uppercase tracking-wider text-[#F5A623]">
+            <span className="flex items-center gap-1.5 text-xs font-fun font-bold uppercase tracking-wider text-[#FF6B00]">
               <Scale className="h-4 w-4" />
               Most Controversial
             </span>
@@ -253,7 +253,7 @@ export const HoodPulseView: React.FC<HoodPulseViewProps> = ({
               <button
                 key={market.id}
                 onClick={() => onSelectMarket(market)}
-                className="flex w-full items-center justify-between gap-3 rounded-2xl border border-[#232330] bg-[#0f1015] p-3.5 text-left transition hover:border-[#F5A623]/50 hover:bg-[#1c1815]"
+                className="flex w-full items-center justify-between gap-3 rounded-2xl border border-[#232330] bg-[#0f1015] p-3.5 text-left transition hover:border-[#FF6B00]/50 hover:bg-[#1c1815]"
               >
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-xs font-fun font-bold text-white">
@@ -264,7 +264,7 @@ export const HoodPulseView: React.FC<HoodPulseViewProps> = ({
                     {metrics.noSentimentPct.toFixed(1)}% • Dual Liquidity
                   </div>
                 </div>
-                <span className="shrink-0 rounded-full bg-[#F5A623]/20 border border-[#F5A623]/30 px-2.5 py-1 font-mono text-xs font-bold text-[#fbbf24]">
+                <span className="shrink-0 rounded-full bg-[#FF6B00]/20 border border-[#FF6B00]/30 px-2.5 py-1 font-mono text-xs font-bold text-[#FF8A33]">
                   {metrics.controversyScore}/100
                 </span>
               </button>
@@ -317,7 +317,7 @@ export const HoodPulseView: React.FC<HoodPulseViewProps> = ({
       <div className="rounded-[24px] border border-[#232330] bg-[#161620] p-4 sm:p-5 shadow-lg">
         <div className="mb-3.5 flex items-center gap-2 text-xs font-fun font-bold uppercase tracking-wider text-slate-300">
           <Filter className="h-4 w-4 text-[#227c9d]" />
-          <span>Filter Hood Pulse Activity Stream</span>
+          <span>Filter Tired Pulse Activity Stream</span>
         </div>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
@@ -458,7 +458,7 @@ export const HoodPulseView: React.FC<HoodPulseViewProps> = ({
                         className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-mono text-[11px] font-bold ${
                           act.isYes
                             ? 'bg-[#227c9d]/20 text-[#53b3d4] border border-[#227c9d]/30'
-                            : 'bg-[#F5A623]/20 text-[#fbbf24] border border-[#F5A623]/30'
+                            : 'bg-[#FF6B00]/20 text-[#FF8A33] border border-[#FF6B00]/30'
                         }`}
                       >
                         {act.isBuy ? (
@@ -508,7 +508,7 @@ export const HoodPulseView: React.FC<HoodPulseViewProps> = ({
                         <ExternalLink className="h-2.5 w-2.5" />
                       </a>
                     ) : (
-                      <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/30 bg-amber-500/15 px-3 py-1 font-mono text-[10px] font-bold text-amber-300">
+                      <span className="inline-flex items-center gap-1 rounded-full border border-[#FF6B00]/30 bg-[#FF6B00]/15 px-3 py-1 font-mono text-[10px] font-bold text-orange-300">
                         <span>SANDBOX EVENT</span>
                       </span>
                     )}
@@ -560,7 +560,7 @@ export const HoodPulseView: React.FC<HoodPulseViewProps> = ({
 
           <div className="rounded-[24px] border border-[#232330] bg-[#161620] p-5 shadow-lg">
             <h3 className="mb-3.5 flex items-center gap-2 text-xs font-fun font-bold uppercase tracking-wider text-white">
-              <TrendingUp className="h-4 w-4 text-[#F5A623]" />
+              <TrendingUp className="h-4 w-4 text-[#FF6B00]" />
               Trending Opinions & Theses
             </h3>
             <div className="space-y-2.5">
@@ -584,7 +584,7 @@ export const HoodPulseView: React.FC<HoodPulseViewProps> = ({
                         className={`rounded-full px-2 py-0.5 font-mono text-[10px] font-bold ${
                           item.side === 'YES'
                             ? 'bg-[#227c9d]/20 text-[#53b3d4]'
-                            : 'bg-[#F5A623]/20 text-[#fbbf24]'
+                            : 'bg-[#FF6B00]/20 text-[#FF8A33]'
                         }`}
                       >
                         {item.side} ({(item.sharesHeld / 1000).toFixed(1)}k)

@@ -1,4 +1,4 @@
-// Transparent, non-PnL Opinion Reputation Engine for Nullhood.
+// Transparent, non-PnL Opinion Reputation Engine for Tired.Fun.
 // Reputation is calculated strictly from verifiable participation, market creation impact,
 // market diversity, and stake-backed community discourse — never from speculative profit
 // or purchased engagement.
@@ -220,7 +220,7 @@ export function buildProfilesFromPlatformState(
   const activeUserAddr = connectedWallet
     ? `${connectedWallet.slice(0, 6)}...${connectedWallet.slice(-4)}`
     : '0x71C9...89A4';
-  const userEntry = ensureEntry(activeUserAddr, '@you_nullhood');
+  const userEntry = ensureEntry(activeUserAddr, '@you_tiredfun');
   for (const [mIdStr, pos] of Object.entries(userHoldings)) {
     if (pos.yesShares > 0 || pos.noShares > 0) {
       userEntry.marketsSet.add(Number(mIdStr));

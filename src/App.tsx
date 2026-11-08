@@ -50,7 +50,7 @@ import {
   quoteSellOrder,
 } from './lib/bondingCurve';
 import { NULLHOOD_MARKETS_ABI } from './contracts/NullhoodMarketsArtifact';
-import { Navbar, NullhoodNavTab } from './components/Navbar';
+import { Navbar, TiredFunNavTab } from './components/Navbar';
 import { LiveTicker } from './components/LiveTicker';
 import { MarketCard } from './components/MarketCard';
 import { MarketDetailModal } from './components/MarketDetailModal';
@@ -114,7 +114,7 @@ export function App() {
   );
 
   // Navigation & Filters
-  const [activeTab, setActiveTab] = useState<NullhoodNavTab>('feed');
+  const [activeTab, setActiveTab] = useState<TiredFunNavTab>('feed');
   const [selectedCategory, setSelectedCategory] = useState<MarketCategory>('All');
   const [viewLayout, setViewLayout] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState<SortOption>('volume');
@@ -520,7 +520,7 @@ export function App() {
       return next.toFixed(4);
     });
 
-    // Record Hood Pulse Event
+    // Record Tired Pulse Event
     const traderLabel = walletAddress ? shortenAddress(walletAddress) : '0x71C9...89A4';
     const isWhale = (isBuy ? amount : quote.netEthDelta) >= 0.25;
     const newAct: TradeActivity = {
@@ -890,10 +890,10 @@ export function App() {
             {/* IF "ALL" CATEGORY IS SELECTED: Render Hero Banner + Featured Markets + Subcategory Showcase */}
             {selectedCategory === 'All' ? (
               <>
-                {/* Nullhood Hero Banner with pov.co Styling & Spacing */}
+                {/* Tired.Fun Hero Banner with pov.co Styling & Spacing */}
                 <div className="relative overflow-hidden rounded-[28px] border border-[#232330] bg-gradient-to-r from-[#101a22] via-[#14141c] to-[#0f0f15] p-6 sm:p-8">
                   <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#227c9d]/15 blur-3xl" />
-                  <div className="pointer-events-none absolute -bottom-24 left-1/3 h-56 w-56 rounded-full bg-[#F5A623]/10 blur-3xl" />
+                  <div className="pointer-events-none absolute -bottom-24 left-1/3 h-56 w-56 rounded-full bg-[#FF6B00]/10 blur-3xl" />
 
                   <div className="relative grid grid-cols-1 items-center gap-6 lg:grid-cols-12">
                     <div className="lg:col-span-7">
@@ -904,17 +904,17 @@ export function App() {
 
                       <h1 className="font-fun text-3xl font-black tracking-tight text-white sm:text-4xl">
                         Trade Public Conviction.{' '}
-                        <span className="bg-gradient-to-r from-[#227c9d] via-[#53b3d4] to-[#F5A623] bg-clip-text text-transparent">
+                        <span className="bg-gradient-to-r from-[#227c9d] via-[#53b3d4] to-[#FF6B00] bg-clip-text text-transparent">
                           No Oracles. No Expiry.
                         </span>
                       </h1>
 
                       <p className="mt-2 max-w-xl text-xs sm:text-sm leading-relaxed text-[#8c8c9e]">
-                        Nullhood brings perpetual opinion market dynamics to{' '}
+                        Tired.Fun brings perpetual opinion market dynamics to{' '}
                         <span className="text-white font-semibold">Robinhood Chain Testnet</span>. Every
                         YES and NO token trades on its own independent bonding curve with 100% instant
                         liquidity, and curators earn{' '}
-                        <span className="text-[#F5A623] font-bold">1% creator fees</span> forever.
+                        <span className="text-[#FF6B00] font-bold">1% creator fees</span> forever.
                       </p>
 
                       {/* Spawn Bar */}
@@ -968,7 +968,7 @@ export function App() {
                         <span className="text-[11px] font-bold uppercase tracking-wider text-[#7a7a8c]">
                           Creator Fees Accrued
                         </span>
-                        <div className="mt-1 font-mono text-xl font-black text-[#F5A623]">
+                        <div className="mt-1 font-mono text-xl font-black text-[#FF6B00]">
                           {globalStats.totalCreatorFees.toFixed(3)}{' '}
                           <span className="text-xs">ETH</span>
                         </div>
@@ -996,7 +996,7 @@ export function App() {
                 <div>
                   <div className="mb-4 flex items-center justify-between">
                     <h2 className="font-fun text-xl font-bold text-white flex items-center gap-2">
-                      <Flame className="h-5 w-5 text-[#F5A623]" />
+                      <Flame className="h-5 w-5 text-[#FF6B00]" />
                       <span>Trending Markets</span>
                     </h2>
                     <div className="flex items-center rounded-full border border-[#232330] bg-[#14141c] px-3 py-1.5">
@@ -1269,7 +1269,7 @@ export function App() {
           </div>
         )}
 
-        {/* TAB 2: OPINION FEED (X-Style Feed replacing Hood Pulse) */}
+        {/* TAB 2: OPINION FEED (X-Style Feed replacing Tired Pulse) */}
         {activeTab === 'pulse' && (
           <OpinionFeedView
             markets={markets}
@@ -1371,7 +1371,7 @@ export function App() {
                             </div>
                             <div className="mt-1 flex items-center justify-between font-mono text-[11px] font-semibold">
                               <span className="text-[#53b3d4]">{yesSentimentPct.toFixed(1)}% YES</span>
-                              <span className="text-[#F5A623]">{noSentimentPct.toFixed(1)}% NO</span>
+                              <span className="text-[#FF6B00]">{noSentimentPct.toFixed(1)}% NO</span>
                             </div>
                           </div>
                         </div>
@@ -1397,9 +1397,9 @@ export function App() {
                           )}
 
                           {nShares > 0 && (
-                            <div className="flex items-center justify-between rounded-2xl border border-[#F5A623]/30 bg-[#F5A623]/10 p-3.5">
+                            <div className="flex items-center justify-between rounded-2xl border border-[#FF6B00]/30 bg-[#FF6B00]/10 p-3.5">
                               <div>
-                                <span className="text-xs font-fun font-bold text-[#fbbf24]">
+                                <span className="text-xs font-fun font-bold text-[#FF8A33]">
                                   NO POSITION
                                 </span>
                                 <div className="font-mono text-xs text-white">
@@ -1408,7 +1408,7 @@ export function App() {
                               </div>
                               <button
                                 onClick={() => handleExecuteTrade(m.id, false, false, nShares)}
-                                className="rounded-full bg-[#F5A623] px-4 py-2 font-fun text-xs font-bold text-black hover:bg-[#e09214] transition"
+                                className="rounded-full bg-[#FF6B00] px-4 py-2 font-fun text-xs font-bold text-black hover:bg-[#EA580C] transition"
                               >
                                 Instant Sell
                               </button>
@@ -1429,14 +1429,14 @@ export function App() {
             <div className="rounded-[28px] border border-[#1c313a] bg-gradient-to-r from-[#0e1c24] via-[#121218] to-[#101a22] p-6 sm:p-8 shadow-xl">
               <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#227c9d]/30 bg-[#227c9d]/15 px-3.5 py-1 text-xs font-fun font-bold text-[#53b3d4]">
                 <Flame className="h-3.5 w-3.5 text-[#227c9d]" />
-                <span>NULLHOOD PROTOCOL ARCHITECTURE (POV MODEL)</span>
+                <span>TIRED.FUN PROTOCOL ARCHITECTURE (POV MODEL)</span>
               </div>
               <h2 className="mb-3 text-2xl font-fun font-bold text-white sm:text-3xl">
                 How Perpetual Opinion Markets Work on Robinhood Chain
               </h2>
               <p className="text-sm leading-relaxed text-slate-300 font-sans">
                 Traditional prediction markets lock your capital for months waiting for an external
-                oracle to resolve a single binary date. <strong className="text-white">Nullhood</strong> replaces binary
+                oracle to resolve a single binary date. <strong className="text-white">Tired.Fun</strong> replaces binary
                 expiration with <strong className="text-white">continuous, independent bonding curves</strong> that measure
                 live collective conviction 24/7.
               </p>
@@ -1467,7 +1467,7 @@ export function App() {
                 </div>
 
                 <div className="rounded-[22px] border border-[#232330] bg-[#0f1015] p-5 shadow-inner">
-                  <Coins className="mb-2.5 h-6 w-6 text-[#F5A623]" />
+                  <Coins className="mb-2.5 h-6 w-6 text-[#FF6B00]" />
                   <h3 className="mb-1 text-sm font-fun font-bold text-white">
                     3. 1% Creator Revenue Share
                   </h3>
@@ -1483,7 +1483,7 @@ export function App() {
                   <ShieldCheck className="h-5 w-5 text-[#227c9d]" />
                   <span>
                     Built natively for <strong>Robinhood Chain Testnet (Chain ID 46630)</strong> •{' '}
-                    <code className="font-mono text-[#53b3d4]">contracts/NullhoodMarkets.sol</code>
+                    <code className="font-mono text-[#53b3d4]">contracts/Tired.FunMarkets.sol</code>
                   </span>
                 </div>
                 <div className="flex items-center gap-3">
@@ -1491,7 +1491,7 @@ export function App() {
                     href={ROBINHOOD_FAUCET_URL}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-1 text-[#F5A623] hover:underline"
+                    className="inline-flex items-center gap-1 text-[#FF6B00] hover:underline"
                   >
                     <span>Testnet Faucet</span>
                     <ExternalLink className="h-3 w-3" />
@@ -1521,7 +1521,7 @@ export function App() {
               <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#227c9d] text-white shadow-[0_0_12px_rgba(34,124,157,0.6)]">
                 <Flame className="h-4 w-4" />
               </span>
-              <span>nullhood</span>
+              <span>tired.fun</span>
             </div>
             <a
               href="https://explorer.testnet.chain.robinhood.com"

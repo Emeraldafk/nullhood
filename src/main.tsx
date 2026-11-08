@@ -23,7 +23,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('Nullhood ErrorBoundary caught:', error, errorInfo);
+    console.error('Tired.Fun ErrorBoundary caught:', error, errorInfo);
   }
 
   render() {

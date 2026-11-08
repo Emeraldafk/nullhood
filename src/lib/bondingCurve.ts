@@ -1,4 +1,4 @@
-// Exact client-side mirror of contracts/NullhoodMarkets.sol (v2 Audited) independent YES/NO bonding curve math
+// Exact client-side mirror of contracts/Tired.FunMarkets.sol (v2 Audited) independent YES/NO bonding curve math
 // plus seed markets, holder distributions, and historical sentiment/price series on Robinhood Chain.
 
 export const INITIAL_VIRTUAL_ETH = 0.5; // 0.5 ETH virtual reserve per side (non-withdrawable)
@@ -6,7 +6,7 @@ export const INITIAL_VIRTUAL_SHARES = 500_000; // 500,000 virtual shares per sid
 export const CURVE_K = INITIAL_VIRTUAL_ETH * INITIAL_VIRTUAL_SHARES; // 250,000
 export const MIN_TRADE_ETH = 0.0001; // Anti-dust minimum trade threshold
 export const DEFAULT_CREATOR_FEE_RATE = 0.01; // 1.0% to Market Creator
-export const DEFAULT_PROTOCOL_FEE_RATE = 0.01; // 1.0% to Nullhood Protocol
+export const DEFAULT_PROTOCOL_FEE_RATE = 0.01; // 1.0% to Tired.Fun Protocol
 export const CREATOR_FEE_RATE = DEFAULT_CREATOR_FEE_RATE;
 export const PROTOCOL_FEE_RATE = DEFAULT_PROTOCOL_FEE_RATE;
 export const TOTAL_FEE_RATE = CREATOR_FEE_RATE + PROTOCOL_FEE_RATE; // 2.0% total

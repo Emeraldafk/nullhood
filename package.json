@@ -1,8 +1,8 @@
 {
-  "name": "nullhood-robinhood-pov",
+  "name": "tired-fun",
   "private": true,
   "version": "1.0.0",
-  "description": "Nullhood — Perpetual Opinion & Sentiment Markets (POV.co architecture) on Robinhood Chain Testnet (Chain ID 46630)",
+  "description": "Tired.Fun — Perpetual Opinion & Sentiment Markets (POV.co architecture) on Robinhood Chain Testnet (Chain ID 46630)",
   "type": "module",
   "scripts": {
     "dev": "vite",

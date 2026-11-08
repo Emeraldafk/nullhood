@@ -329,10 +329,10 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                 </div>
 
                 <div className="text-right">
-                  <span className="text-[11px] font-bold uppercase text-[#F5A623]">
+                  <span className="text-[11px] font-bold uppercase text-[#FF6B00]">
                     NO CONVICTION ({metrics.noMultiplier.toFixed(1)}x)
                   </span>
-                  <div className="font-mono text-2xl font-black text-[#F5A623]">
+                  <div className="font-mono text-2xl font-black text-[#FF6B00]">
                     {metrics.noSentimentPct.toFixed(1)}%
                   </div>
                 </div>
@@ -446,14 +446,14 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                       cx={noDotX}
                       cy={noDotY}
                       r="7"
-                      fill="#F5A623"
+                      fill="#FF6B00"
                       stroke="#0d0d12"
                       strokeWidth="2"
                     />
                     <text
                       x={Math.min(440, noDotX + 10)}
                       y={Math.min(205, noDotY + 16)}
-                      fill="#F5A623"
+                      fill="#FF6B00"
                       fontSize="11"
                       fontFamily="Space Grotesk, monospace"
                       fontWeight="bold"
@@ -503,7 +503,7 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                     {history.length > 1 && (
                       <polyline
                         fill="none"
-                        stroke="#F5A623"
+                        stroke="#FF6B00"
                         strokeWidth="2.5"
                         points={history
                           .map((pt, idx) => {
@@ -522,7 +522,7 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                       return (
                         <g key={idx}>
                           <circle cx={x} cy={yYes} r="4" fill="#227c9d" />
-                          <circle cx={x} cy={yNo} r="4" fill="#F5A623" />
+                          <circle cx={x} cy={yNo} r="4" fill="#FF6B00" />
                           <text
                             x={x - 14}
                             y={198}
@@ -540,7 +540,7 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                     <span className="text-[#53b3d4]">
                       ● YES: {metrics.yesPriceEth.toFixed(6)} ETH ({metrics.yesMultiplier.toFixed(1)}x)
                     </span>
-                    <span className="text-[#F5A623]">
+                    <span className="text-[#FF6B00]">
                       ● NO: {metrics.noPriceEth.toFixed(6)} ETH ({metrics.noMultiplier.toFixed(1)}x)
                     </span>
                   </div>
@@ -619,7 +619,7 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                         />
                         <div
                           style={{ width: `${100 - yesBuyPressurePct}%` }}
-                          className="bg-amber-500/60"
+                          className="bg-[#FF6B00]/60"
                         />
                       </div>
                       <div className="mt-1.5 flex justify-between font-mono text-[10px] text-[#8c8c9e]">
@@ -630,13 +630,13 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
 
                     <div className="rounded-xl border border-[#232330] bg-[#0e0e14] p-3">
                       <div className="mb-1 flex justify-between font-mono text-[11px]">
-                        <span className="font-bold text-[#F5A623]">NO BUY/SELL PRESSURE</span>
+                        <span className="font-bold text-[#FF6B00]">NO BUY/SELL PRESSURE</span>
                         <span className="text-white">{noBuyPressurePct.toFixed(0)}% Buy</span>
                       </div>
                       <div className="flex h-2 w-full overflow-hidden rounded-full bg-[#252533]">
                         <div
                           style={{ width: `${noBuyPressurePct}%` }}
-                          className="bg-[#F5A623]"
+                          className="bg-[#FF6B00]"
                         />
                         <div
                           style={{ width: `${100 - noBuyPressurePct}%` }}
@@ -674,7 +674,7 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                               className={`rounded px-1.5 py-0.2 text-[10px] font-bold ${
                                 h.side === 'YES'
                                   ? 'bg-[#227c9d]/20 text-[#53b3d4]'
-                                  : 'bg-[#F5A623]/20 text-[#F5A623]'
+                                  : 'bg-[#FF6B00]/20 text-[#FF6B00]'
                               }`}
                             >
                               {h.side}
@@ -712,10 +712,10 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-[#F5A623]/25 bg-[#F5A623]/5 p-3.5">
+              <div className="rounded-2xl border border-[#FF6B00]/25 bg-[#FF6B00]/5 p-3.5">
                 <div className="mb-1 flex items-center justify-between">
-                  <span className="text-xs font-bold text-[#F5A623]">NO CURVE</span>
-                  <span className="font-mono text-xs font-bold text-[#F5A623]">
+                  <span className="text-xs font-bold text-[#FF6B00]">NO CURVE</span>
+                  <span className="font-mono text-xs font-bold text-[#FF6B00]">
                     {metrics.noMultiplier.toFixed(1)}x
                   </span>
                 </div>
@@ -726,7 +726,7 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                   </div>
                   <div className="flex justify-between">
                     <span className="text-[#8c8c9e]">Real Reserve:</span>
-                    <span className="text-[#F5A623]">{market.noCurve.realEth.toFixed(3)} ETH</span>
+                    <span className="text-[#FF6B00]">{market.noCurve.realEth.toFixed(3)} ETH</span>
                   </div>
                 </div>
               </div>
@@ -794,7 +794,7 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                             className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
                               c.side === 'YES'
                                 ? 'bg-[#227c9d]/20 text-[#53b3d4]'
-                                : 'bg-[#F5A623]/20 text-amber-300'
+                                : 'bg-[#FF6B00]/20 text-orange-300'
                             }`}
                           >
                             {c.side} ({(c.sharesHeld / 1000).toFixed(1)}k)
@@ -926,13 +926,13 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                     onClick={() => setSelectedSide('NO')}
                     className={`flex flex-col rounded-2xl border p-3.5 text-left transition ${
                       selectedSide === 'NO'
-                        ? 'border-[#F5A623] bg-[#F5A623]/20 shadow-md'
+                        ? 'border-[#FF6B00] bg-[#FF6B00]/20 shadow-md'
                         : 'border-[#232330] bg-[#0e0e14] opacity-70 hover:opacity-100'
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-base font-black text-[#F5A623]">No</span>
-                      <span className="font-mono text-xs font-bold text-[#F5A623]">
+                      <span className="text-base font-black text-[#FF6B00]">No</span>
+                      <span className="font-mono text-xs font-bold text-[#FF6B00]">
                         {metrics.noSentimentPct.toFixed(1)}%
                       </span>
                     </div>
@@ -1029,7 +1029,7 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                     <span className="text-[#8c8c9e]">Impact:</span>
                     <span
                       className={
-                        quote.priceImpactPct >= 0 ? 'text-[#53b3d4]' : 'text-[#F5A623]'
+                        quote.priceImpactPct >= 0 ? 'text-[#53b3d4]' : 'text-[#FF6B00]'
                       }
                     >
                       {quote.priceImpactPct >= 0 ? '+' : ''}
@@ -1039,7 +1039,7 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
 
                   <div className="flex justify-between border-t border-[#232330] pt-1.5 text-[11px]">
                     <span className="text-[#8c8c9e]">Fee (1% Creator / 1% Protocol):</span>
-                    <span className="text-amber-300">{quote.totalFeeEth.toFixed(5)} ETH</span>
+                    <span className="text-orange-300">{quote.totalFeeEth.toFixed(5)} ETH</span>
                   </div>
                 </div>
 
@@ -1061,7 +1061,7 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                   className={`w-full rounded-2xl py-3.5 text-sm font-extrabold uppercase tracking-wider text-white shadow-md transition hover:brightness-110 active:scale-[0.99] disabled:opacity-50 ${
                     selectedSide === 'YES'
                       ? 'bg-[#227c9d] hover:bg-[#1a647f]'
-                      : 'bg-[#F5A623] hover:bg-[#e49717] text-black'
+                      : 'bg-[#FF6B00] hover:bg-[#EA580C] text-black'
                   }`}
                 >
                   {txStatus === 'SIMULATING' || txStatus === 'SIGNING'

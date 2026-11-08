@@ -1,4 +1,4 @@
-// Live Database, Storage & On-Chain Synchronization Service for Nullhood
+// Live Database, Storage & On-Chain Synchronization Service for Tired.Fun
 // Provides live persistence for markets, trades, snapshots, and comments,
 // with direct on-chain contract synchronization on Robinhood Chain (Chain ID 46630)
 
@@ -28,7 +28,7 @@ const STORAGE_KEYS = {
 
 const DEFAULT_LIKES: Record<number, { count: number; liked: boolean }> = {};
 
-export class NullhoodDatabaseService {
+export class TiredFunDatabaseService {
   /**
    * Save markets to persistent local database
    */
@@ -526,4 +526,4 @@ export class NullhoodDatabaseService {
   }
 }
 
-export const dbService = new NullhoodDatabaseService();
+export const dbService = new TiredFunDatabaseService();

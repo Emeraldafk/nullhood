@@ -17,12 +17,14 @@ import {
 } from '../config/robinhoodChain';
 import { UserProfile } from '../lib/userProfileService';
 
-export type NullhoodNavTab =
+export type TiredFunNavTab =
   | 'feed'
   | 'pulse'
   | 'reputation'
   | 'portfolio'
   | 'how-it-works';
+
+export type NullhoodNavTab = TiredFunNavTab;
 
 interface NavbarProps {
   walletAddress: string | null;
@@ -31,8 +33,8 @@ interface NavbarProps {
   claimableCreatorFees: number;
   contractAddress: string;
   isLiveOnChainMode: boolean;
-  activeTab: NullhoodNavTab;
-  setActiveTab: (tab: NullhoodNavTab) => void;
+  activeTab: TiredFunNavTab;
+  setActiveTab: (tab: TiredFunNavTab) => void;
   onConnectWallet: () => void;
   onSwitchNetwork: () => void;
   onOpenCreateModal: () => void;
@@ -60,13 +62,13 @@ export const Navbar: React.FC<NavbarProps> = ({
   return (
     <header className="sticky top-0 z-40 w-full border-b border-[#21212c] bg-[#0c0c11]/95 backdrop-blur-xl">
       <div className="flex w-full items-center justify-between px-4 sm:px-8 lg:px-10 xl:px-14 py-3.5">
-        {/* Left: Brand Logo + Primary Nullhood tabs */}
+        {/* Left: Brand Logo + Primary Tired.Fun tabs */}
         <div className="flex items-center gap-8 lg:gap-12">
           <button
             onClick={() => setActiveTab('feed')}
             className="flex items-center gap-2.5 text-left focus:outline-none group"
           >
-            {/* Nullhood flame icon in signature #227c9d */}
+            {/* Tired.Fun flame icon in signature #227c9d */}
             <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-[#227c9d] text-white shadow-md transition-transform group-hover:scale-105 font-fun text-xl">
               <Flame className="h-5 w-5 fill-white" />
             </div>
@@ -82,7 +84,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           </button>
 
-          {/* Primary Nullhood tabs */}
+          {/* Primary Tired.Fun tabs */}
           <nav className="hidden items-center gap-2 lg:gap-2.5 md:flex">
             <button
               onClick={() => setActiveTab('feed')}
@@ -169,7 +171,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           ) : !isRobinhoodChain ? (
             <button
               onClick={onSwitchNetwork}
-              className="rounded-full bg-amber-500 px-3.5 py-1.5 text-xs font-bold text-black hover:bg-amber-400"
+              className="rounded-full bg-[#FF6B00] px-3.5 py-1.5 text-xs font-bold text-black hover:bg-[#FF6B00]"
             >
               Switch to 46630
             </button>

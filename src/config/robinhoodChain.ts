@@ -5,7 +5,8 @@ export const ROBINHOOD_CHAIN_HEX = '0xb626';
 export const ROBINHOOD_RPC_URL = 'https://rpc.testnet.chain.robinhood.com';
 export const ROBINHOOD_EXPLORER_URL = 'https://explorer.testnet.chain.robinhood.com';
 export const ROBINHOOD_FAUCET_URL = 'https://faucet.testnet.chain.robinhood.com';
-export const DEFAULT_NULLHOOD_CONTRACT_ADDRESS = '0xa21b125556895273960730d9dea52c2082b2ccd2';
+export const DEFAULT_TIRED_FUN_CONTRACT_ADDRESS = '0xa21b125556895273960730d9dea52c2082b2ccd2';
+export const DEFAULT_NULLHOOD_CONTRACT_ADDRESS = DEFAULT_TIRED_FUN_CONTRACT_ADDRESS;
 
 export const robinhoodTestnet = defineChain({
   id: ROBINHOOD_CHAIN_ID,

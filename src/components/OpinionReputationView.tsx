@@ -72,7 +72,7 @@ export const OpinionReputationView: React.FC<OpinionReputationViewProps> = ({
               Verifiable Conviction & Curation Standing
             </h2>
             <p className="mt-1.5 text-xs leading-relaxed text-slate-300">
-              Because Nullhood markets measure perpetual collective conviction rather than binary
+              Because Tired.Fun markets measure perpetual collective conviction rather than binary
               oracle outcomes, <strong className="text-white">Reputation never equates trading profit with truth</strong>.
               Scores are computed deterministically from four logarithmic pillars that cap whale
               wash-trading and require active curve stake for discussion weight:
@@ -98,7 +98,7 @@ export const OpinionReputationView: React.FC<OpinionReputationViewProps> = ({
         {/* Left Column: Community Reputation Directory */}
         <div className="space-y-3 lg:col-span-5">
           <h3 className="text-xs font-fun font-bold uppercase tracking-wider text-slate-300">
-            Nullhood Reputation Directory ({profiles.length} Profiles)
+            Tired.Fun Reputation Directory ({profiles.length} Profiles)
           </h3>
 
           <div className="space-y-2.5">
@@ -262,7 +262,7 @@ export const OpinionReputationView: React.FC<OpinionReputationViewProps> = ({
                   <div className="rounded-2xl border border-[#232330] bg-[#0f1015] p-3.5">
                     <div className="mb-1.5 flex justify-between text-xs">
                       <span className="text-slate-400 font-sans">Backed Discourse (Max 200)</span>
-                      <span className="font-mono font-bold text-[#F5A623]">
+                      <span className="font-mono font-bold text-[#FF6B00]">
                         {activeProfile.breakdown.discourseScore} pts
                       </span>
                     </div>
@@ -271,7 +271,7 @@ export const OpinionReputationView: React.FC<OpinionReputationViewProps> = ({
                         style={{
                           width: `${(activeProfile.breakdown.discourseScore / 200) * 100}%`,
                         }}
-                        className="h-full bg-[#F5A623] rounded-full"
+                        className="h-full bg-[#FF6B00] rounded-full"
                       />
                     </div>
                   </div>
@@ -279,7 +279,7 @@ export const OpinionReputationView: React.FC<OpinionReputationViewProps> = ({
                   <div className="rounded-2xl border border-[#232330] bg-[#0f1015] p-3.5">
                     <div className="mb-1.5 flex justify-between text-xs">
                       <span className="text-slate-400 font-sans">Curve Participation (Max 150)</span>
-                      <span className="font-mono font-bold text-amber-300">
+                      <span className="font-mono font-bold text-orange-300">
                         {activeProfile.breakdown.volumeParticipationScore} pts
                       </span>
                     </div>
@@ -321,7 +321,7 @@ export const OpinionReputationView: React.FC<OpinionReputationViewProps> = ({
                   <span className="text-[10px] font-fun font-bold uppercase text-slate-400">
                     Creator Fees Earned
                   </span>
-                  <div className="mt-1 font-fun text-xl font-bold text-[#F5A623]">
+                  <div className="mt-1 font-fun text-xl font-bold text-[#FF6B00]">
                     {activeProfile.creatorFeesEarnedEth.toFixed(3)} ETH
                   </div>
                 </div>
@@ -368,7 +368,7 @@ export const OpinionReputationView: React.FC<OpinionReputationViewProps> = ({
                             <ExternalLink className="h-2.5 w-2.5" />
                           </a>
                         ) : (
-                          <span className="text-amber-300/80">Platform Record</span>
+                          <span className="text-orange-300/80">Platform Record</span>
                         )}
                       </div>
                     </div>

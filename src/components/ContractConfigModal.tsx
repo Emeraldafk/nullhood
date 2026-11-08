@@ -143,14 +143,14 @@ export const ContractConfigModal: React.FC<ContractConfigModalProps> = ({
             className={`rounded-2xl border p-4 ${
               isLiveOnChainMode
                 ? 'border-[#227c9d]/40 bg-[#227c9d]/15 text-[#53b3d4]'
-                : 'border-amber-400/40 bg-amber-500/15 text-amber-300'
+                : 'border-[#FF6B00]/40 bg-[#FF6B00]/15 text-orange-300'
             }`}
           >
             <div className="flex items-center gap-2 font-fun font-bold text-sm">
               {isLiveOnChainMode ? (
                 <ShieldCheck className="h-4 w-4 shrink-0 text-[#227c9d]" />
               ) : (
-                <AlertTriangle className="h-4 w-4 shrink-0 text-amber-400" />
+                <AlertTriangle className="h-4 w-4 shrink-0 text-[#FF6B00]" />
               )}
               <span>
                 {isLiveOnChainMode
@@ -214,7 +214,7 @@ export const ContractConfigModal: React.FC<ContractConfigModalProps> = ({
                 href={ROBINHOOD_FAUCET_URL}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1 text-[#F5A623] hover:underline"
+                className="inline-flex items-center gap-1 text-[#FF6B00] hover:underline"
               >
                 <span>faucet.testnet.chain.robinhood.com</span>
                 <ExternalLink className="h-3 w-3" />
@@ -227,13 +227,13 @@ export const ContractConfigModal: React.FC<ContractConfigModalProps> = ({
             <div>
               <div className="mb-1.5 flex items-center justify-between">
                 <label className="font-fun font-bold uppercase tracking-wider text-slate-300">
-                  `NullhoodMarkets.sol` Contract Address
+                  `Tired.FunMarkets.sol` Contract Address
                 </label>
                 {inputAddr && (
                   <button
                     type="button"
                     onClick={() => setInputAddr('')}
-                    className="font-fun text-xs text-amber-300 hover:underline"
+                    className="font-fun text-xs text-orange-300 hover:underline"
                   >
                     Switch to Sandbox Mode
                   </button>
@@ -258,7 +258,7 @@ export const ContractConfigModal: React.FC<ContractConfigModalProps> = ({
                 <span className="font-mono text-[10px] text-slate-400">Via Connected Wallet</span>
               </div>
               <p className="mb-3 text-xs text-slate-300">
-                Deploys audited `NullhoodMarkets.sol` bytecode directly to Robinhood Chain Testnet
+                Deploys audited `Tired.FunMarkets.sol` bytecode directly to Robinhood Chain Testnet
                 using your connected wallet. Requires testnet ETH from the faucet.
               </p>
               <button

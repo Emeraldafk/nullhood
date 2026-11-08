@@ -1,4 +1,4 @@
-// IPFS & Decentralized Content Pinning Service for Nullhood
+// IPFS & Decentralized Content Pinning Service for Tired.Fun
 // Provides cryptographic hashing and IPFS CID generation for market media and metadata
 
 export interface IpfsUploadResult {

@@ -21,7 +21,7 @@ interface MarketCardProps {
 
 function getAvatarGradient(name: string): string {
   const gradients = [
-    'from-amber-400 to-orange-500',
+    'from-[#FF6B00] to-orange-500',
     'from-teal-400 to-emerald-600',
     'from-sky-400 to-blue-600',
     'from-rose-400 to-pink-600',
@@ -87,7 +87,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent md:bg-gradient-to-r md:from-transparent md:to-black/50" />
 
           {/* Highlight Badge */}
-          <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-black uppercase tracking-wider text-[#F5A623] backdrop-blur-md border border-[#F5A623]/30 shadow-md">
+          <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-black uppercase tracking-wider text-[#FF6B00] backdrop-blur-md border border-[#FF6B00]/30 shadow-md">
             <span>🔥</span>
             <span>Trending Highlight</span>
           </div>
@@ -176,7 +176,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                   e.stopPropagation();
                   onSelect(market, 'NO');
                 }}
-                className="flex items-center justify-center rounded-[14px] bg-[#F5A623] py-3 text-sm font-extrabold text-[#111116] shadow-sm transition hover:bg-[#e49717] active:scale-[0.98]"
+                className="flex items-center justify-center rounded-[14px] bg-[#FF6B00] py-3 text-sm font-extrabold text-[#111116] shadow-sm transition hover:bg-[#EA580C] active:scale-[0.98]"
               >
                 No
               </button>
@@ -193,7 +193,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
 
               <div className="mt-1 flex items-center justify-between font-mono text-[11px] font-semibold text-[#8c8c9e]">
                 <span className="text-[#53b3d4]">{yesSentimentPct.toFixed(1)}% YES</span>
-                <span className="text-[#F5A623]">{noSentimentPct.toFixed(1)}% NO</span>
+                <span className="text-[#FF6B00]">{noSentimentPct.toFixed(1)}% NO</span>
               </div>
             </div>
           </div>
@@ -275,7 +275,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                 e.stopPropagation();
                 onSelect(market, 'NO');
               }}
-              className="flex items-center justify-center rounded-[14px] bg-[#F5A623] py-2.5 text-sm font-extrabold text-[#111116] shadow-sm transition hover:bg-[#e49717] active:scale-[0.98]"
+              className="flex items-center justify-center rounded-[14px] bg-[#FF6B00] py-2.5 text-sm font-extrabold text-[#111116] shadow-sm transition hover:bg-[#EA580C] active:scale-[0.98]"
             >
               No
             </button>
@@ -292,7 +292,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
 
             <div className="mt-1 flex items-center justify-between font-mono text-[11px] font-semibold text-[#8c8c9e]">
               <span className="text-[#53b3d4]">{yesSentimentPct.toFixed(1)}% YES</span>
-              <span className="text-[#F5A623]">{noSentimentPct.toFixed(1)}% NO</span>
+              <span className="text-[#FF6B00]">{noSentimentPct.toFixed(1)}% NO</span>
             </div>
           </div>
         </div>
@@ -410,7 +410,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                   e.stopPropagation();
                   onSelect(market, 'NO');
                 }}
-                className="flex items-center justify-center rounded-[14px] bg-[#F5A623] py-2.5 text-sm font-extrabold text-[#111116] shadow-sm transition hover:bg-[#e49717] active:scale-[0.98]"
+                className="flex items-center justify-center rounded-[14px] bg-[#FF6B00] py-2.5 text-sm font-extrabold text-[#111116] shadow-sm transition hover:bg-[#EA580C] active:scale-[0.98]"
               >
                 No
               </button>
@@ -427,7 +427,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
 
               <div className="mt-1 flex items-center justify-between font-mono text-[11px] font-semibold text-[#8c8c9e]">
                 <span className="text-[#53b3d4]">{yesSentimentPct.toFixed(1)}% YES</span>
-                <span className="text-[#F5A623]">{noSentimentPct.toFixed(1)}% NO</span>
+                <span className="text-[#FF6B00]">{noSentimentPct.toFixed(1)}% NO</span>
               </div>
             </div>
           </div>

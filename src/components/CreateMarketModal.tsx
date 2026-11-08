@@ -65,7 +65,7 @@ export const CreateMarketModal: React.FC<CreateMarketModalProps> = ({
 }) => {
   const [question, setQuestion] = useState('');
   const [category, setCategory] = useState<Exclude<MarketCategory, 'All'>>('Robinhood');
-  const [sourceHandle, setSourceHandle] = useState('@nullhood_xyz');
+  const [sourceHandle, setSourceHandle] = useState('@TheTiredFun');
   const [imageUri, setImageUri] = useState(PRESET_COVERS[0].url);
   const [initialSideIsYes, setInitialSideIsYes] = useState(true);
   const [initialBuyEth, setInitialBuyEth] = useState('0.001');
@@ -88,7 +88,7 @@ export const CreateMarketModal: React.FC<CreateMarketModalProps> = ({
         question: question.trim(),
         category,
         imageUri: imageUri.trim() || PRESET_COVERS[0].url,
-        sourceHandle: sourceHandle.trim() || '@nullhood_xyz',
+        sourceHandle: sourceHandle.trim() || '@TheTiredFun',
         initialSideIsYes,
         initialBuyEth: parseFloat(initialBuyEth) || 0,
       });
@@ -237,7 +237,7 @@ export const CreateMarketModal: React.FC<CreateMarketModalProps> = ({
                 onClick={() => setInitialSideIsYes(false)}
                 className={`rounded-xl border py-2.5 text-xs font-black transition ${
                   !initialSideIsYes
-                    ? 'border-[#F5A623] bg-[#F5A623] text-black shadow-sm'
+                    ? 'border-[#FF6B00] bg-[#FF6B00] text-black shadow-sm'
                     : 'border-[#232330] bg-[#0c0c11] text-[#8c8c9e]'
                 }`}
               >
@@ -261,8 +261,8 @@ export const CreateMarketModal: React.FC<CreateMarketModalProps> = ({
           </div>
 
           {/* Creator Reward Note */}
-          <div className="flex items-center gap-2.5 rounded-2xl border border-[#F5A623]/30 bg-[#F5A623]/10 p-3 text-xs text-amber-300">
-            <Coins className="h-4 w-4 shrink-0 text-[#F5A623]" />
+          <div className="flex items-center gap-2.5 rounded-2xl border border-[#FF6B00]/30 bg-[#FF6B00]/10 p-3 text-xs text-orange-300">
+            <Coins className="h-4 w-4 shrink-0 text-[#FF6B00]" />
             <span>
               You earn <strong>1.00% ETH</strong> on every trade across both curves for the
               lifetime of this market.
@@ -273,7 +273,7 @@ export const CreateMarketModal: React.FC<CreateMarketModalProps> = ({
           <div className="flex items-center gap-2.5 rounded-2xl border border-[#227c9d]/30 bg-[#227c9d]/10 p-3 text-xs text-[#53b3d4]">
             <ShieldCheck className="h-4 w-4 shrink-0 text-[#227c9d]" />
             <span>
-              <strong>30-Min Anti-Rug Lock:</strong> Initial creator seed positions are locked in <code className="font-mono text-white">NullhoodMarkets.sol</code> for 30 minutes to prevent frontrunning.
+              <strong>30-Min Anti-Rug Lock:</strong> Initial creator seed positions are locked in <code className="font-mono text-white">Tired.FunMarkets.sol</code> for 30 minutes to prevent frontrunning.
             </span>
           </div>
 

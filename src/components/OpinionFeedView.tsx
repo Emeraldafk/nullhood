@@ -42,7 +42,7 @@ interface OpinionFeedViewProps {
 
 function getAvatarGradient(name: string): string {
   const gradients = [
-    'from-amber-400 to-orange-500',
+    'from-[#FF6B00] to-orange-500',
     'from-teal-400 to-emerald-600',
     'from-sky-400 to-blue-600',
     'from-rose-400 to-pink-600',
@@ -336,7 +336,7 @@ export const OpinionFeedView: React.FC<OpinionFeedViewProps> = ({
                         onClick={() => setNewOpinionSide('NO')}
                         className={`rounded-full px-3 py-1 text-[11px] font-extrabold transition ${
                           newOpinionSide === 'NO'
-                            ? 'bg-[#F5A623] text-[#111116]'
+                            ? 'bg-[#FF6B00] text-[#111116]'
                             : 'text-[#8c8c9e] hover:text-white'
                         }`}
                       >
@@ -549,7 +549,7 @@ export const OpinionFeedView: React.FC<OpinionFeedViewProps> = ({
                       <button
                         type="button"
                         onClick={() => handleVote(market.id, false)}
-                        className="flex items-center justify-center gap-1.5 rounded-[14px] bg-[#F5A623] py-2.5 text-sm font-extrabold text-[#111116] shadow-sm transition hover:bg-[#e49717] active:scale-[0.98]"
+                        className="flex items-center justify-center gap-1.5 rounded-[14px] bg-[#FF6B00] py-2.5 text-sm font-extrabold text-[#111116] shadow-sm transition hover:bg-[#EA580C] active:scale-[0.98]"
                       >
                         <span>Vote NO</span>
                       </button>
@@ -573,7 +573,7 @@ export const OpinionFeedView: React.FC<OpinionFeedViewProps> = ({
 
                       <div className="mt-1 flex items-center justify-between font-mono text-[11px] font-semibold text-[#8c8c9e]">
                         <span className="text-[#53b3d4]">{yesSentimentPct.toFixed(1)}% YES</span>
-                        <span className="text-[#F5A623]">{noSentimentPct.toFixed(1)}% NO</span>
+                        <span className="text-[#FF6B00]">{noSentimentPct.toFixed(1)}% NO</span>
                       </div>
                     </div>
                   </div>
@@ -769,7 +769,7 @@ export const OpinionFeedView: React.FC<OpinionFeedViewProps> = ({
                                         className={`rounded px-1.5 py-0.5 text-[9px] font-bold ${
                                           c.side === 'YES'
                                             ? 'bg-[#227c9d]/20 text-[#53b3d4]'
-                                            : 'bg-[#F5A623]/20 text-[#F5A623]'
+                                            : 'bg-[#FF6B00]/20 text-[#FF6B00]'
                                         }`}
                                       >
                                         {c.side} HOLDER
@@ -829,7 +829,7 @@ export const OpinionFeedView: React.FC<OpinionFeedViewProps> = ({
           {/* WHAT'S HAPPENING BOX (Dynamic from Live Opinions) */}
           <div className="rounded-[24px] border border-[#232332] bg-[#14141c] p-5 shadow-lg">
             <h3 className="font-fun text-lg font-black text-white mb-4 flex items-center gap-2">
-              <Flame className="h-4 w-4 text-[#F5A623]" />
+              <Flame className="h-4 w-4 text-[#FF6B00]" />
               <span>What's happening</span>
             </h3>
 
