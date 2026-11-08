@@ -68,16 +68,16 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={() => setActiveTab('feed')}
             className="flex items-center gap-2.5 text-left focus:outline-none group"
           >
-            {/* Tired.Fun flame icon in signature #227c9d */}
-            <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-[#227c9d] text-white shadow-md transition-transform group-hover:scale-105 font-fun text-xl">
+            {/* Tired.Fun flame icon in signature Orange */}
+            <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-[#FF6B00] text-white shadow-md shadow-[#FF6B00]/25 transition-transform group-hover:scale-105 font-fun text-xl">
               <Flame className="h-5 w-5 fill-white" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-fun text-2xl font-black tracking-tight text-white">
-                  null<span className="text-[#227c9d]">hood</span>
+                  Tired<span className="text-[#FF6B00]">.Fun</span>
                 </span>
-                <span className="hidden rounded-full border border-[#227c9d]/30 bg-[#227c9d]/10 px-2 py-0.5 font-mono text-[10px] font-bold text-[#53b3d4] lg:inline-block">
+                <span className="hidden rounded-full border border-[#FF6B00]/30 bg-[#FF6B00]/10 px-2 py-0.5 font-mono text-[10px] font-bold text-[#FF8A33] lg:inline-block">
                   ROBINHOOD CHAIN • 46630
                 </span>
               </div>
@@ -171,7 +171,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           ) : !isRobinhoodChain ? (
             <button
               onClick={onSwitchNetwork}
-              className="rounded-full bg-[#FF6B00] px-3.5 py-1.5 text-xs font-bold text-black hover:bg-[#FF6B00]"
+              className="rounded-full bg-[#FF6B00] px-3.5 py-1.5 text-xs font-bold text-white hover:bg-[#EA580C] transition shadow-sm"
             >
               Switch to 46630
             </button>
