@@ -77,8 +77,8 @@ export const ConnectWalletModal: React.FC<ConnectWalletModalProps> = ({
           </div>
 
           {/* Prompt reason callout banner */}
-          <div className="mt-3.5 flex items-center gap-2 rounded-xl border border-[#227c9d]/30 bg-[#227c9d]/10 px-3 py-2 text-xs text-[#53b3d4]">
-            <Sparkles className="h-4 w-4 shrink-0 text-[#227c9d]" />
+          <div className="mt-3.5 flex items-center gap-2 rounded-xl border border-[#FF6B00]/30 bg-[#FF6B00]/10 px-3 py-2 text-xs text-[#FF8A33]">
+            <Sparkles className="h-4 w-4 shrink-0 text-[#FF6B00]" />
             <span>
               Connect your wallet to proceed with <strong>{pendingActionTitle}</strong> on Robinhood Chain.
             </span>
@@ -102,14 +102,14 @@ export const ConnectWalletModal: React.FC<ConnectWalletModalProps> = ({
             type="button"
             disabled={isConnecting}
             onClick={() => handleConnect('MetaMask')}
-            className="group flex w-full items-center justify-between rounded-2xl border border-[#232332] bg-[#161622] p-3.5 transition-all hover:border-[#227c9d] hover:bg-[#1b1c2b] active:scale-[0.99] disabled:opacity-60"
+            className="group flex w-full items-center justify-between rounded-2xl border border-[#232332] bg-[#161622] p-3.5 transition-all hover:border-[#FF6B00] hover:bg-[#1b1c2b] active:scale-[0.99] disabled:opacity-60"
           >
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#e2761b]/15 text-[#e2761b] font-bold text-lg">
                 🦊
               </div>
               <div className="text-left">
-                <div className="flex items-center gap-2 font-fun text-sm font-bold text-white group-hover:text-[#53b3d4]">
+                <div className="flex items-center gap-2 font-fun text-sm font-bold text-white group-hover:text-[#FF8A33]">
                   <span>MetaMask</span>
                   {hasInjected && (
                     <span className="rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 font-mono text-[9px] font-bold text-emerald-400">
@@ -129,16 +129,16 @@ export const ConnectWalletModal: React.FC<ConnectWalletModalProps> = ({
             type="button"
             disabled={isConnecting}
             onClick={() => handleConnect('Rabby Wallet')}
-            className="group flex w-full items-center justify-between rounded-2xl border border-[#232332] bg-[#161622] p-3.5 transition-all hover:border-[#227c9d] hover:bg-[#1b1c2b] active:scale-[0.99] disabled:opacity-60"
+            className="group flex w-full items-center justify-between rounded-2xl border border-[#232332] bg-[#161622] p-3.5 transition-all hover:border-[#FF6B00] hover:bg-[#1b1c2b] active:scale-[0.99] disabled:opacity-60"
           >
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-500/15 text-indigo-400 font-bold text-lg">
                 🐰
               </div>
               <div className="text-left">
-                <div className="flex items-center gap-2 font-fun text-sm font-bold text-white group-hover:text-[#53b3d4]">
+                <div className="flex items-center gap-2 font-fun text-sm font-bold text-white group-hover:text-[#FF8A33]">
                   <span>Rabby Wallet</span>
-                  <span className="rounded-full bg-[#227c9d]/15 border border-[#227c9d]/30 px-2 py-0.5 font-mono text-[9px] font-bold text-[#53b3d4]">
+                  <span className="rounded-full bg-[#FF6B00]/15 border border-[#FF6B00]/30 px-2 py-0.5 font-mono text-[9px] font-bold text-[#FF8A33]">
                     Popular
                   </span>
                 </div>
@@ -154,14 +154,14 @@ export const ConnectWalletModal: React.FC<ConnectWalletModalProps> = ({
             type="button"
             disabled={isConnecting}
             onClick={() => handleConnect('Coinbase Wallet')}
-            className="group flex w-full items-center justify-between rounded-2xl border border-[#232332] bg-[#161622] p-3.5 transition-all hover:border-[#227c9d] hover:bg-[#1b1c2b] active:scale-[0.99] disabled:opacity-60"
+            className="group flex w-full items-center justify-between rounded-2xl border border-[#232332] bg-[#161622] p-3.5 transition-all hover:border-[#FF6B00] hover:bg-[#1b1c2b] active:scale-[0.99] disabled:opacity-60"
           >
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-500/15 text-blue-400 font-bold text-lg">
                 🔵
               </div>
               <div className="text-left">
-                <div className="font-fun text-sm font-bold text-white group-hover:text-[#53b3d4]">
+                <div className="font-fun text-sm font-bold text-white group-hover:text-[#FF8A33]">
                   Coinbase Wallet
                 </div>
                 <p className="text-[11px] text-[#7a7a8c]">Smart wallet or mobile scan</p>
@@ -176,14 +176,14 @@ export const ConnectWalletModal: React.FC<ConnectWalletModalProps> = ({
             type="button"
             disabled={isConnecting}
             onClick={() => handleConnect('Browser Wallet')}
-            className="group flex w-full items-center justify-between rounded-2xl border border-[#232332] bg-[#161622] p-3.5 transition-all hover:border-[#227c9d] hover:bg-[#1b1c2b] active:scale-[0.99] disabled:opacity-60"
+            className="group flex w-full items-center justify-between rounded-2xl border border-[#232332] bg-[#161622] p-3.5 transition-all hover:border-[#FF6B00] hover:bg-[#1b1c2b] active:scale-[0.99] disabled:opacity-60"
           >
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400 font-bold text-lg">
                 ⚡
               </div>
               <div className="text-left">
-                <div className="font-fun text-sm font-bold text-white group-hover:text-[#53b3d4]">
+                <div className="font-fun text-sm font-bold text-white group-hover:text-[#FF8A33]">
                   Injected EVM Provider
                 </div>
                 <p className="text-[11px] text-[#7a7a8c]">Brave, OKX, Rainbow, or any web3 wallet</p>

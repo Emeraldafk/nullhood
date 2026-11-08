@@ -860,7 +860,7 @@ export function App() {
                       onClick={() => setSelectedCategory(cat.id)}
                       className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold transition whitespace-nowrap ${
                         isSelected
-                          ? 'bg-[#227c9d] text-white shadow-sm ring-1 ring-[#53b3d4]/30'
+                          ? 'bg-[#FF6B00] text-white shadow-sm ring-1 ring-[#FF8A33]/30'
                           : 'bg-[#15151e] text-[#8c8c9e] hover:text-white hover:bg-[#20202c]'
                       }`}
                     >

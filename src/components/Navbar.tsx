@@ -90,7 +90,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => setActiveTab('feed')}
               className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-xs lg:text-sm font-bold transition-all ${
                 activeTab === 'feed'
-                  ? 'bg-[#227c9d] text-white shadow-sm'
+                  ? 'bg-[#FF6B00] text-white shadow-sm shadow-[#FF6B00]/25'
                   : 'text-[#8c8c9e] hover:text-white hover:bg-[#1a1a24]'
               }`}
             >
@@ -102,7 +102,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => setActiveTab('pulse')}
               className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-xs lg:text-sm font-bold transition-all ${
                 activeTab === 'pulse'
-                  ? 'bg-[#227c9d] text-white shadow-sm'
+                  ? 'bg-[#FF6B00] text-white shadow-sm shadow-[#FF6B00]/25'
                   : 'text-[#8c8c9e] hover:text-white hover:bg-[#1a1a24]'
               }`}
             >
@@ -114,7 +114,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => setActiveTab('reputation')}
               className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-xs lg:text-sm font-bold transition-all ${
                 activeTab === 'reputation'
-                  ? 'bg-[#227c9d] text-white shadow-sm'
+                  ? 'bg-[#FF6B00] text-white shadow-sm shadow-[#FF6B00]/25'
                   : 'text-[#8c8c9e] hover:text-white hover:bg-[#1a1a24]'
               }`}
             >
@@ -126,7 +126,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => setActiveTab('portfolio')}
               className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-xs lg:text-sm font-bold transition-all ${
                 activeTab === 'portfolio'
-                  ? 'bg-[#227c9d] text-white shadow-sm'
+                  ? 'bg-[#FF6B00] text-white shadow-sm shadow-[#FF6B00]/25'
                   : 'text-[#8c8c9e] hover:text-white hover:bg-[#1a1a24]'
               }`}
             >
@@ -138,7 +138,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => setActiveTab('how-it-works')}
               className={`rounded-full px-3 py-1.5 text-xs font-bold transition-all ${
                 activeTab === 'how-it-works'
-                  ? 'bg-[#227c9d] text-white shadow-sm'
+                  ? 'bg-[#FF6B00] text-white shadow-sm shadow-[#FF6B00]/25'
                   : 'text-[#8c8c9e] hover:text-white hover:bg-[#1a1a24]'
               }`}
             >
@@ -163,7 +163,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {!walletAddress ? (
             <button
               onClick={onConnectWallet}
-              className="flex items-center gap-1.5 rounded-full bg-[#227c9d] px-5 py-2 text-xs lg:text-sm font-extrabold text-white shadow-sm transition hover:bg-[#1a647f] active:scale-95"
+              className="flex items-center gap-1.5 rounded-full bg-[#FF6B00] px-5 py-2 text-xs lg:text-sm font-extrabold text-white shadow-md shadow-[#FF6B00]/25 transition hover:bg-[#EA580C] active:scale-95"
             >
               <Wallet className="h-3.5 w-3.5" />
               <span>Connect</span>
