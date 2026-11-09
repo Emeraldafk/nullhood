@@ -2,46 +2,92 @@
 pragma solidity ^0.8.20;
 
 /**
- * @title NullhoodMarkets (v2 — Audited & Hardened)
- * @notice Perpetual Opinion & Sentiment Markets on Robinhood Chain (Chain ID 46630).
- *         - Markets never resolve via an external oracle; they measure real-time collective conviction.
- *         - YES and NO sides trade on independent continuous constant-product bonding curves.
- *         - Virtual reserves (0.5 ETH per side) bootstrap pricing and can NEVER be withdrawn as real ETH.
- *         - O(1) global solvency invariant enforced on every buy, sell, and fee withdrawal.
- *         - Configurable fee split between Market Creators and Protocol Treasury (capped at 5% total).
- *         - Emergency pause circuit breaker, two-step ownership transfer, and paginated views.
+ * @title TiredFunMarkets (v3 — Hybrid Opinion & Prediction Market Engine)
+ * @notice Native hybrid market platform on Robinhood Chain (Chain ID 46630).
+ *         Supports two distinct market types:
+ *         1. PERPETUAL OPINION MARKETS (Type 0):
+ *            - Continuous 24/7 conviction trading on independent constant-product bonding curves.
+ *            - No expiry date and no mandatory resolution.
+ *         2. RESOLVABLE PREDICTION MARKETS (Type 1):
+ *            - Time-governed trading halting strictly at `closingTime`.
+ *            - Objective YES/NO criteria with approved evidence source.
+ *            - Evidence-based resolution lifecycle: ACTIVE -> CLOSED -> PROPOSED -> DISPUTED -> RESOLVED/VOID.
+ *            - Mathematically solvent Pari-Mutuel settlement distribution of actual real ETH reserves.
+ *            - Zero-winner fallback to VOID refunds to prevent trapped capital.
+ *            - 0% commission on settlement claims (1% creator fee earned exclusively on trading volume).
+ *         - Strict virtual reserve isolation ($E_v = 0.5$ ETH, $S_v = 500,000$ shares; never withdrawable).
+ *         - O(1) global solvency invariant enforced on every buy, sell, claim, and refund.
  */
 contract NullhoodMarkets {
     // -------------------------------------------------------------------------
     // Constants & Curve Parameters
     // -------------------------------------------------------------------------
     uint256 public constant BPS_DENOMINATOR = 10_000;
-    uint256 public constant CREATOR_FEE_BPS = 100; // Default 1.00% creator fee
-    uint256 public constant PROTOCOL_FEE_BPS = 100; // Default 1.00% protocol fee
-    uint256 public constant TOTAL_FEE_BPS = 200; // Default 2.00% total fee
-    uint256 public constant MAX_TOTAL_FEE_BPS = 500; // Hard cap: 5.00% maximum total fee
+    uint256 public constant CREATOR_FEE_BPS = 100; // 1.00% creator fee on trading volume
+    uint256 public constant PROTOCOL_FEE_BPS = 100; // 1.00% protocol fee on trading volume
+    uint256 public constant MAX_TOTAL_FEE_BPS = 500; // 5.00% hard cap
 
-    // Minimum trade size prevents dust-splitting fee-evasion attacks (< 100 wei)
-    uint256 public constant MIN_TRADE_ETH = 0.0001 ether; // 1e14 wei (100,000 gwei)
+    uint256 public constant MIN_TRADE_ETH = 0.0001 ether; // Anti-dust minimum trade guard
     uint256 public constant MAX_STRING_LENGTH = 512;
-    uint256 public constant CREATOR_SEED_LOCK_PERIOD = 30 minutes; // Anti-manipulation: creator initial seed locked 30 mins
+    uint256 public constant CREATOR_SEED_LOCK_PERIOD = 30 minutes; // Anti-rug lock on initial creator seed
 
-    // Each side (YES and NO) independently initializes with virtual reserves:
-    // Virtual ETH = 0.5 ETH, Virtual Shares = 500,000 shares (1e18 decimals)
-    // Initial spot price per share = 0.5 / 500,000 = 0.000001 ETH
+    // Virtual reserves per side: 0.5 ETH virtual, 500,000 virtual shares
+    // Genesis spot price: 0.5 / 500,000 = 0.000001 ETH (1e12 wei)
     uint256 public constant INITIAL_VIRTUAL_ETH = 0.5 ether;
     uint256 public constant INITIAL_VIRTUAL_SHARES = 500_000 * 1e18;
     uint256 public constant CURVE_INVARIANT_K = INITIAL_VIRTUAL_ETH * INITIAL_VIRTUAL_SHARES;
 
     // -------------------------------------------------------------------------
-    // Data Structures
+    // Enums & Structs
     // -------------------------------------------------------------------------
+    enum MarketType {
+        PERPETUAL_OPINION,       // 0: Indefinite sentiment, no closing date or resolution
+        RESOLVABLE_PREDICTION     // 1: Closes at closingTime, resolves via evidence, settles
+    }
+
+    enum MarketStatus {
+        ACTIVE,                  // 0: Trading open
+        CLOSED,                  // 1: Trading halted (time reached), awaiting resolution proposal
+        PROPOSED,                // 2: Outcome proposed, challenge window open
+        DISPUTED,                // 3: Challenged with counter-evidence, awaiting adjudication
+        RESOLVED,                // 4: Finalized YES or NO, winner settlement claimable
+        VOID                     // 5: Cancelled/invalid, proportional refund claimable
+    }
+
+    enum Outcome {
+        UNRESOLVED,              // 0
+        YES,                     // 1
+        NO,                      // 2
+        VOID                     // 3
+    }
+
     struct SideCurve {
         uint256 virtualEth;     // Virtual ETH reserve (strictly INITIAL_VIRTUAL_ETH + realEth)
         uint256 virtualShares;  // Virtual share pool (strictly INITIAL_VIRTUAL_SHARES - totalShares)
-        uint256 realEth;        // Actual withdrawable ETH collateral locked in this side's curve
-        uint256 totalShares;    // Circulating shares held by traders on this side
+        uint256 realEth;        // Actual withdrawable ETH collateral locked in this side
+        uint256 totalShares;    // Circulating shares held by traders
         uint256 volumeEth;      // Cumulative ETH volume traded on this side
+    }
+
+    struct PredictionDetails {
+        uint256 closingTime;           // Timestamp when trading halts strictly (UTC)
+        uint256 resolutionDeadline;    // Timestamp when outcome must be proposed
+        uint256 disputeDeadline;       // Timestamp when dispute challenge window closes
+        string yesCondition;           // Objective YES condition
+        string noCondition;            // Objective NO condition
+        string evidenceSource;         // URL or oracle specification
+        string proposedEvidence;       // Evidence notes/link from proposer
+        string disputeEvidence;        // Counter-evidence notes/link from challenger
+        address proposer;              // Address that submitted outcome proposal
+        address disputer;              // Address that submitted dispute challenge
+        uint256 proposedAt;            // Timestamp of outcome proposal
+        uint256 disputedAt;            // Timestamp of dispute challenge
+        uint256 resolvedAt;            // Timestamp of final resolution
+        Outcome proposedOutcome;       // Outcome currently proposed
+        Outcome finalOutcome;          // Final adjudicated outcome
+        uint256 distributablePool;     // Frozen total real ETH at resolution (YES realEth + NO realEth)
+        uint256 winningTotalShares;    // Total shares of winning outcome at resolution
+        uint256 totalClaimedSettlement;// Total ETH paid out in claims
     }
 
     struct Market {
@@ -50,12 +96,15 @@ contract NullhoodMarkets {
         string question;
         string category;
         string imageUri;
-        string sourceHandle;    // Optional X/social handle or context link
+        string sourceHandle;
         uint256 createdAt;
         uint256 totalTrades;
         uint256 creatorFeesEarned;
         SideCurve yesCurve;
         SideCurve noCurve;
+        MarketType marketType;         // PERPETUAL_OPINION vs RESOLVABLE_PREDICTION
+        MarketStatus status;           // ACTIVE, CLOSED, PROPOSED, DISPUTED, RESOLVED, VOID
+        PredictionDetails prediction;
     }
 
     struct MarketAnalytics {
@@ -89,7 +138,15 @@ contract NullhoodMarkets {
         uint256 noVolumeEth;
         uint256 yesPriceWei;
         uint256 noPriceWei;
-        uint256 yesSentimentBps; // 0 to 10000 (5000 = 50.00% YES)
+        uint256 yesSentimentBps;        // 0 to 10000 (5000 = 50.00% YES)
+        MarketType marketType;          // 0 = Opinion, 1 = Prediction
+        MarketStatus status;            // 0 = Active, 1 = Closed, etc.
+        uint256 closingTime;
+        uint256 resolutionDeadline;
+        Outcome finalOutcome;
+        uint256 distributablePool;
+        uint256 winningTotalShares;
+        string evidenceSource;
     }
 
     struct UserPosition {
@@ -98,6 +155,8 @@ contract NullhoodMarkets {
         uint256 noShares;
         uint256 yesValueEth;
         uint256 noValueEth;
+        bool hasClaimedSettlement;
+        uint256 claimableSettlementEth;
     }
 
     struct UserOnChainStats {
@@ -122,6 +181,12 @@ contract NullhoodMarkets {
     uint256 public creatorFeeBps = CREATOR_FEE_BPS;
     uint256 public protocolFeeBps = PROTOCOL_FEE_BPS;
 
+    // Date governance parameters (configurable by admin)
+    uint256 public minTradingDuration = 24 hours;     // 1 day minimum trading duration
+    uint256 public maxTradingDuration = 90 days;      // 90 days maximum trading duration
+    uint256 public maxResolutionGracePeriod = 30 days;// Maximum window for proposal after close
+    uint256 public disputeWindowDuration = 24 hours;  // 24 hours dispute challenge period
+
     uint256 public marketCount;
     uint256 public totalRealEthLocked;
     uint256 public totalClaimableCreatorFees;
@@ -131,23 +196,24 @@ contract NullhoodMarkets {
     mapping(uint256 => MarketAnalytics) internal _analytics;
     mapping(uint256 => mapping(address => bool)) public hasTradedMarket;
 
-    // marketId => user => yesShares
+    // marketId => user => shares
     mapping(uint256 => mapping(address => uint256)) public yesBalances;
-    // marketId => user => noShares
     mapping(uint256 => mapping(address => uint256)) public noBalances;
 
-    // creator => claimable ETH fees
+    // marketId => user => claimed settlement reward
+    mapping(uint256 => mapping(address => bool)) public hasClaimedSettlement;
+
+    // Authorized resolvers (admin or designated resolver addresses)
+    mapping(address => bool) public isAuthorizedResolver;
+
+    // Creator fee ledger
     mapping(address => uint256) public claimableCreatorFees;
-    // creator => lifetime ETH fees earned
     mapping(address => uint256) public lifetimeCreatorFees;
-    // creator => lifetime ETH fees claimed
     mapping(address => uint256) public claimedCreatorFees;
-    // creator => number of fee claim transactions
     mapping(address => uint256) public creatorClaimCount;
-    // marketId => creator seed liquidation lock expiration timestamp
     mapping(uint256 => uint256) public creatorSeedLockUntil;
 
-    // On-chain reputation & participation counters
+    // User participation analytics
     mapping(address => uint256) public userMarketsCreated;
     mapping(address => uint256) public userTotalTrades;
     mapping(address => uint256) public userTotalVolumeWei;
@@ -164,8 +230,8 @@ contract NullhoodMarkets {
         address indexed creator,
         string question,
         string category,
-        string imageUri,
-        string sourceHandle,
+        MarketType marketType,
+        uint256 closingTime,
         uint256 timestamp
     );
 
@@ -182,15 +248,53 @@ contract NullhoodMarkets {
         uint256 timestamp
     );
 
+    event OutcomeProposed(
+        uint256 indexed marketId,
+        Outcome proposedOutcome,
+        address indexed proposer,
+        string evidenceUrl,
+        uint256 disputeDeadline
+    );
+
+    event OutcomeDisputed(
+        uint256 indexed marketId,
+        Outcome challengedOutcome,
+        address indexed disputer,
+        string counterEvidenceUrl
+    );
+
+    event MarketResolved(
+        uint256 indexed marketId,
+        Outcome finalOutcome,
+        uint256 distributablePool,
+        uint256 winningTotalShares,
+        string adjudicationEvidence
+    );
+
+    event SettlementClaimed(
+        uint256 indexed marketId,
+        address indexed recipient,
+        uint256 rewardEth,
+        uint256 sharesBurned
+    );
+
+    event VoidRefundClaimed(
+        uint256 indexed marketId,
+        address indexed recipient,
+        uint256 refundEth
+    );
+
     event CreatorFeesClaimed(address indexed creator, uint256 amount, uint256 claimIndex, uint256 timestamp);
     event ProtocolFeesClaimed(address indexed recipient, uint256 amount, uint256 timestamp);
     event FeeConfigurationUpdated(uint256 creatorFeeBps, uint256 protocolFeeBps);
+    event DateGovernanceUpdated(uint256 minTradingDuration, uint256 maxTradingDuration, uint256 disputeWindowDuration);
+    event ResolverAuthorizationUpdated(address indexed resolver, bool isAuthorized);
     event PausedStateChanged(bool isPaused, address indexed triggeredBy);
     event OwnershipTransferStarted(address indexed previousOwner, address indexed newOwner);
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
     // -------------------------------------------------------------------------
-    // Modifiers & Errors
+    // Custom Errors
     // -------------------------------------------------------------------------
     error ReentrancyGuard();
     error ContractPaused();
@@ -207,7 +311,19 @@ contract NullhoodMarkets {
     error TransferFailed();
     error Unauthorized();
     error ZeroAddress();
+    error TradingClosed();
+    error InvalidDates();
+    error MarketNotResolvable();
+    error InvalidMarketStatus();
+    error ChallengePeriodActive();
+    error ChallengePeriodExpired();
+    error AlreadyClaimed();
+    error NoWinningShares();
+    error CreatorCannotResolveOwnMarket();
 
+    // -------------------------------------------------------------------------
+    // Modifiers
+    // -------------------------------------------------------------------------
     modifier nonReentrant() {
         if (_unlocked != 1) revert ReentrancyGuard();
         _unlocked = 2;
@@ -225,6 +341,11 @@ contract NullhoodMarkets {
         _;
     }
 
+    modifier onlyResolver() {
+        if (msg.sender != owner && !isAuthorizedResolver[msg.sender]) revert Unauthorized();
+        _;
+    }
+
     modifier validMarket(uint256 marketId) {
         if (marketId == 0 || marketId > marketCount) revert InvalidMarket();
         _;
@@ -232,6 +353,7 @@ contract NullhoodMarkets {
 
     constructor() {
         owner = msg.sender;
+        isAuthorizedResolver[msg.sender] = true;
     }
 
     // -------------------------------------------------------------------------
@@ -250,6 +372,26 @@ contract NullhoodMarkets {
         creatorFeeBps = _creatorFeeBps;
         protocolFeeBps = _protocolFeeBps;
         emit FeeConfigurationUpdated(_creatorFeeBps, _protocolFeeBps);
+    }
+
+    function setDateGovernance(
+        uint256 _minTradingDuration,
+        uint256 _maxTradingDuration,
+        uint256 _disputeWindowDuration
+    ) external onlyOwner {
+        if (_minTradingDuration == 0 || _minTradingDuration > _maxTradingDuration) {
+            revert InvalidDates();
+        }
+        minTradingDuration = _minTradingDuration;
+        maxTradingDuration = _maxTradingDuration;
+        disputeWindowDuration = _disputeWindowDuration;
+        emit DateGovernanceUpdated(_minTradingDuration, _maxTradingDuration, _disputeWindowDuration);
+    }
+
+    function setAuthorizedResolver(address resolver, bool authorized) external onlyOwner {
+        if (resolver == address(0)) revert ZeroAddress();
+        isAuthorizedResolver[resolver] = authorized;
+        emit ResolverAuthorizationUpdated(resolver, authorized);
     }
 
     function transferOwnership(address newOwner) external onlyOwner {
@@ -271,12 +413,12 @@ contract NullhoodMarkets {
     }
 
     // -------------------------------------------------------------------------
-    // Market Creation
+    // Market Creation (Dual Market Types)
     // -------------------------------------------------------------------------
 
     /**
-     * @notice Launch a new perpetual opinion market on Robinhood Chain.
-     *         If msg.value > 0, automatically executes an initial seed buy on `initialSideIsYes`.
+     * @notice Launch a Perpetual Opinion Market (Type 0).
+     *         Never resolves via oracle; continuous perpetual sentiment trading.
      */
     function createMarket(
         string calldata question,
@@ -285,6 +427,94 @@ contract NullhoodMarkets {
         string calldata sourceHandle,
         bool initialSideIsYes
     ) external payable nonReentrant whenNotPaused returns (uint256 marketId) {
+        marketId = _initMarket(
+            question,
+            category,
+            imageUri,
+            sourceHandle,
+            MarketType.PERPETUAL_OPINION,
+            0,
+            0,
+            "",
+            "",
+            ""
+        );
+
+        if (msg.value > 0) {
+            creatorSeedLockUntil[marketId] = block.timestamp + CREATOR_SEED_LOCK_PERIOD;
+            _buy(marketId, msg.sender, initialSideIsYes, msg.value, 0);
+        }
+
+        _assertSolvency();
+    }
+
+    /**
+     * @notice Launch a Resolvable Prediction Market (Type 1).
+     *         Requires defined closing date, resolution deadline, YES/NO criteria, and evidence source.
+     */
+    function createPredictionMarket(
+        string calldata question,
+        string calldata category,
+        string calldata imageUri,
+        string calldata sourceHandle,
+        uint256 closingTime,
+        uint256 resolutionDeadline,
+        string calldata yesCondition,
+        string calldata noCondition,
+        string calldata evidenceSource,
+        bool initialSideIsYes
+    ) external payable nonReentrant whenNotPaused returns (uint256 marketId) {
+        // Enforce date governance
+        if (
+            closingTime < block.timestamp + minTradingDuration ||
+            closingTime > block.timestamp + maxTradingDuration ||
+            resolutionDeadline < closingTime ||
+            resolutionDeadline > closingTime + maxResolutionGracePeriod
+        ) {
+            revert InvalidDates();
+        }
+
+        if (
+            bytes(yesCondition).length == 0 ||
+            bytes(noCondition).length == 0 ||
+            bytes(evidenceSource).length == 0
+        ) {
+            revert EmptyQuestion();
+        }
+
+        marketId = _initMarket(
+            question,
+            category,
+            imageUri,
+            sourceHandle,
+            MarketType.RESOLVABLE_PREDICTION,
+            closingTime,
+            resolutionDeadline,
+            yesCondition,
+            noCondition,
+            evidenceSource
+        );
+
+        if (msg.value > 0) {
+            creatorSeedLockUntil[marketId] = block.timestamp + CREATOR_SEED_LOCK_PERIOD;
+            _buy(marketId, msg.sender, initialSideIsYes, msg.value, 0);
+        }
+
+        _assertSolvency();
+    }
+
+    function _initMarket(
+        string memory question,
+        string memory category,
+        string memory imageUri,
+        string memory sourceHandle,
+        MarketType mType,
+        uint256 closingTime,
+        uint256 resolutionDeadline,
+        string memory yesCondition,
+        string memory noCondition,
+        string memory evidenceSource
+    ) internal returns (uint256 marketId) {
         if (bytes(question).length == 0) revert EmptyQuestion();
         if (
             bytes(question).length > MAX_STRING_LENGTH ||
@@ -306,6 +536,16 @@ contract NullhoodMarkets {
         m.imageUri = imageUri;
         m.sourceHandle = sourceHandle;
         m.createdAt = block.timestamp;
+        m.marketType = mType;
+        m.status = MarketStatus.ACTIVE;
+
+        if (mType == MarketType.RESOLVABLE_PREDICTION) {
+            m.prediction.closingTime = closingTime;
+            m.prediction.resolutionDeadline = resolutionDeadline;
+            m.prediction.yesCondition = yesCondition;
+            m.prediction.noCondition = noCondition;
+            m.prediction.evidenceSource = evidenceSource;
+        }
 
         uint256 genesisPriceWei = (INITIAL_VIRTUAL_ETH * 1e18) / INITIAL_VIRTUAL_SHARES;
 
@@ -345,17 +585,10 @@ contract NullhoodMarkets {
             msg.sender,
             question,
             m.category,
-            imageUri,
-            sourceHandle,
+            mType,
+            closingTime,
             block.timestamp
         );
-
-        if (msg.value > 0) {
-            creatorSeedLockUntil[marketId] = block.timestamp + CREATOR_SEED_LOCK_PERIOD;
-            _buy(marketId, msg.sender, initialSideIsYes, msg.value, 0);
-        }
-
-        _assertSolvency();
     }
 
     // -------------------------------------------------------------------------
@@ -363,10 +596,8 @@ contract NullhoodMarkets {
     // -------------------------------------------------------------------------
 
     /**
-     * @notice Buy YES or NO shares on an opinion market's independent bonding curve.
-     * @param marketId Market ID
-     * @param isYes True to buy YES shares, false to buy NO shares
-     * @param minSharesOut Minimum shares expected (slippage protection)
+     * @notice Buy YES or NO shares on a market's bonding curve.
+     *         For prediction markets, trading automatically halts when closingTime is reached.
      */
     function buyShares(
         uint256 marketId,
@@ -375,17 +606,16 @@ contract NullhoodMarkets {
     ) external payable nonReentrant whenNotPaused validMarket(marketId) returns (uint256 sharesOut) {
         if (msg.value == 0) revert ZeroAmount();
         if (msg.value < MIN_TRADE_ETH) revert TradeBelowMinimum(msg.value, MIN_TRADE_ETH);
+
+        _checkTradingActive(marketId);
+
         sharesOut = _buy(marketId, msg.sender, isYes, msg.value, minSharesOut);
         _assertSolvency();
     }
 
     /**
-     * @notice Sell YES or NO shares back into that side's independent bonding curve for instant ETH liquidity.
-     *         Virtual reserves (INITIAL_VIRTUAL_ETH) can NEVER be withdrawn; grossEthOut is strictly bounded by realEth.
-     * @param marketId Market ID
-     * @param isYes True to sell YES shares, false to sell NO shares
-     * @param sharesIn Exact number of shares (18 decimals) to sell
-     * @param minEthOut Minimum net ETH expected (slippage protection)
+     * @notice Sell YES or NO shares back into that side's curve for instant ETH liquidity.
+     *         Virtual reserves can NEVER be withdrawn; grossEthOut is strictly bounded by realEth.
      */
     function sellShares(
         uint256 marketId,
@@ -394,6 +624,8 @@ contract NullhoodMarkets {
         uint256 minEthOut
     ) external nonReentrant whenNotPaused validMarket(marketId) returns (uint256 netEthOut) {
         if (sharesIn == 0) revert ZeroAmount();
+
+        _checkTradingActive(marketId);
 
         Market storage m = _markets[marketId];
         if (msg.sender == m.creator && block.timestamp < creatorSeedLockUntil[marketId]) {
@@ -406,7 +638,6 @@ contract NullhoodMarkets {
 
         uint256 grossEthOut;
         {
-            // Calculate new virtual shares and required virtual ETH to preserve K
             uint256 newVirtualShares = curve.virtualShares + sharesIn;
             if (newVirtualShares > INITIAL_VIRTUAL_SHARES) {
                 newVirtualShares = INITIAL_VIRTUAL_SHARES;
@@ -419,7 +650,7 @@ contract NullhoodMarkets {
             }
 
             grossEthOut = curve.virtualEth > newVirtualEth ? curve.virtualEth - newVirtualEth : 0;
-            // Strict virtual reserve isolation: never allow withdrawing more than realEth locked on this side
+            // Strict virtual reserve isolation: cannot exceed real ETH locked on this side
             if (grossEthOut > curve.realEth) {
                 grossEthOut = curve.realEth;
             }
@@ -427,14 +658,12 @@ contract NullhoodMarkets {
         }
 
         {
-            // Deduct fees (creator + protocol)
             uint256 creatorFee = (grossEthOut * creatorFeeBps) / BPS_DENOMINATOR;
             uint256 protocolFee = (grossEthOut * protocolFeeBps) / BPS_DENOMINATOR;
             netEthOut = grossEthOut - creatorFee - protocolFee;
 
             if (netEthOut < minEthOut) revert SlippageExceeded();
 
-            // Accrue fees
             claimableCreatorFees[m.creator] += creatorFee;
             lifetimeCreatorFees[m.creator] += creatorFee;
             totalClaimableCreatorFees += creatorFee;
@@ -443,7 +672,6 @@ contract NullhoodMarkets {
             m.totalTrades += 1;
         }
 
-        // Update curve & global reserve state
         curve.realEth -= grossEthOut;
         curve.virtualEth = INITIAL_VIRTUAL_ETH + curve.realEth;
         curve.totalShares -= sharesIn;
@@ -452,7 +680,6 @@ contract NullhoodMarkets {
 
         totalRealEthLocked -= grossEthOut;
 
-        // Verify curve invariant holds
         if (curve.virtualEth * curve.virtualShares < CURVE_INVARIANT_K) {
             revert SolvencyInvariantViolated();
         }
@@ -463,10 +690,8 @@ contract NullhoodMarkets {
             noBalances[marketId][msg.sender] = userBal - sharesIn;
         }
 
-        // Update analytics & reputation stats
         _recordTradeAnalytics(marketId, m.creator, msg.sender, isYes, false, grossEthOut);
 
-        // Transfer net ETH to seller
         (bool ok, ) = msg.sender.call{value: netEthOut}("");
         if (!ok) revert TransferFailed();
 
@@ -490,7 +715,6 @@ contract NullhoodMarkets {
 
         uint256 newRealEth = curve.realEth + netEth;
         uint256 newVirtualEth = INITIAL_VIRTUAL_ETH + newRealEth;
-        // Round up newVirtualShares to preserve invariant K
         uint256 newVirtualShares = (CURVE_INVARIANT_K + newVirtualEth - 1) / newVirtualEth;
         sharesOut = curve.virtualShares > newVirtualShares ? curve.virtualShares - newVirtualShares : 0;
 
@@ -523,6 +747,495 @@ contract NullhoodMarkets {
 
         _recordTradeAnalytics(marketId, m.creator, buyer, isYes, true, ethIn);
         _emitOpinionTraded(marketId, buyer, isYes, true, ethIn, sharesOut);
+    }
+
+    function _checkTradingActive(uint256 marketId) internal {
+        Market storage m = _markets[marketId];
+        if (m.marketType == MarketType.RESOLVABLE_PREDICTION) {
+            if (m.status != MarketStatus.ACTIVE || block.timestamp >= m.prediction.closingTime) {
+                if (m.status == MarketStatus.ACTIVE && block.timestamp >= m.prediction.closingTime) {
+                    m.status = MarketStatus.CLOSED;
+                }
+                revert TradingClosed();
+            }
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Prediction Market Resolution Engine
+    // -------------------------------------------------------------------------
+
+    /**
+     * @notice Propose an outcome for a closed prediction market.
+     *         Market creators can NEVER propose or finalize their own market (anti-manipulation).
+     */
+    function proposeOutcome(
+        uint256 marketId,
+        Outcome outcome,
+        string calldata evidenceUrl
+    ) external onlyResolver validMarket(marketId) {
+        Market storage m = _markets[marketId];
+        if (m.marketType != MarketType.RESOLVABLE_PREDICTION) revert MarketNotResolvable();
+        if (msg.sender == m.creator) revert CreatorCannotResolveOwnMarket();
+        if (block.timestamp < m.prediction.closingTime) revert TradingClosed();
+        if (m.status != MarketStatus.ACTIVE && m.status != MarketStatus.CLOSED) revert InvalidMarketStatus();
+        if (outcome != Outcome.YES && outcome != Outcome.NO && outcome != Outcome.VOID) revert InvalidMarketStatus();
+
+        m.status = MarketStatus.PROPOSED;
+        m.prediction.proposer = msg.sender;
+        m.prediction.proposedOutcome = outcome;
+        m.prediction.proposedEvidence = evidenceUrl;
+        m.prediction.proposedAt = block.timestamp;
+        m.prediction.disputeDeadline = block.timestamp + disputeWindowDuration;
+
+        emit OutcomeProposed(marketId, outcome, msg.sender, evidenceUrl, m.prediction.disputeDeadline);
+    }
+
+    /**
+     * @notice Challenge a proposed outcome during the dispute window with counter-evidence.
+     */
+    function disputeOutcome(
+        uint256 marketId,
+        string calldata counterEvidenceUrl
+    ) external validMarket(marketId) {
+        Market storage m = _markets[marketId];
+        if (m.marketType != MarketType.RESOLVABLE_PREDICTION) revert MarketNotResolvable();
+        if (m.status != MarketStatus.PROPOSED) revert InvalidMarketStatus();
+        if (block.timestamp >= m.prediction.disputeDeadline) revert ChallengePeriodExpired();
+
+        m.status = MarketStatus.DISPUTED;
+        m.prediction.disputer = msg.sender;
+        m.prediction.disputeEvidence = counterEvidenceUrl;
+        m.prediction.disputedAt = block.timestamp;
+
+        emit OutcomeDisputed(marketId, m.prediction.proposedOutcome, msg.sender, counterEvidenceUrl);
+    }
+
+    /**
+     * @notice Finalize market resolution and unlock settlement claims.
+     *         If PROPOSED: Callable by resolver once disputeDeadline has passed with no dispute.
+     *         If DISPUTED: Callable by admin/resolver after adjudicating counter-evidence.
+     */
+    function resolveMarket(
+        uint256 marketId,
+        Outcome finalOutcome,
+        string calldata adjudicationEvidence
+    ) external onlyResolver validMarket(marketId) {
+        Market storage m = _markets[marketId];
+        if (m.marketType != MarketType.RESOLVABLE_PREDICTION) revert MarketNotResolvable();
+        if (msg.sender == m.creator) revert CreatorCannotResolveOwnMarket();
+
+        if (m.status == MarketStatus.PROPOSED) {
+            if (block.timestamp < m.prediction.disputeDeadline) revert ChallengePeriodActive();
+            // Automatically confirm proposed outcome if no dispute
+            if (finalOutcome == Outcome.UNRESOLVED) {
+                finalOutcome = m.prediction.proposedOutcome;
+            }
+        } else if (m.status != MarketStatus.DISPUTED) {
+            revert InvalidMarketStatus();
+        }
+
+        uint256 distributablePool = m.yesCurve.realEth + m.noCurve.realEth;
+        uint256 winShares = 0;
+
+        if (finalOutcome == Outcome.YES) {
+            winShares = m.yesCurve.totalShares;
+            // Zero-winner fallback: if no YES shares exist, fallback to VOID refund
+            if (winShares == 0) finalOutcome = Outcome.VOID;
+        } else if (finalOutcome == Outcome.NO) {
+            winShares = m.noCurve.totalShares;
+            if (winShares == 0) finalOutcome = Outcome.VOID;
+        }
+
+        if (finalOutcome == Outcome.VOID) {
+            m.status = MarketStatus.VOID;
+            m.prediction.finalOutcome = Outcome.VOID;
+        } else {
+            m.status = MarketStatus.RESOLVED;
+            m.prediction.finalOutcome = finalOutcome;
+            m.prediction.distributablePool = distributablePool;
+            m.prediction.winningTotalShares = winShares;
+        }
+
+        m.prediction.resolvedAt = block.timestamp;
+
+        emit MarketResolved(marketId, finalOutcome, distributablePool, winShares, adjudicationEvidence);
+    }
+
+    /**
+     * @notice Emergency administrative circuit breaker to cancel an invalid/exploited market into VOID state.
+     */
+    function emergencyCancelMarket(uint256 marketId, string calldata reason) external onlyOwner validMarket(marketId) {
+        Market storage m = _markets[marketId];
+        if (m.status == MarketStatus.RESOLVED) revert InvalidMarketStatus();
+        m.status = MarketStatus.VOID;
+        m.prediction.finalOutcome = Outcome.VOID;
+        m.prediction.resolvedAt = block.timestamp;
+        emit MarketResolved(marketId, Outcome.VOID, m.yesCurve.realEth + m.noCurve.realEth, 0, reason);
+    }
+
+    // -------------------------------------------------------------------------
+    // Settlement Claims (Pari-Mutuel & VOID Refunds)
+    // -------------------------------------------------------------------------
+
+    /**
+     * @notice Claim winning settlement payout on a RESOLVED prediction market.
+     *         Payout strictly proportional to winning shares against real distributable pool.
+     *         0% creator/protocol fees charged on settlement payouts.
+     */
+    function claimSettlementReward(uint256 marketId) external nonReentrant validMarket(marketId) returns (uint256 reward) {
+        Market storage m = _markets[marketId];
+        if (m.marketType != MarketType.RESOLVABLE_PREDICTION) revert MarketNotResolvable();
+        if (m.status != MarketStatus.RESOLVED) revert InvalidMarketStatus();
+        if (hasClaimedSettlement[marketId][msg.sender]) revert AlreadyClaimed();
+
+        Outcome winner = m.prediction.finalOutcome;
+        uint256 userShares = 0;
+
+        if (winner == Outcome.YES) {
+            userShares = yesBalances[marketId][msg.sender];
+            if (userShares == 0) revert NoWinningShares();
+            yesBalances[marketId][msg.sender] = 0;
+        } else if (winner == Outcome.NO) {
+            userShares = noBalances[marketId][msg.sender];
+            if (userShares == 0) revert NoWinningShares();
+            noBalances[marketId][msg.sender] = 0;
+        } else {
+            revert InvalidMarketStatus();
+        }
+
+        reward = (m.prediction.distributablePool * userShares) / m.prediction.winningTotalShares;
+        if (reward == 0) revert ZeroAmount();
+
+        hasClaimedSettlement[marketId][msg.sender] = true;
+        m.prediction.totalClaimedSettlement += reward;
+        totalRealEthLocked -= reward;
+
+        (bool ok, ) = msg.sender.call{value: reward}("");
+        if (!ok) revert TransferFailed();
+
+        _assertSolvency();
+        emit SettlementClaimed(marketId, msg.sender, reward, userShares);
+    }
+
+    /**
+     * @notice Claim proportional refund on a VOID prediction market.
+     */
+    function claimVoidRefund(uint256 marketId) external nonReentrant validMarket(marketId) returns (uint256 refundAmount) {
+        Market storage m = _markets[marketId];
+        if (m.status != MarketStatus.VOID) revert InvalidMarketStatus();
+        if (hasClaimedSettlement[marketId][msg.sender]) revert AlreadyClaimed();
+
+        uint256 userYes = yesBalances[marketId][msg.sender];
+        uint256 userNo = noBalances[marketId][msg.sender];
+        if (userYes == 0 && userNo == 0) revert NoWinningShares();
+
+        uint256 yesRefund = m.yesCurve.totalShares > 0 ? (m.yesCurve.realEth * userYes) / m.yesCurve.totalShares : 0;
+        uint256 noRefund = m.noCurve.totalShares > 0 ? (m.noCurve.realEth * userNo) / m.noCurve.totalShares : 0;
+        refundAmount = yesRefund + noRefund;
+        if (refundAmount == 0) revert ZeroAmount();
+
+        hasClaimedSettlement[marketId][msg.sender] = true;
+        yesBalances[marketId][msg.sender] = 0;
+        noBalances[marketId][msg.sender] = 0;
+        totalRealEthLocked -= refundAmount;
+
+        (bool ok, ) = msg.sender.call{value: refundAmount}("");
+        if (!ok) revert TransferFailed();
+
+        _assertSolvency();
+        emit VoidRefundClaimed(marketId, msg.sender, refundAmount);
+    }
+
+    /**
+     * @notice Preview claimable settlement amount for any user without executing a transaction.
+     */
+    function getSettlementQuote(
+        uint256 marketId,
+        address user
+    ) external view validMarket(marketId) returns (
+        bool isEligible,
+        uint256 estimatedPayoutWei,
+        Outcome winningOutcome,
+        bool alreadyClaimed
+    ) {
+        Market storage m = _markets[marketId];
+        alreadyClaimed = hasClaimedSettlement[marketId][user];
+        winningOutcome = m.prediction.finalOutcome;
+
+        if (alreadyClaimed) {
+            return (false, 0, winningOutcome, true);
+        }
+
+        if (m.status == MarketStatus.RESOLVED) {
+            uint256 userShares = winningOutcome == Outcome.YES ? yesBalances[marketId][user] : noBalances[marketId][user];
+            if (userShares > 0 && m.prediction.winningTotalShares > 0) {
+                estimatedPayoutWei = (m.prediction.distributablePool * userShares) / m.prediction.winningTotalShares;
+                isEligible = estimatedPayoutWei > 0;
+            }
+        } else if (m.status == MarketStatus.VOID) {
+            uint256 userYes = yesBalances[marketId][user];
+            uint256 userNo = noBalances[marketId][user];
+            uint256 yesRefund = m.yesCurve.totalShares > 0 ? (m.yesCurve.realEth * userYes) / m.yesCurve.totalShares : 0;
+            uint256 noRefund = m.noCurve.totalShares > 0 ? (m.noCurve.realEth * userNo) / m.noCurve.totalShares : 0;
+            estimatedPayoutWei = yesRefund + noRefund;
+            isEligible = estimatedPayoutWei > 0;
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Creator Fee Claiming
+    // -------------------------------------------------------------------------
+
+    /**
+     * @notice Withdraw accrued creator fees across all markets created.
+     */
+    function claimCreatorFees() external nonReentrant returns (uint256 amount) {
+        amount = claimableCreatorFees[msg.sender];
+        if (amount == 0) revert ZeroAmount();
+
+        claimableCreatorFees[msg.sender] = 0;
+        totalClaimableCreatorFees -= amount;
+        claimedCreatorFees[msg.sender] += amount;
+        uint256 claimIdx = ++creatorClaimCount[msg.sender];
+
+        (bool ok, ) = msg.sender.call{value: amount}("");
+        if (!ok) revert TransferFailed();
+
+        _assertSolvency();
+
+        emit CreatorFeesClaimed(msg.sender, amount, claimIdx, block.timestamp);
+    }
+
+    /**
+     * @notice Withdraw protocol fees (owner only).
+     */
+    function claimProtocolFees(address recipient) external nonReentrant onlyOwner {
+        if (recipient == address(0)) revert ZeroAddress();
+        uint256 amount = protocolFeesAccrued;
+        if (amount == 0) revert ZeroAmount();
+        protocolFeesAccrued = 0;
+
+        (bool ok, ) = recipient.call{value: amount}("");
+        if (!ok) revert TransferFailed();
+
+        _assertSolvency();
+
+        emit ProtocolFeesClaimed(recipient, amount, block.timestamp);
+    }
+
+    // -------------------------------------------------------------------------
+    // Solvency Verification
+    // -------------------------------------------------------------------------
+
+    function _assertSolvency() internal view {
+        uint256 requiredBacking = totalRealEthLocked + totalClaimableCreatorFees + protocolFeesAccrued;
+        if (address(this).balance < requiredBacking) {
+            revert SolvencyInvariantViolated();
+        }
+    }
+
+    /**
+     * @notice Public audit verification confirming 100% real ETH backing for curves, fees, and settlements.
+     */
+    function verifyProtocolSolvency()
+        external
+        view
+        returns (
+            bool isSolvent,
+            uint256 contractEthBalance,
+            uint256 realEthReserves,
+            uint256 pendingCreatorFees,
+            uint256 pendingProtocolFees,
+            uint256 surplusWei
+        )
+    {
+        contractEthBalance = address(this).balance;
+        realEthReserves = totalRealEthLocked;
+        pendingCreatorFees = totalClaimableCreatorFees;
+        pendingProtocolFees = protocolFeesAccrued;
+        uint256 required = realEthReserves + pendingCreatorFees + pendingProtocolFees;
+        isSolvent = contractEthBalance >= required;
+        surplusWei = isSolvent ? contractEthBalance - required : 0;
+    }
+
+    // -------------------------------------------------------------------------
+    // Quotes & View Functions
+    // -------------------------------------------------------------------------
+
+    function quoteBuy(
+        uint256 marketId,
+        bool isYes,
+        uint256 ethIn
+    ) external view validMarket(marketId) returns (uint256 sharesOut, uint256 feeEth, uint256 newPriceWei) {
+        if (ethIn == 0) return (0, 0, 0);
+        Market storage m = _markets[marketId];
+        SideCurve storage curve = isYes ? m.yesCurve : m.noCurve;
+
+        uint256 cFee = (ethIn * creatorFeeBps) / BPS_DENOMINATOR;
+        uint256 pFee = (ethIn * protocolFeeBps) / BPS_DENOMINATOR;
+        feeEth = cFee + pFee;
+
+        uint256 netEth = ethIn - feeEth;
+        uint256 newVirtualEth = curve.virtualEth + netEth;
+        uint256 newVirtualShares = (CURVE_INVARIANT_K + newVirtualEth - 1) / newVirtualEth;
+        sharesOut = curve.virtualShares > newVirtualShares ? curve.virtualShares - newVirtualShares : 0;
+        newPriceWei = (newVirtualEth * 1e18) / newVirtualShares;
+    }
+
+    function quoteSell(
+        uint256 marketId,
+        bool isYes,
+        uint256 sharesIn
+    ) external view validMarket(marketId) returns (uint256 netEthOut, uint256 feeEth, uint256 newPriceWei) {
+        if (sharesIn == 0) return (0, 0, 0);
+        Market storage m = _markets[marketId];
+        SideCurve storage curve = isYes ? m.yesCurve : m.noCurve;
+
+        uint256 newVirtualShares = curve.virtualShares + sharesIn;
+        if (newVirtualShares > INITIAL_VIRTUAL_SHARES) {
+            newVirtualShares = INITIAL_VIRTUAL_SHARES;
+        }
+        uint256 newVirtualEth = (CURVE_INVARIANT_K + newVirtualShares - 1) / newVirtualShares;
+        if (newVirtualEth < INITIAL_VIRTUAL_ETH) {
+            newVirtualEth = INITIAL_VIRTUAL_ETH;
+        }
+        uint256 grossEthOut = curve.virtualEth > newVirtualEth ? curve.virtualEth - newVirtualEth : 0;
+        if (grossEthOut > curve.realEth) {
+            grossEthOut = curve.realEth;
+        }
+        uint256 cFee = (grossEthOut * creatorFeeBps) / BPS_DENOMINATOR;
+        uint256 pFee = (grossEthOut * protocolFeeBps) / BPS_DENOMINATOR;
+        feeEth = cFee + pFee;
+        netEthOut = grossEthOut - feeEth;
+        newPriceWei = ((curve.virtualEth - grossEthOut) * 1e18) / newVirtualShares;
+    }
+
+    function getMarket(uint256 marketId) public view validMarket(marketId) returns (MarketSummary memory summary) {
+        Market storage m = _markets[marketId];
+        (uint256 yesPrice, uint256 noPrice, uint256 sentimentBps) = _getMarketMetrics(m);
+
+        MarketStatus currentStatus = m.status;
+        if (
+            m.marketType == MarketType.RESOLVABLE_PREDICTION &&
+            currentStatus == MarketStatus.ACTIVE &&
+            block.timestamp >= m.prediction.closingTime
+        ) {
+            currentStatus = MarketStatus.CLOSED;
+        }
+
+        summary = MarketSummary({
+            id: m.id,
+            creator: m.creator,
+            question: m.question,
+            category: m.category,
+            imageUri: m.imageUri,
+            sourceHandle: m.sourceHandle,
+            createdAt: m.createdAt,
+            totalTrades: m.totalTrades,
+            creatorFeesEarned: m.creatorFeesEarned,
+            yesRealEth: m.yesCurve.realEth,
+            noRealEth: m.noCurve.realEth,
+            yesTotalShares: m.yesCurve.totalShares,
+            noTotalShares: m.noCurve.totalShares,
+            yesVolumeEth: m.yesCurve.volumeEth,
+            noVolumeEth: m.noCurve.volumeEth,
+            yesPriceWei: yesPrice,
+            noPriceWei: noPrice,
+            yesSentimentBps: sentimentBps,
+            marketType: m.marketType,
+            status: currentStatus,
+            closingTime: m.prediction.closingTime,
+            resolutionDeadline: m.prediction.resolutionDeadline,
+            finalOutcome: m.prediction.finalOutcome,
+            distributablePool: m.prediction.distributablePool,
+            winningTotalShares: m.prediction.winningTotalShares,
+            evidenceSource: m.prediction.evidenceSource
+        });
+    }
+
+    function getMarketPredictionDetails(uint256 marketId) external view validMarket(marketId) returns (PredictionDetails memory) {
+        return _markets[marketId].prediction;
+    }
+
+    function getMarketAnalytics(uint256 marketId) external view validMarket(marketId) returns (MarketAnalytics memory) {
+        return _analytics[marketId];
+    }
+
+    function getUserStats(address user) external view returns (UserOnChainStats memory) {
+        return UserOnChainStats({
+            marketsCreated: userMarketsCreated[user],
+            totalTrades: userTotalTrades[user],
+            totalVolumeWei: userTotalVolumeWei[user],
+            uniqueMarketsTraded: userUniqueMarketsTraded[user],
+            creatorVolumeGeneratedWei: creatorVolumeGeneratedWei[user],
+            claimableCreatorFeesWei: claimableCreatorFees[user],
+            lifetimeCreatorFeesWei: lifetimeCreatorFees[user],
+            totalCreatorFeesClaimedWei: claimedCreatorFees[user],
+            creatorClaimCount: creatorClaimCount[user]
+        });
+    }
+
+    function getAllMarkets() external view returns (MarketSummary[] memory list) {
+        list = new MarketSummary[](marketCount);
+        for (uint256 i = 1; i <= marketCount; i++) {
+            list[i - 1] = getMarket(i);
+        }
+    }
+
+    function getMarketsPaginated(
+        uint256 offset,
+        uint256 limit
+    ) external view returns (MarketSummary[] memory list, uint256 total) {
+        total = marketCount;
+        if (offset >= total || limit == 0) {
+            return (new MarketSummary[](0), total);
+        }
+        uint256 count = total - offset;
+        if (count > limit) count = limit;
+        list = new MarketSummary[](count);
+        for (uint256 i = 0; i < count; i++) {
+            list[i] = getMarket(offset + i + 1);
+        }
+    }
+
+    function getUserPositions(address user) external view returns (UserPosition[] memory positions) {
+        positions = new UserPosition[](marketCount);
+        for (uint256 i = 1; i <= marketCount; i++) {
+            uint256 yShares = yesBalances[i][user];
+            uint256 nShares = noBalances[i][user];
+            uint256 yVal = 0;
+            uint256 nVal = 0;
+            if (yShares > 0) {
+                (yVal, , ) = this.quoteSell(i, true, yShares);
+            }
+            if (nShares > 0) {
+                (nVal, , ) = this.quoteSell(i, false, nShares);
+            }
+            (, uint256 estimatedPayout, , bool claimed) = this.getSettlementQuote(i, user);
+            positions[i - 1] = UserPosition({
+                marketId: i,
+                yesShares: yShares,
+                noShares: nShares,
+                yesValueEth: yVal,
+                noValueEth: nVal,
+                hasClaimedSettlement: claimed,
+                claimableSettlementEth: estimatedPayout
+            });
+        }
+    }
+
+    function _getMarketMetrics(
+        Market storage m
+    ) internal view returns (uint256 yesPriceWei, uint256 noPriceWei, uint256 yesSentimentBps) {
+        yesPriceWei = (m.yesCurve.virtualEth * 1e18) / m.yesCurve.virtualShares;
+        noPriceWei = (m.noCurve.virtualEth * 1e18) / m.noCurve.virtualShares;
+        uint256 total = yesPriceWei + noPriceWei;
+        if (total == 0) {
+            yesSentimentBps = 5000;
+        } else {
+            yesSentimentBps = (yesPriceWei * BPS_DENOMINATOR) / total;
+        }
     }
 
     function _emitOpinionTraded(
@@ -582,261 +1295,5 @@ contract NullhoodMarkets {
         userTotalTrades[trader] += 1;
         userTotalVolumeWei[trader] += volumeWei;
         creatorVolumeGeneratedWei[creator] += volumeWei;
-    }
-
-    // -------------------------------------------------------------------------
-    // Fee Claiming
-    // -------------------------------------------------------------------------
-
-    /**
-     * @notice Withdraw accrued creator fees across all created opinion markets.
-     */
-    function claimCreatorFees() external nonReentrant returns (uint256 amount) {
-        amount = claimableCreatorFees[msg.sender];
-        if (amount == 0) revert ZeroAmount();
-
-        claimableCreatorFees[msg.sender] = 0;
-        totalClaimableCreatorFees -= amount;
-        claimedCreatorFees[msg.sender] += amount;
-        uint256 claimIdx = ++creatorClaimCount[msg.sender];
-
-        (bool ok, ) = msg.sender.call{value: amount}("");
-        if (!ok) revert TransferFailed();
-
-        _assertSolvency();
-
-        emit CreatorFeesClaimed(msg.sender, amount, claimIdx, block.timestamp);
-    }
-
-    /**
-     * @notice Withdraw protocol fees (owner only).
-     */
-    function claimProtocolFees(address recipient) external nonReentrant onlyOwner {
-        if (recipient == address(0)) revert ZeroAddress();
-        uint256 amount = protocolFeesAccrued;
-        if (amount == 0) revert ZeroAmount();
-        protocolFeesAccrued = 0;
-
-        (bool ok, ) = recipient.call{value: amount}("");
-        if (!ok) revert TransferFailed();
-
-        _assertSolvency();
-
-        emit ProtocolFeesClaimed(recipient, amount, block.timestamp);
-    }
-
-    // -------------------------------------------------------------------------
-    // Solvency Verification
-    // -------------------------------------------------------------------------
-
-    function _assertSolvency() internal view {
-        uint256 requiredBacking = totalRealEthLocked + totalClaimableCreatorFees + protocolFeesAccrued;
-        if (address(this).balance < requiredBacking) {
-            revert SolvencyInvariantViolated();
-        }
-    }
-
-    /**
-     * @notice Public audit function verifying that actual ETH held by the contract
-     *         covers 100% of real curve reserves, creator fees, and protocol fees.
-     */
-    function verifyProtocolSolvency()
-        external
-        view
-        returns (
-            bool isSolvent,
-            uint256 contractEthBalance,
-            uint256 realEthReserves,
-            uint256 pendingCreatorFees,
-            uint256 pendingProtocolFees,
-            uint256 surplusWei
-        )
-    {
-        contractEthBalance = address(this).balance;
-        realEthReserves = totalRealEthLocked;
-        pendingCreatorFees = totalClaimableCreatorFees;
-        pendingProtocolFees = protocolFeesAccrued;
-        uint256 required = realEthReserves + pendingCreatorFees + pendingProtocolFees;
-        isSolvent = contractEthBalance >= required;
-        surplusWei = isSolvent ? contractEthBalance - required : 0;
-    }
-
-    // -------------------------------------------------------------------------
-    // Quotes & View Functions
-    // -------------------------------------------------------------------------
-
-    /**
-     * @notice Preview how many shares a buyer receives for `ethIn` wei on `isYes`.
-     */
-    function quoteBuy(
-        uint256 marketId,
-        bool isYes,
-        uint256 ethIn
-    ) external view validMarket(marketId) returns (uint256 sharesOut, uint256 feeEth, uint256 newPriceWei) {
-        if (ethIn == 0) return (0, 0, 0);
-        Market storage m = _markets[marketId];
-        SideCurve storage curve = isYes ? m.yesCurve : m.noCurve;
-
-        uint256 cFee = (ethIn * creatorFeeBps) / BPS_DENOMINATOR;
-        uint256 pFee = (ethIn * protocolFeeBps) / BPS_DENOMINATOR;
-        feeEth = cFee + pFee;
-
-        uint256 netEth = ethIn - feeEth;
-        uint256 newVirtualEth = curve.virtualEth + netEth;
-        uint256 newVirtualShares = (CURVE_INVARIANT_K + newVirtualEth - 1) / newVirtualEth;
-        sharesOut = curve.virtualShares > newVirtualShares ? curve.virtualShares - newVirtualShares : 0;
-        newPriceWei = (newVirtualEth * 1e18) / newVirtualShares;
-    }
-
-    /**
-     * @notice Preview how much net ETH a seller receives for `sharesIn` on `isYes`.
-     */
-    function quoteSell(
-        uint256 marketId,
-        bool isYes,
-        uint256 sharesIn
-    ) external view validMarket(marketId) returns (uint256 netEthOut, uint256 feeEth, uint256 newPriceWei) {
-        if (sharesIn == 0) return (0, 0, 0);
-        Market storage m = _markets[marketId];
-        SideCurve storage curve = isYes ? m.yesCurve : m.noCurve;
-
-        uint256 newVirtualShares = curve.virtualShares + sharesIn;
-        if (newVirtualShares > INITIAL_VIRTUAL_SHARES) {
-            newVirtualShares = INITIAL_VIRTUAL_SHARES;
-        }
-        uint256 newVirtualEth = (CURVE_INVARIANT_K + newVirtualShares - 1) / newVirtualShares;
-        if (newVirtualEth < INITIAL_VIRTUAL_ETH) {
-            newVirtualEth = INITIAL_VIRTUAL_ETH;
-        }
-        uint256 grossEthOut = curve.virtualEth > newVirtualEth ? curve.virtualEth - newVirtualEth : 0;
-        if (grossEthOut > curve.realEth) {
-            grossEthOut = curve.realEth;
-        }
-        uint256 cFee = (grossEthOut * creatorFeeBps) / BPS_DENOMINATOR;
-        uint256 pFee = (grossEthOut * protocolFeeBps) / BPS_DENOMINATOR;
-        feeEth = cFee + pFee;
-        netEthOut = grossEthOut - feeEth;
-        newPriceWei = ((curve.virtualEth - grossEthOut) * 1e18) / newVirtualShares;
-    }
-
-    /**
-     * @notice Fetch full summary for a single market.
-     */
-    function getMarket(uint256 marketId) public view validMarket(marketId) returns (MarketSummary memory summary) {
-        Market storage m = _markets[marketId];
-        (uint256 yesPrice, uint256 noPrice, uint256 sentimentBps) = _getMarketMetrics(m);
-
-        summary = MarketSummary({
-            id: m.id,
-            creator: m.creator,
-            question: m.question,
-            category: m.category,
-            imageUri: m.imageUri,
-            sourceHandle: m.sourceHandle,
-            createdAt: m.createdAt,
-            totalTrades: m.totalTrades,
-            creatorFeesEarned: m.creatorFeesEarned,
-            yesRealEth: m.yesCurve.realEth,
-            noRealEth: m.noCurve.realEth,
-            yesTotalShares: m.yesCurve.totalShares,
-            noTotalShares: m.noCurve.totalShares,
-            yesVolumeEth: m.yesCurve.volumeEth,
-            noVolumeEth: m.noCurve.volumeEth,
-            yesPriceWei: yesPrice,
-            noPriceWei: noPrice,
-            yesSentimentBps: sentimentBps
-        });
-    }
-
-    /**
-     * @notice Fetch detailed analytics for a single market (buy/sell pressure, trade counts, peak prices).
-     */
-    function getMarketAnalytics(uint256 marketId) external view validMarket(marketId) returns (MarketAnalytics memory) {
-        return _analytics[marketId];
-    }
-
-    /**
-     * @notice Fetch on-chain reputation & creator stats for any user address.
-     */ru
-    function getUserStats(address user) external view returns (UserOnChainStats memory) {
-        return UserOnChainStats({
-            marketsCreated: userMarketsCreated[user],
-            totalTrades: userTotalTrades[user],
-            totalVolumeWei: userTotalVolumeWei[user],
-            uniqueMarketsTraded: userUniqueMarketsTraded[user],
-            creatorVolumeGeneratedWei: creatorVolumeGeneratedWei[user],
-            claimableCreatorFeesWei: claimableCreatorFees[user],
-            lifetimeCreatorFeesWei: lifetimeCreatorFees[user],
-            totalCreatorFeesClaimedWei: claimedCreatorFees[user],
-            creatorClaimCount: creatorClaimCount[user]
-        });
-    }
-
-    /**
-     * @notice Fetch all markets in a single RPC call for the live feed.
-     */
-    function getAllMarkets() external view returns (MarketSummary[] memory list) {
-        list = new MarketSummary[](marketCount);
-        for (uint256 i = 1; i <= marketCount; i++) {
-            list[i - 1] = getMarket(i);
-        }
-    }
-
-    /**
-     * @notice Paginated market fetch to prevent RPC gas exhaustion at scale.
-     */
-    function getMarketsPaginated(
-        uint256 offset,
-        uint256 limit
-    ) external view returns (MarketSummary[] memory list, uint256 total) {
-        total = marketCount;
-        if (offset >= total || limit == 0) {
-            return (new MarketSummary[](0), total);
-        }
-        uint256 count = total - offset;
-        if (count > limit) count = limit;
-        list = new MarketSummary[](count);
-        for (uint256 i = 0; i < count; i++) {
-            list[i] = getMarket(offset + i + 1);
-        }
-    }
-
-    /**
-     * @notice Fetch a user's positions and instant liquidation values across all markets.
-     */
-    function getUserPositions(address user) external view returns (UserPosition[] memory positions) {
-        positions = new UserPosition[](marketCount);
-        for (uint256 i = 1; i <= marketCount; i++) {
-            uint256 yShares = yesBalances[i][user];
-            uint256 nShares = noBalances[i][user];
-            uint256 yVal = 0;
-            uint256 nVal = 0;
-            if (yShares > 0) {
-                (yVal, , ) = this.quoteSell(i, true, yShares);
-            }
-            if (nShares > 0) {
-                (nVal, , ) = this.quoteSell(i, false, nShares);
-            }
-            positions[i - 1] = UserPosition({
-                marketId: i,
-                yesShares: yShares,
-                noShares: nShares,
-                yesValueEth: yVal,
-                noValueEth: nVal
-            });
-        }
-    }
-
-    function _getMarketMetrics(
-        Market storage m
-    ) internal view returns (uint256 yesPriceWei, uint256 noPriceWei, uint256 yesSentimentBps) {
-        yesPriceWei = (m.yesCurve.virtualEth * 1e18) / m.yesCurve.virtualShares;
-        noPriceWei = (m.noCurve.virtualEth * 1e18) / m.noCurve.virtualShares;
-        uint256 total = yesPriceWei + noPriceWei;
-        if (total == 0) {
-            yesSentimentBps = 5000;
-        } else {
-            yesSentimentBps = (yesPriceWei * BPS_DENOMINATOR) / total;
-        }
     }
 }

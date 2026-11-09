@@ -40,6 +40,7 @@ import {
 import {
   OpinionMarket,
   MarketCategory,
+  MarketType,
   MarketComment,
   TradeActivity,
   INITIAL_OPINION_MARKETS,
@@ -48,6 +49,7 @@ import {
   getMarketPricesAndSentiment,
   quoteBuyOrder,
   quoteSellOrder,
+  isPredictionMarket,
 } from './lib/bondingCurve';
 import { NULLHOOD_MARKETS_ABI } from './contracts/NullhoodMarketsArtifact';
 import { Navbar, TiredFunNavTab } from './components/Navbar';
@@ -61,6 +63,7 @@ import { OpinionFeedView } from './components/OpinionFeedView';
 import { getUserProfile, UserProfile } from './lib/userProfileService';
 import { OpinionReputationView } from './components/OpinionReputationView';
 import { CreatorEconomicsView, FeeClaimRecord } from './components/CreatorEconomicsView';
+import { AdminResolutionDashboard } from './components/AdminResolutionDashboard';
 import { infraManager } from './lib/indexerService';
 import { dbService } from './lib/databaseService';
 
@@ -565,11 +568,17 @@ export function App() {
     sourceHandle: string;
     initialSideIsYes: boolean;
     initialBuyEth: number;
+    marketType?: MarketType;
+    closingTime?: number;
+    resolutionDeadline?: number;
+    yesCondition?: string;
+    noCondition?: string;
+    evidenceSource?: string;
   }) => {
     // 1. Enforce wallet connection
     if (!walletAddress) {
-      pushToast('Wallet Not Connected', 'Please connect your Robinhood Chain wallet to spawn an opinion market.');
-      promptConnectWallet('Spawning an Opinion Market');
+      pushToast('Wallet Not Connected', 'Please connect your Robinhood Chain wallet to spawn a market.');
+      promptConnectWallet('Spawning a Market');
       return;
     }
 
@@ -579,6 +588,8 @@ export function App() {
     }
 
     let txHash: string;
+    const isPrediction = data.marketType === 'RESOLVABLE_PREDICTION';
+
     try {
       await switchOrAddRobinhoodChain();
       const walletClient = createWalletClient({
@@ -587,21 +598,45 @@ export function App() {
         transport: custom(window.ethereum),
       });
 
-      pushToast('Confirm in Wallet', 'Please confirm the createMarket transaction in MetaMask...');
+      pushToast(
+        'Confirm in Wallet',
+        `Please confirm ${isPrediction ? 'createPredictionMarket' : 'createMarket'} in MetaMask...`
+      );
 
-      txHash = await walletClient.writeContract({
-        address: contractAddress as `0x${string}`,
-        abi: NULLHOOD_MARKETS_ABI,
-        functionName: 'createMarket',
-        args: [
-          data.question,
-          data.category,
-          data.imageUri,
-          data.sourceHandle || `@${userProfile.username}`,
-          data.initialSideIsYes,
-        ],
-        value: data.initialBuyEth > 0 ? parseEther(data.initialBuyEth.toString()) : 0n,
-      });
+      if (isPrediction) {
+        txHash = await walletClient.writeContract({
+          address: contractAddress as `0x${string}`,
+          abi: NULLHOOD_MARKETS_ABI,
+          functionName: 'createPredictionMarket',
+          args: [
+            data.question,
+            data.category,
+            data.imageUri,
+            data.sourceHandle || `@${userProfile.username}`,
+            BigInt(data.closingTime || Math.floor(Date.now() / 1000) + 7 * 86400),
+            BigInt(data.resolutionDeadline || Math.floor(Date.now() / 1000) + 8 * 86400),
+            data.yesCondition || '',
+            data.noCondition || '',
+            data.evidenceSource || '',
+            data.initialSideIsYes,
+          ],
+          value: data.initialBuyEth > 0 ? parseEther(data.initialBuyEth.toString()) : 0n,
+        });
+      } else {
+        txHash = await walletClient.writeContract({
+          address: contractAddress as `0x${string}`,
+          abi: NULLHOOD_MARKETS_ABI,
+          functionName: 'createMarket',
+          args: [
+            data.question,
+            data.category,
+            data.imageUri,
+            data.sourceHandle || `@${userProfile.username}`,
+            data.initialSideIsYes,
+          ],
+          value: data.initialBuyEth > 0 ? parseEther(data.initialBuyEth.toString()) : 0n,
+        });
+      }
 
       pushToast('Creating Market', 'Awaiting block confirmation on Robinhood Chain...', txHash);
 
@@ -624,7 +659,7 @@ export function App() {
       }
 
       pushToast(
-        'Opinion Market Live on Robinhood Chain!',
+        isPrediction ? 'Prediction Market Live on Robinhood Chain!' : 'Opinion Market Live on Robinhood Chain!',
         `Spawned Market on-chain: "${data.question}"`,
         txHash
       );
@@ -632,6 +667,243 @@ export function App() {
       infraManager.recordError('CONTRACT_TX', err);
       const msg = err instanceof Error ? err.message : 'Market creation cancelled';
       pushToast('Market Creation Cancelled', msg.slice(0, 80));
+      throw err;
+    }
+  };
+
+  // Phase 4 & 5 Handlers: Prediction Resolution, Disputes, Settlement Claims
+  const handleProposeOutcome = async (
+    marketId: number,
+    outcome: 'YES' | 'NO' | 'VOID',
+    evidenceUrl: string
+  ) => {
+    if (!walletAddress || !window.ethereum) {
+      pushToast('Wallet Required', 'Please connect your Robinhood Chain wallet to propose outcome.');
+      promptConnectWallet('Proposing Outcome');
+      return;
+    }
+    const outcomeNum = outcome === 'YES' ? 1 : outcome === 'NO' ? 2 : 3;
+    try {
+      await switchOrAddRobinhoodChain();
+      const walletClient = createWalletClient({
+        account: walletAddress as `0x${string}`,
+        chain: robinhoodTestnet,
+        transport: custom(window.ethereum),
+      });
+
+      pushToast('Confirm in Wallet', 'Please confirm proposeOutcome in your wallet...');
+      const txHash = await walletClient.writeContract({
+        address: contractAddress as `0x${string}`,
+        abi: NULLHOOD_MARKETS_ABI,
+        functionName: 'proposeOutcome',
+        args: [BigInt(marketId), outcomeNum, evidenceUrl],
+      });
+
+      pushToast('Proposing Outcome', 'Broadcasting proposal to Robinhood Chain...', txHash);
+      await infraManager.publicClient.waitForTransactionReceipt({ hash: txHash as `0x${string}` });
+
+      const refreshed = await dbService.syncOnChainMarkets(contractAddress);
+      if (refreshed && refreshed.length > 0) setMarkets(refreshed);
+
+      pushToast('Outcome Proposed', `Proposed ${outcome} with verifiable evidence on Market #${marketId}`, txHash);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Proposal failed';
+      pushToast('Proposal Error', msg.slice(0, 80));
+      throw err;
+    }
+  };
+
+  const handleDisputeOutcome = async (marketId: number, counterEvidenceUrl: string) => {
+    if (!walletAddress || !window.ethereum) {
+      pushToast('Wallet Required', 'Please connect your wallet to dispute outcome.');
+      promptConnectWallet('Disputing Outcome');
+      return;
+    }
+    try {
+      await switchOrAddRobinhoodChain();
+      const walletClient = createWalletClient({
+        account: walletAddress as `0x${string}`,
+        chain: robinhoodTestnet,
+        transport: custom(window.ethereum),
+      });
+
+      pushToast('Confirm in Wallet', 'Please confirm disputeOutcome in your wallet...');
+      const txHash = await walletClient.writeContract({
+        address: contractAddress as `0x${string}`,
+        abi: NULLHOOD_MARKETS_ABI,
+        functionName: 'disputeOutcome',
+        args: [BigInt(marketId), counterEvidenceUrl],
+      });
+
+      pushToast('Challenging Outcome', 'Submitting dispute to Robinhood Chain...', txHash);
+      await infraManager.publicClient.waitForTransactionReceipt({ hash: txHash as `0x${string}` });
+
+      const refreshed = await dbService.syncOnChainMarkets(contractAddress);
+      if (refreshed && refreshed.length > 0) setMarkets(refreshed);
+
+      pushToast('Dispute Submitted', `Disputed Market #${marketId} with counter-evidence`, txHash);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Dispute failed';
+      pushToast('Dispute Error', msg.slice(0, 80));
+      throw err;
+    }
+  };
+
+  const handleResolveMarket = async (
+    marketId: number,
+    outcome: 'YES' | 'NO' | 'VOID',
+    evidenceUrl: string
+  ) => {
+    if (!walletAddress || !window.ethereum) {
+      pushToast('Wallet Required', 'Please connect your wallet to resolve market.');
+      promptConnectWallet('Resolving Market');
+      return;
+    }
+    const outcomeNum = outcome === 'YES' ? 1 : outcome === 'NO' ? 2 : 3;
+    try {
+      await switchOrAddRobinhoodChain();
+      const walletClient = createWalletClient({
+        account: walletAddress as `0x${string}`,
+        chain: robinhoodTestnet,
+        transport: custom(window.ethereum),
+      });
+
+      pushToast('Confirm in Wallet', 'Please confirm resolveMarket in your wallet...');
+      const txHash = await walletClient.writeContract({
+        address: contractAddress as `0x${string}`,
+        abi: NULLHOOD_MARKETS_ABI,
+        functionName: 'resolveMarket',
+        args: [BigInt(marketId), outcomeNum, evidenceUrl],
+      });
+
+      pushToast('Finalizing Resolution', 'Settling market on Robinhood Chain...', txHash);
+      await infraManager.publicClient.waitForTransactionReceipt({ hash: txHash as `0x${string}` });
+
+      const refreshed = await dbService.syncOnChainMarkets(contractAddress);
+      if (refreshed && refreshed.length > 0) setMarkets(refreshed);
+
+      pushToast('Market Resolved!', `Finalized as ${outcome}. Pari-Mutuel claims are now open!`, txHash);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Resolution failed';
+      pushToast('Resolution Error', msg.slice(0, 80));
+      throw err;
+    }
+  };
+
+  const handleEmergencyCancel = async (marketId: number, reason: string) => {
+    if (!walletAddress || !window.ethereum) {
+      pushToast('Wallet Required', 'Please connect your wallet.');
+      return;
+    }
+    try {
+      await switchOrAddRobinhoodChain();
+      const walletClient = createWalletClient({
+        account: walletAddress as `0x${string}`,
+        chain: robinhoodTestnet,
+        transport: custom(window.ethereum),
+      });
+
+      pushToast('Confirm in Wallet', 'Please confirm emergency cancel in wallet...');
+      const txHash = await walletClient.writeContract({
+        address: contractAddress as `0x${string}`,
+        abi: NULLHOOD_MARKETS_ABI,
+        functionName: 'emergencyCancelMarket',
+        args: [BigInt(marketId), reason],
+      });
+
+      pushToast('Cancelling Market', 'Voiding market on Robinhood Chain...', txHash);
+      await infraManager.publicClient.waitForTransactionReceipt({ hash: txHash as `0x${string}` });
+
+      const refreshed = await dbService.syncOnChainMarkets(contractAddress);
+      if (refreshed && refreshed.length > 0) setMarkets(refreshed);
+
+      pushToast('Market Voided', `Cancelled Market #${marketId}. Proportional refunds open.`, txHash);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Cancel failed';
+      pushToast('Cancel Error', msg.slice(0, 80));
+      throw err;
+    }
+  };
+
+  const handleClaimSettlement = async (marketId: number) => {
+    if (!walletAddress || !window.ethereum) {
+      pushToast('Wallet Required', 'Please connect your wallet to claim settlement rewards.');
+      promptConnectWallet('Claiming Settlement');
+      return;
+    }
+    try {
+      await switchOrAddRobinhoodChain();
+      const walletClient = createWalletClient({
+        account: walletAddress as `0x${string}`,
+        chain: robinhoodTestnet,
+        transport: custom(window.ethereum),
+      });
+
+      pushToast('Confirm in Wallet', 'Please confirm claimSettlementReward in MetaMask...');
+      const txHash = await walletClient.writeContract({
+        address: contractAddress as `0x${string}`,
+        abi: NULLHOOD_MARKETS_ABI,
+        functionName: 'claimSettlementReward',
+        args: [BigInt(marketId)],
+      });
+
+      pushToast('Claiming Payout', 'Processing Pari-Mutuel reward distribution...', txHash);
+      await infraManager.publicClient.waitForTransactionReceipt({ hash: txHash as `0x${string}` });
+
+      const bal = await infraManager.publicClient.getBalance({ address: walletAddress as `0x${string}` });
+      setEthBalance(formatEther(bal));
+
+      setHoldings((prev) => {
+        const next = { ...prev, [marketId]: { yesShares: 0, noShares: 0 } };
+        dbService.saveHoldings(next);
+        return next;
+      });
+
+      pushToast('Settlement Claimed!', `Pari-Mutuel winning payout received in your wallet!`, txHash);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Claim failed';
+      pushToast('Claim Error', msg.slice(0, 80));
+      throw err;
+    }
+  };
+
+  const handleClaimVoidRefund = async (marketId: number) => {
+    if (!walletAddress || !window.ethereum) {
+      pushToast('Wallet Required', 'Please connect your wallet to claim refund.');
+      return;
+    }
+    try {
+      await switchOrAddRobinhoodChain();
+      const walletClient = createWalletClient({
+        account: walletAddress as `0x${string}`,
+        chain: robinhoodTestnet,
+        transport: custom(window.ethereum),
+      });
+
+      pushToast('Confirm in Wallet', 'Please confirm claimVoidRefund in MetaMask...');
+      const txHash = await walletClient.writeContract({
+        address: contractAddress as `0x${string}`,
+        abi: NULLHOOD_MARKETS_ABI,
+        functionName: 'claimVoidRefund',
+        args: [BigInt(marketId)],
+      });
+
+      pushToast('Claiming Refund', 'Processing refund on Robinhood Chain...', txHash);
+      await infraManager.publicClient.waitForTransactionReceipt({ hash: txHash as `0x${string}` });
+
+      const bal = await infraManager.publicClient.getBalance({ address: walletAddress as `0x${string}` });
+      setEthBalance(formatEther(bal));
+
+      setHoldings((prev) => {
+        const next = { ...prev, [marketId]: { yesShares: 0, noShares: 0 } };
+        dbService.saveHoldings(next);
+        return next;
+      });
+
+      pushToast('Refund Claimed!', `Locked ETH reserve refund received in your wallet!`, txHash);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Refund failed';
+      pushToast('Refund Error', msg.slice(0, 80));
       throw err;
     }
   };
@@ -1423,7 +1695,25 @@ export function App() {
           </div>
         )}
 
-        {/* TAB 5: HOW POV WORKS (ARCHITECTURE) */}
+        {/* TAB 5: PREDICTION RESOLUTION & GOVERNANCE DASHBOARD */}
+        {activeTab === 'resolution' && (
+          <AdminResolutionDashboard
+            markets={markets}
+            walletAddress={walletAddress}
+            contractAddress={contractAddress}
+            onProposeOutcome={handleProposeOutcome}
+            onDisputeOutcome={handleDisputeOutcome}
+            onResolveMarket={handleResolveMarket}
+            onEmergencyCancel={handleEmergencyCancel}
+            onSelectMarket={(m) => setSelectedMarketId(m.id)}
+            onRefreshMarkets={async () => {
+              const refreshed = await dbService.syncOnChainMarkets(contractAddress);
+              if (refreshed && refreshed.length > 0) setMarkets(refreshed);
+            }}
+          />
+        )}
+
+        {/* TAB 6: HOW POV WORKS (ARCHITECTURE) */}
         {activeTab === 'how-it-works' && (
           <section className="mx-auto max-w-4xl space-y-6">
             <div className="rounded-[28px] border border-[#1c313a] bg-gradient-to-r from-[#0e1c24] via-[#121218] to-[#101a22] p-6 sm:p-8 shadow-xl">
@@ -1591,6 +1881,8 @@ export function App() {
         onExecuteTrade={handleExecuteTrade}
         onAddComment={handleAddComment}
         onToggleCommentLike={handleToggleCommentLike}
+        onClaimSettlement={handleClaimSettlement}
+        onClaimVoidRefund={handleClaimVoidRefund}
       />
       )}
 

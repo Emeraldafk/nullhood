@@ -93,6 +93,31 @@ export interface MarketComment {
   hasLiked?: boolean;
 }
 
+export type MarketType = 'PERPETUAL_OPINION' | 'RESOLVABLE_PREDICTION';
+export type MarketStatus = 'ACTIVE' | 'CLOSED' | 'PROPOSED' | 'DISPUTED' | 'RESOLVED' | 'VOID';
+export type MarketOutcome = 'UNRESOLVED' | 'YES' | 'NO' | 'VOID';
+
+export interface PredictionDetails {
+  closingTime: number; // Unix timestamp in seconds (UTC)
+  resolutionDeadline: number; // Unix timestamp in seconds
+  disputeDeadline?: number;
+  yesCondition: string;
+  noCondition: string;
+  evidenceSource: string;
+  proposedEvidence?: string;
+  disputeEvidence?: string;
+  proposer?: string;
+  disputer?: string;
+  proposedAt?: number;
+  disputedAt?: number;
+  resolvedAt?: number;
+  proposedOutcome?: MarketOutcome;
+  finalOutcome?: MarketOutcome;
+  distributablePoolEth?: number;
+  winningTotalShares?: number;
+  totalClaimedSettlementEth?: number;
+}
+
 export interface OpinionMarket {
   id: number;
   creator: string;
@@ -111,6 +136,9 @@ export interface OpinionMarket {
   txHash?: string;
   isOnChain?: boolean;
   comments: MarketComment[];
+  marketType?: MarketType;
+  status?: MarketStatus;
+  prediction?: PredictionDetails;
 }
 
 export interface TradeQuote {
@@ -195,6 +223,121 @@ export function formatExactDateTime(timestamp?: number | string): string {
     minute: '2-digit',
     hour12: true,
   });
+}
+
+export function isPredictionMarket(market: OpinionMarket): boolean {
+  return market.marketType === 'RESOLVABLE_PREDICTION' || Boolean(market.prediction?.closingTime);
+}
+
+export function isTradingClosed(market: OpinionMarket): boolean {
+  if (!isPredictionMarket(market)) return false;
+  if (market.status && market.status !== 'ACTIVE') return true;
+  if (!market.prediction?.closingTime) return false;
+  const nowSec = Math.floor(Date.now() / 1000);
+  return nowSec >= market.prediction.closingTime;
+}
+
+export function getResolutionTimeRemaining(targetTimestampSec: number): {
+  isExpired: boolean;
+  days: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+  formatted: string;
+} {
+  const nowSec = Math.floor(Date.now() / 1000);
+  const diffSec = targetTimestampSec - nowSec;
+  if (diffSec <= 0) {
+    return { isExpired: true, days: 0, hours: 0, minutes: 0, seconds: 0, formatted: 'Closed' };
+  }
+  const days = Math.floor(diffSec / 86400);
+  const hours = Math.floor((diffSec % 86400) / 3600);
+  const minutes = Math.floor((diffSec % 3600) / 60);
+  const seconds = diffSec % 60;
+  let formatted = '';
+  if (days > 0) formatted = `${days}d ${hours}h left`;
+  else if (hours > 0) formatted = `${hours}h ${minutes}m left`;
+  else formatted = `${minutes}m ${seconds}s left`;
+  return { isExpired: false, days, hours, minutes, seconds, formatted };
+}
+
+export function calculateSettlementQuote(
+  market: OpinionMarket,
+  userYesShares: number,
+  userNoShares: number,
+  alreadyClaimed = false
+): {
+  isEligible: boolean;
+  claimableEth: number;
+  winningOutcome: MarketOutcome;
+  poolEth: number;
+  winningShares: number;
+  reason: string;
+} {
+  const outcome = market.prediction?.finalOutcome || 'UNRESOLVED';
+  const poolEth = (market.yesCurve.realEth || 0) + (market.noCurve.realEth || 0);
+
+  if (alreadyClaimed) {
+    return {
+      isEligible: false,
+      claimableEth: 0,
+      winningOutcome: outcome,
+      poolEth,
+      winningShares: 0,
+      reason: 'Reward already claimed',
+    };
+  }
+
+  if (market.status === 'RESOLVED') {
+    if (outcome === 'YES') {
+      const winShares = market.prediction?.winningTotalShares || market.yesCurve.totalShares || 0;
+      if (userYesShares > 0 && winShares > 0) {
+        const claimableEth = (poolEth * userYesShares) / winShares;
+        return {
+          isEligible: claimableEth > 0,
+          claimableEth,
+          winningOutcome: outcome,
+          poolEth,
+          winningShares: winShares,
+          reason: 'Winning YES Shares Entitlement',
+        };
+      }
+    } else if (outcome === 'NO') {
+      const winShares = market.prediction?.winningTotalShares || market.noCurve.totalShares || 0;
+      if (userNoShares > 0 && winShares > 0) {
+        const claimableEth = (poolEth * userNoShares) / winShares;
+        return {
+          isEligible: claimableEth > 0,
+          claimableEth,
+          winningOutcome: outcome,
+          poolEth,
+          winningShares: winShares,
+          reason: 'Winning NO Shares Entitlement',
+        };
+      }
+    }
+  } else if (market.status === 'VOID') {
+    const yesRefund = market.yesCurve.totalShares > 0 ? (market.yesCurve.realEth * userYesShares) / market.yesCurve.totalShares : 0;
+    const noRefund = market.noCurve.totalShares > 0 ? (market.noCurve.realEth * userNoShares) / market.noCurve.totalShares : 0;
+    const totalRefund = yesRefund + noRefund;
+    return {
+      isEligible: totalRefund > 0,
+      claimableEth: totalRefund,
+      winningOutcome: 'VOID',
+      poolEth,
+      winningShares: 0,
+      reason: 'Proportional VOID Market Refund',
+    };
+  }
+
+  return {
+    isEligible: false,
+    claimableEth: 0,
+    winningOutcome: outcome,
+    poolEth,
+    winningShares: 0,
+    reason: market.status === 'ACTIVE' ? 'Trading still active' : 'Awaiting resolution',
+  };
 }
 
 export function getSpotPriceEth(curve: SideCurveState): number {
@@ -440,6 +583,8 @@ export const INITIAL_OPINION_MARKETS: OpinionMarket[] = [
     ],
     holders: [],
     comments: [],
+    marketType: 'PERPETUAL_OPINION',
+    status: 'ACTIVE',
   },
   {
     id: 2,
@@ -458,6 +603,8 @@ export const INITIAL_OPINION_MARKETS: OpinionMarket[] = [
     ],
     holders: [],
     comments: [],
+    marketType: 'PERPETUAL_OPINION',
+    status: 'ACTIVE',
   },
   {
     id: 3,
@@ -476,30 +623,42 @@ export const INITIAL_OPINION_MARKETS: OpinionMarket[] = [
     ],
     holders: [],
     comments: [],
+    marketType: 'PERPETUAL_OPINION',
+    status: 'ACTIVE',
   },
   {
     id: 4,
     creator: '0xa58dc16645b481D8AF2f095613944C2254311972',
-    question: 'Does Ansem eventually hit a $1B market cap portfolio on Robinhood Chain?',
-    category: 'Crypto',
+    question: 'Will Robinhood Chain mainnet TVL surpass $500,000,000 USD before November 2026?',
+    category: 'Robinhood',
     imageUri: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=600&auto=format&fit=crop&q=80',
     sourceHandle: '@creator',
     createdAt: Date.now() - 1000 * 60 * 60 * 6,
-    totalTrades: 0,
-    creatorFeesEarned: 0,
-    yesCurve: makeCurveStateFromReserve(0, 0, 0.50),
-    noCurve: makeCurveStateFromReserve(0, 0, 0.50),
+    totalTrades: 3,
+    creatorFeesEarned: 0.00004,
+    yesCurve: makeCurveStateFromReserve(0.0022, 0.0022, 0.65),
+    noCurve: makeCurveStateFromReserve(0.0018, 0.0018, 0.35),
     history: [
-      { timestamp: Date.now() - 1000 * 60 * 60 * 6, label: 'Genesis', yesSentiment: 50, yesPriceEth: 0.000001, noPriceEth: 0.000001, volumeSnapshotEth: 0 }
+      { timestamp: Date.now() - 1000 * 60 * 60 * 6, label: 'Genesis', yesSentiment: 50, yesPriceEth: 0.000001, noPriceEth: 0.000001, volumeSnapshotEth: 0 },
+      { timestamp: Date.now(), label: 'Now', yesSentiment: 55.0, yesPriceEth: 0.000001004, noPriceEth: 0.000001003, volumeSnapshotEth: 0.004 }
     ],
     holders: [],
     comments: [],
+    marketType: 'RESOLVABLE_PREDICTION',
+    status: 'ACTIVE',
+    prediction: {
+      closingTime: Math.floor(Date.now() / 1000) + 14 * 86400, // 14 days from now
+      resolutionDeadline: Math.floor(Date.now() / 1000) + 15 * 86400,
+      yesCondition: 'Robinhood Chain TVL on DefiLlama reaches or exceeds $500,000,000 USD prior to closing timestamp.',
+      noCondition: 'Robinhood Chain TVL remains below $500,000,000 USD at closing timestamp.',
+      evidenceSource: 'https://defillama.com/chain/Robinhood',
+    },
   },
   {
     id: 5,
     creator: '0xa58dc16645b481D8AF2f095613944C2254311972',
-    question: 'Will Solana DEX volume permanently surpass Ethereum L1 + L2s combined by end of 2026?',
-    category: 'DeFi',
+    question: 'Will Ethereum L1 finalize the Pectra upgrade before December 31, 2026?',
+    category: 'Crypto',
     imageUri: 'https://images.unsplash.com/photo-1622979135225-d2ba269bc1df?w=600&auto=format&fit=crop&q=80',
     sourceHandle: '@creator',
     createdAt: Date.now() - 1000 * 60 * 60 * 4,
@@ -512,11 +671,20 @@ export const INITIAL_OPINION_MARKETS: OpinionMarket[] = [
     ],
     holders: [],
     comments: [],
+    marketType: 'RESOLVABLE_PREDICTION',
+    status: 'ACTIVE',
+    prediction: {
+      closingTime: Math.floor(Date.now() / 1000) + 30 * 86400, // 30 days
+      resolutionDeadline: Math.floor(Date.now() / 1000) + 31 * 86400,
+      yesCondition: 'Ethereum consensus clients successfully activate Pectra on mainnet beacon chain.',
+      noCondition: 'Pectra mainnet activation has not occurred by closing deadline.',
+      evidenceSource: 'https://ethereum.org and Etherscan',
+    },
   },
   {
     id: 6,
     creator: '0xa58dc16645b481D8AF2f095613944C2254311972',
-    question: 'Will AI agents hold legal identity and autonomous crypto treasuries before 2028?',
+    question: 'Will an AI agent hold an autonomous multi-million dollar on-chain treasury audited by a top firm?',
     category: 'AI',
     imageUri: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&auto=format&fit=crop&q=80',
     sourceHandle: '@creator',
@@ -530,23 +698,47 @@ export const INITIAL_OPINION_MARKETS: OpinionMarket[] = [
     ],
     holders: [],
     comments: [],
+    marketType: 'RESOLVABLE_PREDICTION',
+    status: 'ACTIVE',
+    prediction: {
+      closingTime: Math.floor(Date.now() / 1000) + 45 * 86400,
+      resolutionDeadline: Math.floor(Date.now() / 1000) + 46 * 86400,
+      yesCondition: 'A publicly verified smart contract owned strictly by an autonomous agent key holds >= $2M USD with published audit.',
+      noCondition: 'No verifiable agent treasury meets all criteria before resolution date.',
+      evidenceSource: 'https://etherscan.io and official audit report',
+    },
   },
   {
     id: 7,
     creator: '0xa58dc16645b481D8AF2f095613944C2254311972',
-    question: 'Will Manchester United  ever score a goal in their life',
+    question: 'Will Manchester United score 3 or more goals in their next Premier League match?',
     category: 'Sports',
     imageUri: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=600&auto=format&fit=crop&q=80',
     sourceHandle: '@creator',
-    createdAt: Date.now() - 1000 * 60 * 30,
-    totalTrades: 0,
-    creatorFeesEarned: 0,
-    yesCurve: makeCurveStateFromReserve(0, 0, 0.50),
-    noCurve: makeCurveStateFromReserve(0, 0, 0.50),
+    createdAt: Date.now() - 1000 * 60 * 60 * 24,
+    totalTrades: 5,
+    creatorFeesEarned: 0.00008,
+    yesCurve: makeCurveStateFromReserve(0.0035, 0.0035, 0.50),
+    noCurve: makeCurveStateFromReserve(0.0045, 0.0045, 0.50),
     history: [
-      { timestamp: Date.now() - 1000 * 60 * 30, label: 'Genesis', yesSentiment: 50, yesPriceEth: 0.000001, noPriceEth: 0.000001, volumeSnapshotEth: 0 }
+      { timestamp: Date.now() - 1000 * 60 * 60 * 24, label: 'Genesis', yesSentiment: 50, yesPriceEth: 0.000001, noPriceEth: 0.000001, volumeSnapshotEth: 0 },
+      { timestamp: Date.now() - 1000 * 60 * 60 * 2, label: 'Proposed', yesSentiment: 44.0, yesPriceEth: 0.000001007, noPriceEth: 0.000001009, volumeSnapshotEth: 0.008 }
     ],
     holders: [],
     comments: [],
+    marketType: 'RESOLVABLE_PREDICTION',
+    status: 'PROPOSED',
+    prediction: {
+      closingTime: Math.floor(Date.now() / 1000) - 3600 * 4, // Closed 4 hours ago
+      resolutionDeadline: Math.floor(Date.now() / 1000) + 3600 * 20,
+      disputeDeadline: Math.floor(Date.now() / 1000) + 3600 * 20,
+      yesCondition: 'Manchester United scores 3 or more official goals in full-time regulation play.',
+      noCondition: 'Manchester United scores fewer than 3 goals.',
+      evidenceSource: 'https://www.premierleague.com/match-results',
+      proposedOutcome: 'YES',
+      proposedEvidence: 'https://www.premierleague.com/match/11245 - Final score Man Utd 3 - 1',
+      proposer: '0x3344556677889900112233445566778899001122',
+      proposedAt: Math.floor(Date.now() / 1000) - 3600 * 2,
+    },
   },
 ];

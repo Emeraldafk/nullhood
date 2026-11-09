@@ -50,6 +50,9 @@ const artifactTs = `// Auto-generated from contracts/NullhoodMarkets.sol by scri
 export const NULLHOOD_MARKETS_ABI = ${JSON.stringify(abi, null, 2)} as const;
 
 export const NULLHOOD_MARKETS_BYTECODE: \`0x\${string}\` = "${bytecode}";
+
+export const TIRED_FUN_MARKETS_ABI = NULLHOOD_MARKETS_ABI;
+export const TIRED_FUN_MARKETS_BYTECODE = NULLHOOD_MARKETS_BYTECODE;
 `;
 
 fs.writeFileSync(path.join(outDir, 'NullhoodMarketsArtifact.ts'), artifactTs, 'utf8');

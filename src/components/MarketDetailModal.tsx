@@ -16,6 +16,7 @@ import {
   Loader2,
   Scale,
   Heart,
+  Flame,
 } from 'lucide-react';
 import {
   OpinionMarket,
@@ -28,9 +29,14 @@ import {
   INITIAL_VIRTUAL_ETH,
   CURVE_K,
   MIN_TRADE_ETH,
+  isPredictionMarket,
+  isTradingClosed,
+  calculateSettlementQuote,
+  getResolutionTimeRemaining,
 } from '../lib/bondingCurve';
 import { ROBINHOOD_EXPLORER_URL } from '../config/robinhoodChain';
 import { decodeContractErrorMessage } from '../lib/indexerService';
+import { Target, Clock, Award, ShieldAlert } from 'lucide-react';
 
 interface MarketDetailModalProps {
   market: OpinionMarket | null;
@@ -52,6 +58,9 @@ interface MarketDetailModalProps {
   ) => Promise<void>;
   onAddComment: (marketId: number, side: 'YES' | 'NO', text: string) => void;
   onToggleCommentLike?: (marketId: number, commentId: string) => void;
+  onClaimSettlement?: (marketId: number) => Promise<void>;
+  onClaimVoidRefund?: (marketId: number) => Promise<void>;
+  hasClaimedSettlement?: boolean;
 }
 
 export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
@@ -68,12 +77,16 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
   onExecuteTrade,
   onAddComment,
   onToggleCommentLike,
+  onClaimSettlement,
+  onClaimVoidRefund,
+  hasClaimedSettlement = false,
 }) => {
   const [tradeMode, setTradeMode] = useState<'BUY' | 'SELL'>('BUY');
   const [selectedSide, setSelectedSide] = useState<'YES' | 'NO'>(initialSide);
   const [inputAmount, setInputAmount] = useState<string>('0.001');
   const [slippagePct, setSlippagePct] = useState<number>(1.0);
   const [showSlippageConfig, setShowSlippageConfig] = useState<boolean>(false);
+  const [isClaimingReward, setIsClaimingReward] = useState<boolean>(false);
 
   const [chartTab, setChartTab] = useState<
     'bonding-curve' | 'sentiment' | 'dual-price' | 'intelligence'
@@ -259,48 +272,153 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
     ? Math.max(0.00005, ...history.map((h) => Math.max(h.yesPriceEth, h.noPriceEth)))
     : 0.00005;
 
+  const isPrediction = isPredictionMarket(market);
+  const tradingClosed = isTradingClosed(market);
+  const settlementQuote = calculateSettlementQuote(
+    market,
+    userYesShares,
+    userNoShares,
+    hasClaimedSettlement
+  );
+  const timeRemaining = market.prediction?.closingTime
+    ? getResolutionTimeRemaining(market.prediction.closingTime)
+    : null;
+
+  const currentStatus = market.status || 'ACTIVE';
+
+  const LIFECYCLE_STEPS: { key: string; label: string }[] = [
+    { key: 'ACTIVE', label: '1. Active Trading' },
+    { key: 'CLOSED', label: '2. Closed' },
+    { key: 'PROPOSED', label: '3. Proposed' },
+    { key: 'DISPUTED', label: '4. Dispute Window' },
+    { key: 'RESOLVED', label: '5. Resolved' },
+  ];
+
+  const getStepIndex = (st: string) => {
+    if (st === 'ACTIVE') return tradingClosed ? 1 : 0;
+    if (st === 'CLOSED') return 1;
+    if (st === 'PROPOSED') return 2;
+    if (st === 'DISPUTED') return 3;
+    if (st === 'RESOLVED' || st === 'VOID') return 4;
+    return 0;
+  };
+
+  const activeStepIdx = getStepIndex(currentStatus);
+
+  const handleClaimRewardClick = async () => {
+    if (isClaimingReward) return;
+    setIsClaimingReward(true);
+    try {
+      if (currentStatus === 'VOID') {
+        if (onClaimVoidRefund) await onClaimVoidRefund(market.id);
+      } else {
+        if (onClaimSettlement) await onClaimSettlement(market.id);
+      }
+    } finally {
+      setIsClaimingReward(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-3 backdrop-blur-md sm:p-6">
       <div className="relative flex max-h-[94vh] w-full max-w-6xl flex-col overflow-hidden rounded-[28px] border border-[#232330] bg-[#121218] shadow-2xl">
         {/* Top Modal Header */}
-        <div className="flex items-start justify-between border-b border-[#232330] bg-[#161620] px-6 py-4">
-          <div className="flex items-start gap-4 pr-4">
-            {market.imageUri && (
-              <img
-                src={market.imageUri}
-                alt=""
-                className="h-14 w-14 rounded-2xl border border-[#232330] object-cover"
-              />
-            )}
-            <div>
-              <div className="mb-1 flex flex-wrap items-center gap-2">
-                <span className="rounded-full bg-[#227c9d]/20 px-2.5 py-0.5 text-[11px] font-bold text-[#53b3d4]">
-                  {market.category}
-                </span>
-                <span className="font-mono text-[11px] text-[#8c8c9e]">
-                  Market #{market.id} • Creator {market.creator}
-                </span>
-                {market.sourceHandle && (
-                  <span className="rounded-full bg-[#20202c] px-2.5 py-0.5 font-mono text-[11px] text-slate-300">
-                    {market.sourceHandle}
+        <div className="border-b border-[#232330] bg-[#161620] px-6 py-4">
+          <div className="flex items-start justify-between">
+            <div className="flex items-start gap-4 pr-4">
+              {market.imageUri && (
+                <img
+                  src={market.imageUri}
+                  alt=""
+                  className="h-14 w-14 rounded-2xl border border-[#232330] object-cover"
+                />
+              )}
+              <div>
+                <div className="mb-1 flex flex-wrap items-center gap-2">
+                  {isPrediction ? (
+                    <span className="flex items-center gap-1 rounded-full border border-[#FF6B00]/40 bg-[#FF6B00]/15 px-2.5 py-0.5 font-mono text-[10px] font-bold text-[#FF8A33]">
+                      <Target className="h-3 w-3 text-[#FF6B00]" />
+                      <span>Resolvable Prediction Market</span>
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1 rounded-full border border-[#227c9d]/40 bg-[#227c9d]/15 px-2.5 py-0.5 font-mono text-[10px] font-bold text-[#53b3d4]">
+                      <Flame className="h-3 w-3 text-[#227c9d]" />
+                      <span>Perpetual Opinion Market</span>
+                    </span>
+                  )}
+                  <span className="rounded-full bg-[#20202c] px-2.5 py-0.5 text-[11px] font-bold text-slate-300">
+                    {market.category}
                   </span>
-                )}
-                <span className="rounded-full border border-[#227c9d]/40 bg-[#227c9d]/10 px-2.5 py-0.5 font-mono text-[10px] font-bold text-[#53b3d4]">
-                  ROBINHOOD CHAIN TESTNET (46630)
-                </span>
+                  <span className="font-mono text-[11px] text-[#8c8c9e]">
+                    Market #{market.id} • Creator {market.creator}
+                  </span>
+                  {market.sourceHandle && (
+                    <span className="rounded-full bg-[#20202c] px-2.5 py-0.5 font-mono text-[11px] text-slate-300">
+                      {market.sourceHandle}
+                    </span>
+                  )}
+                  <span className="rounded-full border border-[#227c9d]/40 bg-[#227c9d]/10 px-2.5 py-0.5 font-mono text-[10px] font-bold text-[#53b3d4]">
+                    ROBINHOOD CHAIN TESTNET (46630)
+                  </span>
+                </div>
+                <h2 className="text-lg font-extrabold text-white sm:text-xl font-fun">
+                  {market.question}
+                </h2>
               </div>
-              <h2 className="text-lg font-extrabold text-white sm:text-xl font-fun">
-                {market.question}
-              </h2>
             </div>
+
+            <button
+              onClick={onClose}
+              className="rounded-full border border-[#232330] bg-[#1a1a24] p-2 text-[#8c8c9e] transition hover:border-white/30 hover:text-white"
+            >
+              <X className="h-5 w-5" />
+            </button>
           </div>
 
-          <button
-            onClick={onClose}
-            className="rounded-full border border-[#232330] bg-[#1a1a24] p-2 text-[#8c8c9e] transition hover:border-white/30 hover:text-white"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          {/* Phase 4: Resolution Lifecycle Progress Stepper (Only for Prediction Markets) */}
+          {isPrediction && (
+            <div className="mt-4 pt-3 border-t border-[#232330]/80">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-orange-300 flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5 text-[#FF6B00]" />
+                  Prediction Lifecycle: <strong className="text-white">{currentStatus}</strong>
+                  {timeRemaining && !timeRemaining.isExpired && ` (${timeRemaining.formatted})`}
+                </span>
+                <span className="font-mono text-[10px] text-[#8c8c9e]">
+                  Pari-Mutuel Settlement Model
+                </span>
+              </div>
+
+              <div className="grid grid-cols-5 gap-1 sm:gap-2">
+                {LIFECYCLE_STEPS.map((step, idx) => {
+                  const isPast = idx < activeStepIdx;
+                  const isCurrent = idx === activeStepIdx;
+                  return (
+                    <div
+                      key={step.key}
+                      className={`flex flex-col items-center justify-center rounded-xl p-2 text-center transition ${
+                        isCurrent
+                          ? 'border border-[#FF6B00] bg-[#FF6B00]/20 text-[#FF8A33] shadow-md shadow-[#FF6B00]/10 font-bold'
+                          : isPast
+                          ? 'border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 font-medium'
+                          : 'border border-[#232330] bg-[#0c0c11]/60 text-[#8c8c9e]'
+                      }`}
+                    >
+                      <span className="text-[10px] sm:text-xs font-mono">{step.label}</span>
+                      {isCurrent && (
+                        <span className="mt-0.5 text-[9px] font-bold uppercase tracking-wider text-orange-200">
+                          Active State
+                        </span>
+                      )}
+                      {isPast && (
+                        <span className="mt-0.5 text-[9px] text-emerald-400">Completed</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Modal Body */}
@@ -732,6 +850,89 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
               </div>
             </div>
 
+            {/* Phase 3 & 4: Prediction Specifications Card (Only for Prediction Markets) */}
+            {isPrediction && market.prediction && (
+              <div className="rounded-[22px] border border-[#FF6B00]/30 bg-[#FF6B00]/5 p-4 space-y-3">
+                <div className="flex items-center justify-between border-b border-[#FF6B00]/20 pb-2">
+                  <div className="flex items-center gap-2">
+                    <Target className="h-4 w-4 text-[#FF6B00]" />
+                    <span className="font-fun text-xs font-bold uppercase tracking-wider text-orange-200">
+                      Prediction Resolution Criteria & Verification
+                    </span>
+                  </div>
+                  {market.prediction.evidenceSource && (
+                    <a
+                      href={market.prediction.evidenceSource}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 font-mono text-[11px] text-[#53b3d4] hover:underline"
+                    >
+                      <span>Evidence Source</span>
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 font-mono text-xs">
+                  <div className="rounded-xl border border-[#232330] bg-[#0c0c11] p-2.5">
+                    <span className="block text-[10px] text-[#8c8c9e] uppercase font-bold">Trading Closes (UTC)</span>
+                    <span className="text-white font-bold">
+                      {formatExactDateTime(market.prediction.closingTime * 1000)}
+                    </span>
+                  </div>
+                  <div className="rounded-xl border border-[#232330] bg-[#0c0c11] p-2.5">
+                    <span className="block text-[10px] text-[#8c8c9e] uppercase font-bold">Resolution Deadline</span>
+                    <span className="text-white font-bold">
+                      {formatExactDateTime(market.prediction.resolutionDeadline * 1000)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="space-y-2 text-xs">
+                  <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-2.5">
+                    <strong className="text-emerald-300 font-bold block mb-0.5">YES Condition:</strong>
+                    <p className="text-slate-300 leading-relaxed font-sans">{market.prediction.yesCondition}</p>
+                  </div>
+                  <div className="rounded-xl border border-orange-500/20 bg-orange-500/5 p-2.5">
+                    <strong className="text-orange-300 font-bold block mb-0.5">NO Condition:</strong>
+                    <p className="text-slate-300 leading-relaxed font-sans">{market.prediction.noCondition}</p>
+                  </div>
+                </div>
+
+                {/* If Proposed or Disputed details exist */}
+                {market.prediction.proposedOutcome && (
+                  <div className="rounded-xl border border-purple-500/30 bg-purple-500/10 p-3 text-xs space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-purple-300">Proposed Outcome:</span>
+                      <span className="font-mono font-bold text-white uppercase px-2 py-0.5 rounded bg-purple-600/30">
+                        {market.prediction.proposedOutcome}
+                      </span>
+                    </div>
+                    {market.prediction.proposer && (
+                      <div className="flex justify-between font-mono text-[10px] text-slate-400">
+                        <span>Proposer:</span>
+                        <span>{market.prediction.proposer}</span>
+                      </div>
+                    )}
+                    {market.prediction.proposedEvidence && (
+                      <div className="flex items-center justify-between font-mono text-[11px] pt-1 border-t border-purple-500/20">
+                        <span className="text-slate-400">Adjudication Evidence:</span>
+                        <a
+                          href={market.prediction.proposedEvidence}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[#53b3d4] flex items-center gap-1 hover:underline"
+                        >
+                          <span>Review Evidence</span>
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Conviction Feed */}
             <div className="rounded-[22px] border border-[#232330] bg-[#161620] p-4">
               <h4 className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-white">
@@ -826,250 +1027,407 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
             </div>
           </div>
 
-          {/* Right Column: Instant Bonding Curve Trading Terminal (5 cols) */}
+          {/* Right Column: Instant Bonding Curve Trading Terminal OR Settlement Claim Terminal (5 cols) */}
           <div className="flex flex-col justify-between rounded-[24px] border border-[#232330] bg-[#161620] p-5 lg:col-span-5">
-            <div>
-              {/* BUY / SELL Tabs + Slippage */}
-              <div className="mb-3 flex items-center gap-2">
-                <div className="grid flex-1 grid-cols-2 gap-1 rounded-full border border-[#232330] bg-[#0e0e14] p-1">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setTradeMode('BUY');
-                      setInputAmount('0.001');
-                      setTxErrorExplanation(null);
-                    }}
-                    className={`rounded-full py-2 text-xs font-extrabold uppercase tracking-wider transition ${
-                      tradeMode === 'BUY'
-                        ? 'bg-[#227c9d] text-white shadow-sm'
-                        : 'text-[#8c8c9e] hover:text-white'
-                    }`}
-                  >
-                    Buy
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setTradeMode('SELL');
-                      setInputAmount(
-                        userSideShares > 0 ? Math.floor(userSideShares / 2).toString() : '1000'
-                      );
-                      setTxErrorExplanation(null);
-                    }}
-                    className={`rounded-full py-2 text-xs font-extrabold uppercase tracking-wider transition ${
-                      tradeMode === 'SELL'
-                        ? 'bg-white text-black shadow-sm'
-                        : 'text-[#8c8c9e] hover:text-white'
-                    }`}
-                  >
-                    Sell
-                  </button>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setShowSlippageConfig((s) => !s)}
-                  className="flex items-center gap-1 rounded-full border border-[#232330] bg-[#0e0e14] px-3 py-2 text-xs text-[#8c8c9e] hover:text-white"
-                >
-                  <Sliders className="h-3.5 w-3.5 text-[#227c9d]" />
-                  <span>{slippagePct}%</span>
-                </button>
-              </div>
-
-              {/* Slippage Drawer */}
-              {showSlippageConfig && (
-                <div className="mb-3 rounded-xl border border-[#232330] bg-[#0e0e14] p-2.5">
-                  <div className="flex gap-1.5">
-                    {[0.5, 1.0, 2.5, 5.0].map((val) => (
-                      <button
-                        key={val}
-                        type="button"
-                        onClick={() => setSlippagePct(val)}
-                        className={`flex-1 rounded-full py-1 text-xs font-bold transition ${
-                          slippagePct === val
-                            ? 'bg-[#227c9d] text-white'
-                            : 'bg-[#161620] text-[#8c8c9e]'
-                        }`}
-                      >
-                        {val}%
-                      </button>
-                    ))}
+            {tradingClosed ? (
+              /* Phase 5: Pari-Mutuel Settlement & Closed Market Terminal */
+              <div className="space-y-4">
+                <div className="flex items-center justify-between border-b border-[#232330] pb-3">
+                  <div className="flex items-center gap-2">
+                    <Award className="h-5 w-5 text-[#FF6B00]" />
+                    <h3 className="font-fun text-sm font-black uppercase tracking-wider text-white">
+                      Settlement & Payouts
+                    </h3>
                   </div>
-                </div>
-              )}
-
-              {/* Chunky YES vs NO Selector */}
-              <div className="mb-4">
-                <div className="grid grid-cols-2 gap-2.5">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedSide('YES')}
-                    className={`flex flex-col rounded-2xl border p-3.5 text-left transition ${
-                      selectedSide === 'YES'
-                        ? 'border-[#227c9d] bg-[#227c9d]/20 shadow-md'
-                        : 'border-[#232330] bg-[#0e0e14] opacity-70 hover:opacity-100'
+                  <span
+                    className={`rounded-full px-2.5 py-0.5 font-mono text-[11px] font-bold ${
+                      currentStatus === 'RESOLVED'
+                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                        : currentStatus === 'VOID'
+                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                        : currentStatus === 'DISPUTED'
+                        ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                        : 'bg-[#FF6B00]/20 text-[#FF8A33] border border-[#FF6B00]/30'
                     }`}
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="text-base font-black text-[#53b3d4]">Yes</span>
-                      <span className="font-mono text-xs font-bold text-[#53b3d4]">
-                        {metrics.yesSentimentPct.toFixed(1)}%
-                      </span>
-                    </div>
-                    <span className="mt-1 font-mono text-xs text-white">
-                      {metrics.yesPriceEth.toFixed(6)} ETH
-                    </span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setSelectedSide('NO')}
-                    className={`flex flex-col rounded-2xl border p-3.5 text-left transition ${
-                      selectedSide === 'NO'
-                        ? 'border-[#FF6B00] bg-[#FF6B00]/20 shadow-md'
-                        : 'border-[#232330] bg-[#0e0e14] opacity-70 hover:opacity-100'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-base font-black text-[#FF6B00]">No</span>
-                      <span className="font-mono text-xs font-bold text-[#FF6B00]">
-                        {metrics.noSentimentPct.toFixed(1)}%
-                      </span>
-                    </div>
-                    <span className="mt-1 font-mono text-xs text-white">
-                      {metrics.noPriceEth.toFixed(6)} ETH
-                    </span>
-                  </button>
+                    {currentStatus}
+                  </span>
                 </div>
-              </div>
 
-              {/* User Position */}
-              <div className="mb-3 flex items-center justify-between rounded-xl border border-[#232330] bg-[#0e0e14] px-3.5 py-2 text-xs">
-                <span className="text-[#8c8c9e]">Your {selectedSide} Balance:</span>
-                <span className="font-mono font-bold text-white">
-                  {userSideShares.toLocaleString(undefined, { maximumFractionDigits: 0 })} shares
-                </span>
-              </div>
+                {/* If Resolved or Void: Full Pari-Mutuel Claim Interface */}
+                {currentStatus === 'RESOLVED' || currentStatus === 'VOID' ? (
+                  <div className="space-y-4">
+                    <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-bold uppercase text-emerald-300">
+                          Winning Outcome
+                        </span>
+                        <span className="font-fun text-base font-black text-white px-3 py-0.5 rounded-full bg-emerald-600/40 border border-emerald-400/40">
+                          {currentStatus === 'VOID' ? 'VOID (ALL REFUNDED)' : market.prediction?.finalOutcome || 'YES'}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-300 leading-relaxed font-sans">
+                        {currentStatus === 'VOID'
+                          ? 'This market was voided. All YES and NO share holders can claim proportional refunds from actual ETH reserves.'
+                          : `The objective condition was verified. Winning ${market.prediction?.finalOutcome} share holders receive 100% of the distributable Pari-Mutuel pool.`}
+                      </p>
+                    </div>
 
-              {/* Amount Input */}
-              <form onSubmit={handleSubmitTrade}>
-                <div className="mb-3">
-                  <div className="relative">
-                    <input
-                      type="number"
-                      step="any"
-                      min="0"
-                      value={inputAmount}
-                      onChange={(e) => {
-                        setInputAmount(e.target.value);
+                    {/* Settlement Numbers */}
+                    <div className="rounded-2xl border border-[#232330] bg-[#0c0c11] p-3.5 space-y-2 font-mono text-xs">
+                      <div className="flex justify-between">
+                        <span className="text-[#8c8c9e]">Distributable Pool:</span>
+                        <span className="font-bold text-white">
+                          {metrics.totalPoolEth.toFixed(4)} ETH
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#8c8c9e]">Winning Total Shares:</span>
+                        <span className="text-slate-300">
+                          {(market.prediction?.winningTotalShares || (market.prediction?.finalOutcome === 'NO' ? market.noCurve.totalShares : market.yesCurve.totalShares) || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                        </span>
+                      </div>
+                      <div className="flex justify-between border-t border-[#232330] pt-2">
+                        <span className="text-[#8c8c9e]">Your Eligible Position:</span>
+                        <span className="font-bold text-[#53b3d4]">
+                          {market.prediction?.finalOutcome === 'NO'
+                            ? `${userNoShares.toLocaleString()} NO Shares`
+                            : `${userYesShares.toLocaleString()} YES Shares`}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm pt-1">
+                        <span className="text-[#8c8c9e]">Your Claimable Reward:</span>
+                        <span className="font-black text-[#FF6B00]">
+                          {settlementQuote.claimableEth.toFixed(5)} ETH
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Claim Action Button */}
+                    {hasClaimedSettlement ? (
+                      <div className="flex items-center justify-center gap-2 rounded-2xl border border-emerald-500/40 bg-emerald-500/15 py-3.5 text-xs font-bold text-emerald-300">
+                        <CheckCircle2 className="h-4 w-4" />
+                        <span>Settlement Reward Claimed Successfully</span>
+                      </div>
+                    ) : settlementQuote.isEligible ? (
+                      <button
+                        type="button"
+                        onClick={handleClaimRewardClick}
+                        disabled={isClaimingReward}
+                        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#FF6B00] py-3.5 text-sm font-extrabold uppercase tracking-wider text-black shadow-lg shadow-[#FF6B00]/25 transition hover:bg-[#EA580C] active:scale-[0.99] disabled:opacity-50"
+                      >
+                        {isClaimingReward ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span>Claiming on Robinhood Chain...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Award className="h-4 w-4" />
+                            <span>
+                              Claim {settlementQuote.claimableEth.toFixed(5)} ETH{' '}
+                              {currentStatus === 'VOID' ? 'Refund' : 'Payout'}
+                            </span>
+                          </>
+                        )}
+                      </button>
+                    ) : (
+                      <div className="rounded-2xl border border-[#232330] bg-[#0c0c11] p-3 text-center text-xs text-[#8c8c9e]">
+                        {settlementQuote.reason || 'You do not hold eligible winning shares in this settled market.'}
+                      </div>
+                    )}
+
+                    {/* Pari-Mutuel Financial Invariant Note */}
+                    <div className="flex items-start gap-2 rounded-xl bg-[#0c0c11] p-3 text-[11px] text-slate-400 border border-[#232330]">
+                      <Shield className="h-4 w-4 shrink-0 text-[#227c9d] mt-0.5" />
+                      <span>
+                        <strong>Mathematical Solvency Guarantee:</strong> Payout is calculated exclusively from real ETH reserves ({metrics.totalPoolEth.toFixed(3)} ETH). Virtual reserves never count as collateral. Zero protocol fees deducted from claims.
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  /* Awaiting proposal or dispute */
+                  <div className="space-y-4">
+                    <div className="rounded-2xl border border-[#FF6B00]/30 bg-[#FF6B00]/10 p-4">
+                      <div className="flex items-center gap-2 text-[#FF8A33] font-bold text-xs mb-1">
+                        <Clock className="h-4 w-4" />
+                        <span>Trading Automatically Closed</span>
+                      </div>
+                      <p className="text-xs text-slate-300 leading-relaxed font-sans">
+                        {currentStatus === 'PROPOSED'
+                          ? `An outcome of ${market.prediction?.proposedOutcome} has been proposed with evidence. The 24-hour dispute window is active.`
+                          : currentStatus === 'DISPUTED'
+                          ? 'This market outcome was disputed with counter-evidence. Awaiting authorized resolver final adjudication.'
+                          : 'Trading closed at the defined UTC timestamp. Awaiting verifiable outcome proposal by an authorized resolver.'}
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl border border-[#232330] bg-[#0c0c11] p-3.5 space-y-2 font-mono text-xs">
+                      <div className="flex justify-between">
+                        <span className="text-[#8c8c9e]">Total Pari-Mutuel Pool:</span>
+                        <span className="font-bold text-white">{metrics.totalPoolEth.toFixed(4)} ETH</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#8c8c9e]">Your YES Balance:</span>
+                        <span className="text-[#53b3d4]">{userYesShares.toLocaleString()} shares</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#8c8c9e]">Your NO Balance:</span>
+                        <span className="text-[#FF6B00]">{userNoShares.toLocaleString()} shares</span>
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl border border-[#232330] bg-[#0c0c11] p-3 text-center text-xs text-[#8c8c9e]">
+                      Trading is disabled during outcome proposal and adjudication. Once resolved, winning shareholders can claim rewards here.
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* Normal Active Trading Terminal */
+              <div>
+                {/* BUY / SELL Tabs + Slippage */}
+                <div className="mb-3 flex items-center gap-2">
+                  <div className="grid flex-1 grid-cols-2 gap-1 rounded-full border border-[#232330] bg-[#0e0e14] p-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTradeMode('BUY');
+                        setInputAmount('0.001');
                         setTxErrorExplanation(null);
                       }}
-                      className="w-full rounded-2xl border border-[#232330] bg-[#0e0e14] px-4 py-3 font-mono text-base font-bold text-white focus:border-[#227c9d] focus:outline-none"
-                    />
-                    <span className="absolute right-3.5 top-1/2 -translate-y-1/2 rounded-full bg-[#1e1e2b] px-2.5 py-1 font-mono text-xs font-bold text-[#8c8c9e]">
-                      {tradeMode === 'BUY' ? 'ETH' : 'SHARES'}
-                    </span>
-                  </div>
-
-                  {/* Preset chips */}
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {tradeMode === 'BUY' ? (
-                      [0.001, 0.005, 0.01, 0.05, 0.1].map((amt) => (
-                        <button
-                          key={amt}
-                          type="button"
-                          onClick={() => setInputAmount(amt.toString())}
-                          className="rounded-full border border-[#232330] bg-[#0e0e14] px-3 py-1 font-mono text-[11px] text-slate-300 hover:border-[#227c9d] hover:text-[#53b3d4] transition"
-                        >
-                          {amt} ETH
-                        </button>
-                      ))
-                    ) : (
-                      [0.25, 0.5, 0.75, 1].map((pct) => (
-                        <button
-                          key={pct}
-                          type="button"
-                          onClick={() =>
-                            setInputAmount(
-                              Math.max(100, Math.floor(userSideShares * pct)).toString()
-                            )
-                          }
-                          className="rounded-full border border-[#232330] bg-[#0e0e14] px-3 py-1 font-mono text-[11px] text-slate-300 hover:border-[#227c9d] hover:text-[#53b3d4] transition"
-                        >
-                          {pct * 100}%
-                        </button>
-                      ))
-                    )}
-                  </div>
-                </div>
-
-                {/* Live Quote Breakdown */}
-                <div className="mb-4 space-y-1.5 rounded-2xl border border-[#232330] bg-[#0e0e14] p-3.5 font-mono text-xs">
-                  <div className="flex justify-between">
-                    <span className="text-[#8c8c9e]">
-                      {tradeMode === 'BUY' ? 'Estimated Shares:' : 'Net ETH Out:'}
-                    </span>
-                    <span className="font-bold text-white">
-                      {tradeMode === 'BUY'
-                        ? `+${quote.sharesDelta.toLocaleString(undefined, {
-                            maximumFractionDigits: 1,
-                          })} ${selectedSide}`
-                        : `${quote.netEthDelta.toFixed(5)} ETH`}
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between">
-                    <span className="text-[#8c8c9e]">New Price:</span>
-                    <span className="text-slate-300">
-                      {quote.newPriceEth.toFixed(6)} ETH
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between">
-                    <span className="text-[#8c8c9e]">Impact:</span>
-                    <span
-                      className={
-                        quote.priceImpactPct >= 0 ? 'text-[#53b3d4]' : 'text-[#FF6B00]'
-                      }
+                      className={`rounded-full py-2 text-xs font-extrabold uppercase tracking-wider transition ${
+                        tradeMode === 'BUY'
+                          ? 'bg-[#227c9d] text-white shadow-sm'
+                          : 'text-[#8c8c9e] hover:text-white'
+                      }`}
                     >
-                      {quote.priceImpactPct >= 0 ? '+' : ''}
-                      {quote.priceImpactPct.toFixed(2)}%
-                    </span>
+                      Buy
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTradeMode('SELL');
+                        setInputAmount(
+                          userSideShares > 0 ? Math.floor(userSideShares / 2).toString() : '1000'
+                        );
+                        setTxErrorExplanation(null);
+                      }}
+                      className={`rounded-full py-2 text-xs font-extrabold uppercase tracking-wider transition ${
+                        tradeMode === 'SELL'
+                          ? 'bg-white text-black shadow-sm'
+                          : 'text-[#8c8c9e] hover:text-white'
+                      }`}
+                    >
+                      Sell
+                    </button>
                   </div>
 
-                  <div className="flex justify-between border-t border-[#232330] pt-1.5 text-[11px]">
-                    <span className="text-[#8c8c9e]">Fee (1% Creator / 1% Protocol):</span>
-                    <span className="text-orange-300">{quote.totalFeeEth.toFixed(5)} ETH</span>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowSlippageConfig((s) => !s)}
+                    className="flex items-center gap-1 rounded-full border border-[#232330] bg-[#0e0e14] px-3 py-2 text-xs text-[#8c8c9e] hover:text-white"
+                  >
+                    <Sliders className="h-3.5 w-3.5 text-[#227c9d]" />
+                    <span>{slippagePct}%</span>
+                  </button>
                 </div>
 
-                {/* Error */}
-                {txErrorExplanation && (
-                  <div className="mb-3 rounded-xl border border-red-500/40 bg-red-500/10 p-2.5 text-xs text-red-300">
-                    {txErrorExplanation}
+                {/* Slippage Drawer */}
+                {showSlippageConfig && (
+                  <div className="mb-3 rounded-xl border border-[#232330] bg-[#0e0e14] p-2.5">
+                    <div className="flex gap-1.5">
+                      {[0.5, 1.0, 2.5, 5.0].map((val) => (
+                        <button
+                          key={val}
+                          type="button"
+                          onClick={() => setSlippagePct(val)}
+                          className={`flex-1 rounded-full py-1 text-xs font-bold transition ${
+                            slippagePct === val
+                              ? 'bg-[#227c9d] text-white'
+                              : 'bg-[#161620] text-[#8c8c9e]'
+                          }`}
+                        >
+                          {val}%
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 )}
 
-                {/* Chunky rounded execute button */}
-                <button
-                  type="submit"
-                  disabled={
-                    txStatus === 'SIMULATING' ||
-                    txStatus === 'SIGNING' ||
-                    numericAmount <= 0
-                  }
-                  className={`w-full rounded-2xl py-3.5 text-sm font-extrabold uppercase tracking-wider text-white shadow-md transition hover:brightness-110 active:scale-[0.99] disabled:opacity-50 ${
-                    selectedSide === 'YES'
-                      ? 'bg-[#227c9d] hover:bg-[#1a647f]'
-                      : 'bg-[#FF6B00] hover:bg-[#EA580C] text-black'
-                  }`}
-                >
-                  {txStatus === 'SIMULATING' || txStatus === 'SIGNING'
-                    ? 'Processing...'
-                    : `${tradeMode} ${selectedSide}`}
-                </button>
-              </form>
-            </div>
+                {/* Chunky YES vs NO Selector */}
+                <div className="mb-4">
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedSide('YES')}
+                      className={`flex flex-col rounded-2xl border p-3.5 text-left transition ${
+                        selectedSide === 'YES'
+                          ? 'border-[#227c9d] bg-[#227c9d]/20 shadow-md'
+                          : 'border-[#232330] bg-[#0e0e14] opacity-70 hover:opacity-100'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-base font-black text-[#53b3d4]">Yes</span>
+                        <span className="font-mono text-xs font-bold text-[#53b3d4]">
+                          {metrics.yesSentimentPct.toFixed(1)}%
+                        </span>
+                      </div>
+                      <span className="mt-1 font-mono text-xs text-white">
+                        {metrics.yesPriceEth.toFixed(6)} ETH
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setSelectedSide('NO')}
+                      className={`flex flex-col rounded-2xl border p-3.5 text-left transition ${
+                        selectedSide === 'NO'
+                          ? 'border-[#FF6B00] bg-[#FF6B00]/20 shadow-md'
+                          : 'border-[#232330] bg-[#0e0e14] opacity-70 hover:opacity-100'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-base font-black text-[#FF6B00]">No</span>
+                        <span className="font-mono text-xs font-bold text-[#FF6B00]">
+                          {metrics.noSentimentPct.toFixed(1)}%
+                        </span>
+                      </div>
+                      <span className="mt-1 font-mono text-xs text-white">
+                        {metrics.noPriceEth.toFixed(6)} ETH
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* User Position */}
+                <div className="mb-3 flex items-center justify-between rounded-xl border border-[#232330] bg-[#0e0e14] px-3.5 py-2 text-xs">
+                  <span className="text-[#8c8c9e]">Your {selectedSide} Balance:</span>
+                  <span className="font-mono font-bold text-white">
+                    {userSideShares.toLocaleString(undefined, { maximumFractionDigits: 0 })} shares
+                  </span>
+                </div>
+
+                {/* Amount Input */}
+                <form onSubmit={handleSubmitTrade}>
+                  <div className="mb-3">
+                    <div className="relative">
+                      <input
+                        type="number"
+                        step="any"
+                        min="0"
+                        value={inputAmount}
+                        onChange={(e) => {
+                          setInputAmount(e.target.value);
+                          setTxErrorExplanation(null);
+                        }}
+                        className="w-full rounded-2xl border border-[#232330] bg-[#0e0e14] px-4 py-3 font-mono text-base font-bold text-white focus:border-[#227c9d] focus:outline-none"
+                      />
+                      <span className="absolute right-3.5 top-1/2 -translate-y-1/2 rounded-full bg-[#1e1e2b] px-2.5 py-1 font-mono text-xs font-bold text-[#8c8c9e]">
+                        {tradeMode === 'BUY' ? 'ETH' : 'SHARES'}
+                      </span>
+                    </div>
+
+                    {/* Preset chips */}
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {tradeMode === 'BUY' ? (
+                        [0.001, 0.005, 0.01, 0.05, 0.1].map((amt) => (
+                          <button
+                            key={amt}
+                            type="button"
+                            onClick={() => setInputAmount(amt.toString())}
+                            className="rounded-full border border-[#232330] bg-[#0e0e14] px-3 py-1 font-mono text-[11px] text-slate-300 hover:border-[#227c9d] hover:text-[#53b3d4] transition"
+                          >
+                            {amt} ETH
+                          </button>
+                        ))
+                      ) : (
+                        [0.25, 0.5, 0.75, 1].map((pct) => (
+                          <button
+                            key={pct}
+                            type="button"
+                            onClick={() =>
+                              setInputAmount(
+                                Math.max(100, Math.floor(userSideShares * pct)).toString()
+                              )
+                            }
+                            className="rounded-full border border-[#232330] bg-[#0e0e14] px-3 py-1 font-mono text-[11px] text-slate-300 hover:border-[#227c9d] hover:text-[#53b3d4] transition"
+                          >
+                            {pct * 100}%
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Live Quote Breakdown */}
+                  <div className="mb-4 space-y-1.5 rounded-2xl border border-[#232330] bg-[#0e0e14] p-3.5 font-mono text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-[#8c8c9e]">
+                        {tradeMode === 'BUY' ? 'Estimated Shares:' : 'Net ETH Out:'}
+                      </span>
+                      <span className="font-bold text-white">
+                        {tradeMode === 'BUY'
+                          ? `+${quote.sharesDelta.toLocaleString(undefined, {
+                              maximumFractionDigits: 1,
+                            })} ${selectedSide}`
+                          : `${quote.netEthDelta.toFixed(5)} ETH`}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <span className="text-[#8c8c9e]">New Price:</span>
+                      <span className="text-slate-300">
+                        {quote.newPriceEth.toFixed(6)} ETH
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <span className="text-[#8c8c9e]">Impact:</span>
+                      <span
+                        className={
+                          quote.priceImpactPct >= 0 ? 'text-[#53b3d4]' : 'text-[#FF6B00]'
+                        }
+                      >
+                        {quote.priceImpactPct >= 0 ? '+' : ''}
+                        {quote.priceImpactPct.toFixed(2)}%
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between border-t border-[#232330] pt-1.5 text-[11px]">
+                      <span className="text-[#8c8c9e]">Fee (1% Creator / 1% Protocol):</span>
+                      <span className="text-orange-300">{quote.totalFeeEth.toFixed(5)} ETH</span>
+                    </div>
+                  </div>
+
+                  {/* Error */}
+                  {txErrorExplanation && (
+                    <div className="mb-3 rounded-xl border border-red-500/40 bg-red-500/10 p-2.5 text-xs text-red-300">
+                      {txErrorExplanation}
+                    </div>
+                  )}
+
+                  {/* Chunky rounded execute button */}
+                  <button
+                    type="submit"
+                    disabled={
+                      txStatus === 'SIMULATING' ||
+                      txStatus === 'SIGNING' ||
+                      numericAmount <= 0
+                    }
+                    className={`w-full rounded-2xl py-3.5 text-sm font-extrabold uppercase tracking-wider text-white shadow-md transition hover:brightness-110 active:scale-[0.99] disabled:opacity-50 ${
+                      selectedSide === 'YES'
+                        ? 'bg-[#227c9d] hover:bg-[#1a647f]'
+                        : 'bg-[#FF6B00] hover:bg-[#EA580C] text-black'
+                    }`}
+                  >
+                    {txStatus === 'SIMULATING' || txStatus === 'SIGNING'
+                      ? 'Processing...'
+                      : `${tradeMode} ${selectedSide}`}
+                  </button>
+                </form>
+              </div>
+            )}
 
             {/* Bottom info note */}
             <div className="mt-3 text-center text-[11px] text-[#8c8c9e]">

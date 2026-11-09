@@ -430,6 +430,14 @@ export class TiredFunDatabaseService {
             yesPriceWei: bigint;
             noPriceWei: bigint;
             yesSentimentBps: bigint;
+            marketType: number;
+            status: number;
+            closingTime: bigint;
+            resolutionDeadline: bigint;
+            finalOutcome: number;
+            distributablePool: bigint;
+            winningTotalShares: bigint;
+            evidenceSource: string;
           };
 
           const yesRealEthNum = parseFloat(formatEther(summary.yesRealEth));
@@ -453,6 +461,91 @@ export class TiredFunDatabaseService {
           const finalCreatorFees = isMarketVotedOn ? creatorFeesNum : 0;
           const finalSentimentPct = isMarketVotedOn ? Number(summary.yesSentimentBps) / 100 : 50.0;
 
+          const MARKET_TYPE_MAP: ('PERPETUAL_OPINION' | 'RESOLVABLE_PREDICTION')[] = [
+            'PERPETUAL_OPINION',
+            'RESOLVABLE_PREDICTION',
+          ];
+          const MARKET_STATUS_MAP: ('ACTIVE' | 'CLOSED' | 'PROPOSED' | 'DISPUTED' | 'RESOLVED' | 'VOID')[] = [
+            'ACTIVE',
+            'CLOSED',
+            'PROPOSED',
+            'DISPUTED',
+            'RESOLVED',
+            'VOID',
+          ];
+          const OUTCOME_MAP: ('UNRESOLVED' | 'YES' | 'NO' | 'VOID')[] = [
+            'UNRESOLVED',
+            'YES',
+            'NO',
+            'VOID',
+          ];
+
+          const decodedMarketType = MARKET_TYPE_MAP[summary.marketType] || 'PERPETUAL_OPINION';
+          const decodedStatus = MARKET_STATUS_MAP[summary.status] || 'ACTIVE';
+
+          let predictionObj = undefined;
+          if (decodedMarketType === 'RESOLVABLE_PREDICTION') {
+            try {
+              const pDetails = (await client.readContract({
+                address: contractAddress as `0x${string}`,
+                abi: NULLHOOD_MARKETS_ABI,
+                functionName: 'getMarketPredictionDetails',
+                args: [BigInt(id)],
+              })) as {
+                closingTime: bigint;
+                resolutionDeadline: bigint;
+                disputeDeadline: bigint;
+                yesCondition: string;
+                noCondition: string;
+                evidenceSource: string;
+                proposedEvidence: string;
+                disputeEvidence: string;
+                proposer: string;
+                disputer: string;
+                proposedAt: bigint;
+                disputedAt: bigint;
+                resolvedAt: bigint;
+                proposedOutcome: number;
+                finalOutcome: number;
+                distributablePool: bigint;
+                winningTotalShares: bigint;
+                totalClaimedSettlement: bigint;
+              };
+
+              predictionObj = {
+                closingTime: Number(pDetails.closingTime),
+                resolutionDeadline: Number(pDetails.resolutionDeadline),
+                disputeDeadline: Number(pDetails.disputeDeadline),
+                yesCondition: pDetails.yesCondition,
+                noCondition: pDetails.noCondition,
+                evidenceSource: pDetails.evidenceSource,
+                proposedEvidence: pDetails.proposedEvidence,
+                disputeEvidence: pDetails.disputeEvidence,
+                proposer: pDetails.proposer,
+                disputer: pDetails.disputer,
+                proposedAt: Number(pDetails.proposedAt),
+                disputedAt: Number(pDetails.disputedAt),
+                resolvedAt: Number(pDetails.resolvedAt),
+                proposedOutcome: OUTCOME_MAP[pDetails.proposedOutcome] || 'UNRESOLVED',
+                finalOutcome: OUTCOME_MAP[pDetails.finalOutcome] || 'UNRESOLVED',
+                distributablePoolEth: parseFloat(formatEther(pDetails.distributablePool)),
+                winningTotalShares: parseFloat(formatEther(pDetails.winningTotalShares)),
+                totalClaimedSettlementEth: parseFloat(formatEther(pDetails.totalClaimedSettlement)),
+              };
+            } catch (pErr) {
+              predictionObj = {
+                closingTime: Number(summary.closingTime),
+                resolutionDeadline: Number(summary.resolutionDeadline),
+                yesCondition: '',
+                noCondition: '',
+                evidenceSource: summary.evidenceSource || '',
+                finalOutcome: OUTCOME_MAP[summary.finalOutcome] || 'UNRESOLVED',
+                distributablePoolEth: parseFloat(formatEther(summary.distributablePool)),
+                winningTotalShares: parseFloat(formatEther(summary.winningTotalShares)),
+              };
+            }
+          }
+
           const marketItem: OpinionMarket = {
             id: Number(summary.id),
             creator: summary.creator,
@@ -463,6 +556,9 @@ export class TiredFunDatabaseService {
             createdAt: Number(summary.createdAt) * 1000,
             totalTrades: finalTrades,
             creatorFeesEarned: finalCreatorFees,
+            marketType: decodedMarketType,
+            status: decodedStatus,
+            prediction: predictionObj,
             yesCurve: {
               virtualEth: INITIAL_VIRTUAL_ETH + finalYesEth,
               virtualShares: INITIAL_VIRTUAL_SHARES - (isMarketVotedOn ? parseFloat(formatEther(summary.yesTotalShares)) : 0),

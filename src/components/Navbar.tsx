@@ -9,6 +9,7 @@ import {
   Activity,
   Award,
   Coins,
+  Scale,
 } from 'lucide-react';
 import {
   ROBINHOOD_CHAIN_ID,
@@ -22,6 +23,7 @@ export type TiredFunNavTab =
   | 'pulse'
   | 'reputation'
   | 'portfolio'
+  | 'resolution'
   | 'how-it-works';
 
 export type NullhoodNavTab = TiredFunNavTab;
@@ -132,6 +134,18 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               <Coins className="h-3.5 w-3.5" />
               <span>Portfolio & Fees</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('resolution')}
+              className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-xs lg:text-sm font-bold transition-all ${
+                activeTab === 'resolution'
+                  ? 'bg-[#FF6B00] text-white shadow-sm shadow-[#FF6B00]/25'
+                  : 'text-[#8c8c9e] hover:text-white hover:bg-[#1a1a24]'
+              }`}
+            >
+              <Scale className="h-3.5 w-3.5" />
+              <span>Resolutions</span>
             </button>
 
             <button

@@ -211,6 +211,9 @@ export const CreatorEconomicsView: React.FC<CreatorEconomicsViewProps> = ({
       m.sourceHandle?.toLowerCase() === `@${profile.username}`.toLowerCase()
   );
 
+  const opinionCount = userCreatedMarkets.filter((m) => m.marketType !== 'RESOLVABLE_PREDICTION').length;
+  const predictionCount = userCreatedMarkets.filter((m) => m.marketType === 'RESOLVABLE_PREDICTION').length;
+
   const totalUserCreatorVolume = userCreatedMarkets.reduce(
     (acc, m) => acc + m.yesCurve.volumeEth + m.noCurve.volumeEth,
     0
@@ -736,7 +739,7 @@ export const CreatorEconomicsView: React.FC<CreatorEconomicsViewProps> = ({
             {userCreatedMarkets.length}
           </div>
           <span className="font-mono text-[10px] text-[#227c9d]">
-            Active Opinion Curves
+            {opinionCount} Opinion • {predictionCount} Prediction
           </span>
         </div>
 
@@ -858,6 +861,9 @@ export const CreatorEconomicsView: React.FC<CreatorEconomicsViewProps> = ({
               <div>creatorFee = (grossEthFromCurve * creatorFeeBps) / 10000;</div>
               <div>protocolFee = (grossEthFromCurve * protocolFeeBps) / 10000;</div>
               <div>netEthToSeller = grossEthFromCurve - creatorFee - protocolFee;</div>
+              <div className="mt-3 text-emerald-400 font-bold">// On Prediction Settlement Claims (Pari-Mutuel):</div>
+              <div>creatorFee = 0; protocolFee = 0; // 0% fee on settlement payouts</div>
+              <div>userPayout = (distributablePool * userWinningShares) / totalWinningShares;</div>
             </div>
 
             <p>
