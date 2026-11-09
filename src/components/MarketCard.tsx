@@ -193,8 +193,8 @@ export const MarketCard: React.FC<MarketCardProps> = ({
         {/* Right Content Section */}
         <div className="flex flex-1 flex-col justify-between p-5 sm:p-6">
           <div>
-            <div className="flex items-center justify-between text-xs text-[#8c8c9e] mb-2.5">
-              <div className="flex items-center gap-2 max-w-[65%] truncate">
+            <div className="flex flex-wrap items-center justify-between gap-1.5 text-xs text-[#8c8c9e] mb-2.5">
+              <div className="flex items-center gap-2 max-w-[60%] sm:max-w-[65%] truncate">
                 <div
                   className={`h-6 w-6 shrink-0 rounded-full bg-gradient-to-tr ${getAvatarGradient(
                     creatorDisplay
@@ -207,8 +207,8 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                 </span>
               </div>
 
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-[#8c8c9e]">
-                <span className="rounded-full bg-[#20202c] px-2.5 py-0.5 text-slate-300 font-semibold text-[11px]">
+              <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-semibold text-[#8c8c9e] shrink-0">
+                <span className="rounded-full bg-[#20202c] px-2 py-0.5 text-slate-300 font-semibold text-[10px] sm:text-[11px]">
                   {market.category}
                 </span>
                 <span>•</span>
@@ -311,12 +311,12 @@ export const MarketCard: React.FC<MarketCardProps> = ({
       >
         <div>
           {/* Header Row */}
-          <div className="flex items-center justify-between text-xs text-[#8c8c9e]">
-            <div className="flex items-center gap-2 max-w-[62%] truncate">
+          <div className="flex flex-wrap items-center justify-between gap-1 text-xs text-[#8c8c9e]">
+            <div className="flex items-center gap-1.5 sm:gap-2 max-w-[58%] sm:max-w-[62%] truncate">
               <div
-                className={`h-6 w-6 shrink-0 rounded-full bg-gradient-to-tr ${getAvatarGradient(
+                className={`h-5 w-5 sm:h-6 sm:w-6 shrink-0 rounded-full bg-gradient-to-tr ${getAvatarGradient(
                   creatorDisplay
-                )} flex items-center justify-center text-[10px] font-black text-white shadow-inner`}
+                )} flex items-center justify-center text-[9px] sm:text-[10px] font-black text-white shadow-inner`}
               >
                 {creatorDisplay.charAt(0).toUpperCase()}
               </div>
@@ -325,7 +325,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
               </span>
             </div>
 
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-[#8c8c9e]">
+            <div className="flex items-center gap-1 sm:gap-1.5 text-[11px] sm:text-xs font-semibold text-[#8c8c9e] shrink-0">
               <span>{market.category}</span>
               <span>•</span>
               <span>{timeAgo}</span>

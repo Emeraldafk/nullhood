@@ -188,19 +188,19 @@ export const AdminResolutionDashboard: React.FC<AdminResolutionDashboardProps> =
   return (
     <div className="space-y-6">
       {/* Top Banner */}
-      <div className="relative overflow-hidden rounded-[28px] border border-[#FF6B00]/30 bg-gradient-to-br from-[#1c1410] via-[#161214] to-[#0c0c11] p-6 sm:p-8 shadow-2xl">
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="relative overflow-hidden rounded-[24px] sm:rounded-[28px] border border-[#FF6B00]/30 bg-gradient-to-br from-[#1c1410] via-[#161214] to-[#0c0c11] p-4 sm:p-8 shadow-2xl">
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5 sm:gap-6">
           <div className="max-w-2xl">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="flex items-center gap-1 rounded-full border border-[#FF6B00]/40 bg-[#FF6B00]/15 px-3 py-1 font-mono text-xs font-bold text-[#FF8A33]">
+            <div className="flex flex-wrap items-center gap-2 mb-2">
+              <span className="flex items-center gap-1 rounded-full border border-[#FF6B00]/40 bg-[#FF6B00]/15 px-3 py-1 font-mono text-[11px] sm:text-xs font-bold text-[#FF8A33]">
                 <Scale className="h-3.5 w-3.5 text-[#FF6B00]" />
                 <span>Phase 4 • Prediction Adjudication</span>
               </span>
-              <span className="rounded-full bg-[#20202c] px-3 py-1 font-mono text-xs text-slate-300">
+              <span className="rounded-full bg-[#20202c] px-3 py-1 font-mono text-[11px] sm:text-xs text-slate-300">
                 Robinhood Chain • 46630
               </span>
             </div>
-            <h1 className="font-fun text-2xl sm:text-3xl font-black text-white">
+            <h1 className="font-fun text-xl sm:text-3xl font-black text-white">
               Prediction Resolution & Governance Engine
             </h1>
             <p className="mt-2 text-xs sm:text-sm text-slate-300 leading-relaxed font-sans">
@@ -231,35 +231,35 @@ export const AdminResolutionDashboard: React.FC<AdminResolutionDashboardProps> =
       </div>
 
       {/* Stats Summary Cards */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-        <div className="rounded-2xl border border-[#232330] bg-[#14141c] p-4">
-          <span className="block text-[11px] font-bold uppercase text-[#8c8c9e]">All Predictions</span>
-          <span className="font-mono text-2xl font-black text-white">{totalPredictions}</span>
+      <div className="grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-5">
+        <div className="rounded-2xl border border-[#232330] bg-[#14141c] p-3.5 sm:p-4">
+          <span className="block text-[10px] sm:text-[11px] font-bold uppercase text-[#8c8c9e]">All Predictions</span>
+          <span className="font-mono text-xl sm:text-2xl font-black text-white">{totalPredictions}</span>
         </div>
-        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4">
-          <span className="block text-[11px] font-bold uppercase text-amber-300">Awaiting Proposal</span>
-          <span className="font-mono text-2xl font-black text-amber-300">{awaitingProposalCount}</span>
+        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-3.5 sm:p-4">
+          <span className="block text-[10px] sm:text-[11px] font-bold uppercase text-amber-300">Awaiting Proposal</span>
+          <span className="font-mono text-xl sm:text-2xl font-black text-amber-300">{awaitingProposalCount}</span>
         </div>
-        <div className="rounded-2xl border border-purple-500/30 bg-purple-500/5 p-4">
-          <span className="block text-[11px] font-bold uppercase text-purple-300">Dispute Window</span>
-          <span className="font-mono text-2xl font-black text-purple-300">{inDisputeWindowCount}</span>
+        <div className="rounded-2xl border border-purple-500/30 bg-purple-500/5 p-3.5 sm:p-4">
+          <span className="block text-[10px] sm:text-[11px] font-bold uppercase text-purple-300">Dispute Window</span>
+          <span className="font-mono text-xl sm:text-2xl font-black text-purple-300">{inDisputeWindowCount}</span>
         </div>
-        <div className="rounded-2xl border border-rose-500/30 bg-rose-500/5 p-4">
-          <span className="block text-[11px] font-bold uppercase text-rose-300">Disputed</span>
-          <span className="font-mono text-2xl font-black text-rose-300">{disputedCount}</span>
+        <div className="rounded-2xl border border-rose-500/30 bg-rose-500/5 p-3.5 sm:p-4">
+          <span className="block text-[10px] sm:text-[11px] font-bold uppercase text-rose-300">Disputed</span>
+          <span className="font-mono text-xl sm:text-2xl font-black text-rose-300">{disputedCount}</span>
         </div>
-        <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-4">
-          <span className="block text-[11px] font-bold uppercase text-emerald-300">Settled & Claimable</span>
-          <span className="font-mono text-2xl font-black text-emerald-300">{finalizedCount}</span>
+        <div className="col-span-2 sm:col-span-1 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-3.5 sm:p-4">
+          <span className="block text-[10px] sm:text-[11px] font-bold uppercase text-emerald-300">Settled & Claimable</span>
+          <span className="font-mono text-xl sm:text-2xl font-black text-emerald-300">{finalizedCount}</span>
         </div>
       </div>
 
       {/* Filter Tabs & Search */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-b border-[#232330] pb-4">
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none w-full sm:w-auto">
           <button
             onClick={() => setFilterTab('all')}
-            className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition ${
+            className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition whitespace-nowrap ${
               filterTab === 'all'
                 ? 'bg-[#FF6B00] text-black shadow-sm'
                 : 'text-[#8c8c9e] hover:text-white hover:bg-[#1a1a24]'
@@ -269,7 +269,7 @@ export const AdminResolutionDashboard: React.FC<AdminResolutionDashboardProps> =
           </button>
           <button
             onClick={() => setFilterTab('needs-proposal')}
-            className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition ${
+            className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition whitespace-nowrap ${
               filterTab === 'needs-proposal'
                 ? 'bg-[#FF6B00] text-black shadow-sm'
                 : 'text-[#8c8c9e] hover:text-white hover:bg-[#1a1a24]'
@@ -279,7 +279,7 @@ export const AdminResolutionDashboard: React.FC<AdminResolutionDashboardProps> =
           </button>
           <button
             onClick={() => setFilterTab('dispute-window')}
-            className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition ${
+            className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition whitespace-nowrap ${
               filterTab === 'dispute-window'
                 ? 'bg-[#FF6B00] text-black shadow-sm'
                 : 'text-[#8c8c9e] hover:text-white hover:bg-[#1a1a24]'
@@ -289,7 +289,7 @@ export const AdminResolutionDashboard: React.FC<AdminResolutionDashboardProps> =
           </button>
           <button
             onClick={() => setFilterTab('disputed')}
-            className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition ${
+            className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition whitespace-nowrap ${
               filterTab === 'disputed'
                 ? 'bg-[#FF6B00] text-black shadow-sm'
                 : 'text-[#8c8c9e] hover:text-white hover:bg-[#1a1a24]'
@@ -299,7 +299,7 @@ export const AdminResolutionDashboard: React.FC<AdminResolutionDashboardProps> =
           </button>
           <button
             onClick={() => setFilterTab('finalized')}
-            className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition ${
+            className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition whitespace-nowrap ${
               filterTab === 'finalized'
                 ? 'bg-[#FF6B00] text-black shadow-sm'
                 : 'text-[#8c8c9e] hover:text-white hover:bg-[#1a1a24]'
@@ -530,12 +530,12 @@ export const AdminResolutionDashboard: React.FC<AdminResolutionDashboardProps> =
 
       {/* Action Modal (Propose, Dispute, Resolve, Cancel) */}
       {actionType && activeActionMarket && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md">
-          <div className="relative w-full max-w-lg overflow-hidden rounded-[28px] border border-[#232330] bg-[#121218] shadow-2xl">
-            <div className="flex items-center justify-between border-b border-[#232330] bg-[#161620] px-6 py-4">
-              <div className="flex items-center gap-2.5">
-                <Scale className="h-5 w-5 text-[#FF6B00]" />
-                <h3 className="font-fun text-base font-black text-white">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-2 sm:p-4 backdrop-blur-md">
+          <div className="relative w-full max-w-lg overflow-hidden rounded-[22px] sm:rounded-[28px] border border-[#232330] bg-[#121218] shadow-2xl">
+            <div className="flex items-center justify-between border-b border-[#232330] bg-[#161620] px-4 sm:px-6 py-3 sm:py-4">
+              <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 pr-2">
+                <Scale className="h-4 w-4 sm:h-5 sm:w-5 text-[#FF6B00] shrink-0" />
+                <h3 className="font-fun text-sm sm:text-base font-black text-white truncate">
                   {actionType === 'PROPOSE' && 'Propose Prediction Outcome'}
                   {actionType === 'DISPUTE' && 'Dispute Proposed Outcome'}
                   {actionType === 'RESOLVE' && 'Finalize Prediction Resolution'}
@@ -544,13 +544,13 @@ export const AdminResolutionDashboard: React.FC<AdminResolutionDashboardProps> =
               </div>
               <button
                 onClick={handleCloseAction}
-                className="rounded-full border border-[#232330] bg-[#1a1a24] p-1.5 text-[#8c8c9e] hover:text-white"
+                className="rounded-full border border-[#232330] bg-[#1a1a24] p-1.5 text-[#8c8c9e] hover:text-white shrink-0"
               >
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleExecuteAction} className="p-6 space-y-4">
+            <form onSubmit={handleExecuteAction} className="p-4 sm:p-6 space-y-3.5 sm:space-y-4 max-h-[85vh] overflow-y-auto">
               <div className="rounded-xl border border-[#232330] bg-[#0c0c11] p-3 text-xs">
                 <span className="block text-[10px] uppercase font-bold text-[#8c8c9e] mb-1">
                   Market #{activeActionMarket.id}
@@ -668,3 +668,4 @@ export const AdminResolutionDashboard: React.FC<AdminResolutionDashboardProps> =
     </div>
   );
 };
+

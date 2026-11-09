@@ -320,48 +320,48 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-3 backdrop-blur-md sm:p-6">
-      <div className="relative flex max-h-[94vh] w-full max-w-6xl flex-col overflow-hidden rounded-[28px] border border-[#232330] bg-[#121218] shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-2 backdrop-blur-md sm:p-6">
+      <div className="relative flex max-h-[96vh] sm:max-h-[94vh] w-full max-w-6xl flex-col overflow-hidden rounded-[22px] sm:rounded-[28px] border border-[#232330] bg-[#121218] shadow-2xl">
         {/* Top Modal Header */}
-        <div className="border-b border-[#232330] bg-[#161620] px-6 py-4">
+        <div className="border-b border-[#232330] bg-[#161620] px-3.5 sm:px-6 py-3 sm:py-4">
           <div className="flex items-start justify-between">
-            <div className="flex items-start gap-4 pr-4">
+            <div className="flex items-start gap-2.5 sm:gap-4 pr-2 sm:pr-4 min-w-0">
               {market.imageUri && (
                 <img
                   src={market.imageUri}
                   alt=""
-                  className="h-14 w-14 rounded-2xl border border-[#232330] object-cover"
+                  className="h-10 w-10 sm:h-14 sm:w-14 rounded-xl sm:rounded-2xl border border-[#232330] object-cover shrink-0"
                 />
               )}
-              <div>
-                <div className="mb-1 flex flex-wrap items-center gap-2">
+              <div className="min-w-0">
+                <div className="mb-1 flex flex-wrap items-center gap-1.5 sm:gap-2">
                   {isPrediction ? (
-                    <span className="flex items-center gap-1 rounded-full border border-[#FF6B00]/40 bg-[#FF6B00]/15 px-2.5 py-0.5 font-mono text-[10px] font-bold text-[#FF8A33]">
-                      <Target className="h-3 w-3 text-[#FF6B00]" />
-                      <span>Resolvable Prediction Market</span>
+                    <span className="flex items-center gap-1 rounded-full border border-[#FF6B00]/40 bg-[#FF6B00]/15 px-2 sm:px-2.5 py-0.5 font-mono text-[9px] sm:text-[10px] font-bold text-[#FF8A33]">
+                      <Target className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-[#FF6B00]" />
+                      <span>Resolvable Prediction</span>
                     </span>
                   ) : (
-                    <span className="flex items-center gap-1 rounded-full border border-[#227c9d]/40 bg-[#227c9d]/15 px-2.5 py-0.5 font-mono text-[10px] font-bold text-[#53b3d4]">
-                      <Flame className="h-3 w-3 text-[#227c9d]" />
-                      <span>Perpetual Opinion Market</span>
+                    <span className="flex items-center gap-1 rounded-full border border-[#227c9d]/40 bg-[#227c9d]/15 px-2 sm:px-2.5 py-0.5 font-mono text-[9px] sm:text-[10px] font-bold text-[#53b3d4]">
+                      <Flame className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-[#227c9d]" />
+                      <span>Perpetual Opinion</span>
                     </span>
                   )}
-                  <span className="rounded-full bg-[#20202c] px-2.5 py-0.5 text-[11px] font-bold text-slate-300">
+                  <span className="rounded-full bg-[#20202c] px-2 py-0.5 text-[10px] sm:text-[11px] font-bold text-slate-300">
                     {market.category}
                   </span>
-                  <span className="font-mono text-[11px] text-[#8c8c9e]">
-                    Market #{market.id} • Creator {market.creator}
+                  <span className="font-mono text-[10px] sm:text-[11px] text-[#8c8c9e]">
+                    Market #{market.id}
                   </span>
                   {market.sourceHandle && (
-                    <span className="rounded-full bg-[#20202c] px-2.5 py-0.5 font-mono text-[11px] text-slate-300">
+                    <span className="rounded-full bg-[#20202c] px-2 py-0.5 font-mono text-[10px] sm:text-[11px] text-slate-300">
                       {market.sourceHandle}
                     </span>
                   )}
-                  <span className="rounded-full border border-[#227c9d]/40 bg-[#227c9d]/10 px-2.5 py-0.5 font-mono text-[10px] font-bold text-[#53b3d4]">
+                  <span className="hidden sm:inline-block rounded-full border border-[#227c9d]/40 bg-[#227c9d]/10 px-2.5 py-0.5 font-mono text-[10px] font-bold text-[#53b3d4]">
                     ROBINHOOD CHAIN TESTNET (46630)
                   </span>
                 </div>
-                <h2 className="text-lg font-extrabold text-white sm:text-xl font-fun">
+                <h2 className="text-base sm:text-xl font-extrabold text-white font-fun line-clamp-2">
                   {market.question}
                 </h2>
               </div>
@@ -369,34 +369,34 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
 
             <button
               onClick={onClose}
-              className="rounded-full border border-[#232330] bg-[#1a1a24] p-2 text-[#8c8c9e] transition hover:border-white/30 hover:text-white"
+              className="rounded-full border border-[#232330] bg-[#1a1a24] p-1.5 sm:p-2 text-[#8c8c9e] transition hover:border-white/30 hover:text-white shrink-0"
             >
-              <X className="h-5 w-5" />
+              <X className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
           </div>
 
           {/* Phase 4: Resolution Lifecycle Progress Stepper (Only for Prediction Markets) */}
           {isPrediction && (
-            <div className="mt-4 pt-3 border-t border-[#232330]/80">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-orange-300 flex items-center gap-1.5">
-                  <Clock className="h-3.5 w-3.5 text-[#FF6B00]" />
-                  Prediction Lifecycle: <strong className="text-white">{currentStatus}</strong>
+            <div className="mt-3 pt-2.5 sm:mt-4 sm:pt-3 border-t border-[#232330]/80">
+              <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+                <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-orange-300 flex items-center gap-1.5">
+                  <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-[#FF6B00]" />
+                  Lifecycle: <strong className="text-white">{currentStatus}</strong>
                   {timeRemaining && !timeRemaining.isExpired && ` (${timeRemaining.formatted})`}
                 </span>
-                <span className="font-mono text-[10px] text-[#8c8c9e]">
-                  Pari-Mutuel Settlement Model
+                <span className="font-mono text-[9px] sm:text-[10px] text-[#8c8c9e]">
+                  Pari-Mutuel Model
                 </span>
               </div>
 
-              <div className="grid grid-cols-5 gap-1 sm:gap-2">
+              <div className="flex sm:grid sm:grid-cols-5 gap-1.5 sm:gap-2 overflow-x-auto pb-1.5 sm:pb-0 scrollbar-none">
                 {LIFECYCLE_STEPS.map((step, idx) => {
                   const isPast = idx < activeStepIdx;
                   const isCurrent = idx === activeStepIdx;
                   return (
                     <div
                       key={step.key}
-                      className={`flex flex-col items-center justify-center rounded-xl p-2 text-center transition ${
+                      className={`flex flex-col items-center justify-center rounded-xl p-1.5 sm:p-2 text-center transition min-w-[105px] sm:min-w-0 flex-1 shrink-0 sm:shrink ${
                         isCurrent
                           ? 'border border-[#FF6B00] bg-[#FF6B00]/20 text-[#FF8A33] shadow-md shadow-[#FF6B00]/10 font-bold'
                           : isPast
@@ -406,12 +406,12 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                     >
                       <span className="text-[10px] sm:text-xs font-mono">{step.label}</span>
                       {isCurrent && (
-                        <span className="mt-0.5 text-[9px] font-bold uppercase tracking-wider text-orange-200">
+                        <span className="mt-0.5 text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-orange-200">
                           Active State
                         </span>
                       )}
                       {isPast && (
-                        <span className="mt-0.5 text-[9px] text-emerald-400">Completed</span>
+                        <span className="mt-0.5 text-[8px] sm:text-[9px] text-emerald-400">Completed</span>
                       )}
                     </div>
                   );
@@ -422,7 +422,7 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
         </div>
 
         {/* Modal Body */}
-        <div className="grid flex-1 grid-cols-1 gap-6 overflow-y-auto p-6 lg:grid-cols-12">
+        <div className="grid flex-1 grid-cols-1 gap-4 sm:gap-6 overflow-y-auto p-3.5 sm:p-6 lg:grid-cols-12">
           {/* Left Column: Chart, Market Intelligence & Discussion (7 cols) */}
           <div className="flex flex-col gap-5 lg:col-span-7">
             {/* Live Sentiment Banner */}
@@ -467,7 +467,7 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
             {/* Interactive Chart & Market Intelligence Tabs */}
             <div className="rounded-[22px] border border-[#232330] bg-[#161620] p-4">
               <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                <div className="flex flex-wrap items-center gap-1 rounded-full border border-[#232330] bg-[#0f0f15] p-1">
+                <div className="flex flex-wrap items-center gap-1 rounded-2xl sm:rounded-full border border-[#232330] bg-[#0f0f15] p-1">
                   <button
                     onClick={() => setChartTab('bonding-curve')}
                     className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
@@ -1028,7 +1028,7 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
           </div>
 
           {/* Right Column: Instant Bonding Curve Trading Terminal OR Settlement Claim Terminal (5 cols) */}
-          <div className="flex flex-col justify-between rounded-[24px] border border-[#232330] bg-[#161620] p-5 lg:col-span-5">
+          <div className="flex flex-col justify-between rounded-[22px] sm:rounded-[24px] border border-[#232330] bg-[#161620] p-4 sm:p-5 lg:col-span-5">
             {tradingClosed ? (
               /* Phase 5: Pari-Mutuel Settlement & Closed Market Terminal */
               <div className="space-y-4">

@@ -279,9 +279,9 @@ export const CreatorEconomicsView: React.FC<CreatorEconomicsViewProps> = ({
           className="hidden"
         />
 
-        <div className="relative flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div className="relative flex flex-col md:flex-row items-start md:items-center justify-between gap-5 sm:gap-6">
           {/* Avatar and Identity */}
-          <div className="flex items-center gap-4 sm:gap-5">
+          <div className="flex items-start sm:items-center gap-3.5 sm:gap-5 w-full md:w-auto">
             <div
               onClick={() => {
                 setIsEditingProfile(true);
@@ -326,16 +326,16 @@ export const CreatorEconomicsView: React.FC<CreatorEconomicsViewProps> = ({
               </div>
             </div>
 
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="font-fun text-xl sm:text-2xl font-black text-white">
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                <h2 className="font-fun text-lg sm:text-2xl font-black text-white truncate max-w-[200px] sm:max-w-none">
                   {profile.displayName}
                 </h2>
-                <span className="rounded-full bg-[#227c9d]/20 border border-[#227c9d]/40 px-2.5 py-0.5 font-fun text-[11px] font-bold text-[#53b3d4]">
+                <span className="rounded-full bg-[#227c9d]/20 border border-[#227c9d]/40 px-2.5 py-0.5 font-fun text-[10px] sm:text-[11px] font-bold text-[#53b3d4]">
                   @{profile.username}
                 </span>
                 {(!usernameCooldown.canChange || !pfpCooldown.canChange) && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-[#FF6B00]/10 border border-[#FF6B00]/30 px-2 py-0.5 text-[10px] font-bold text-[#FF6B00]">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-[#FF6B00]/10 border border-[#FF6B00]/30 px-2 py-0.5 text-[9px] sm:text-[10px] font-bold text-[#FF6B00]">
                     <Lock className="h-2.5 w-2.5" />
                     <span>15d Policy Active</span>
                   </span>
@@ -347,8 +347,8 @@ export const CreatorEconomicsView: React.FC<CreatorEconomicsViewProps> = ({
               </p>
 
               {/* Bound Wallet Address pill */}
-              <div className="mt-2.5 flex items-center gap-2">
-                <div className="inline-flex items-center gap-1.5 rounded-full border border-[#2b2b3a] bg-[#101016] px-3 py-1 font-mono text-[11px] text-slate-300">
+              <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                <div className="inline-flex items-center gap-1.5 rounded-full border border-[#2b2b3a] bg-[#101016] px-2.5 sm:px-3 py-1 font-mono text-[10px] sm:text-[11px] text-slate-300">
                   <span className="h-2 w-2 rounded-full bg-emerald-400" />
                   <span>
                     {walletAddress
@@ -368,7 +368,7 @@ export const CreatorEconomicsView: React.FC<CreatorEconomicsViewProps> = ({
                   </button>
                 </div>
 
-                <span className="text-[11px] font-bold text-[#227c9d]">
+                <span className="text-[10px] sm:text-[11px] font-bold text-[#227c9d]">
                   Robinhood Chain (46630)
                 </span>
               </div>

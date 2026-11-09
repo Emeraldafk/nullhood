@@ -252,38 +252,38 @@ export const OpinionFeedView: React.FC<OpinionFeedViewProps> = ({
 
   return (
     <div className="mx-auto max-w-7xl">
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-8 items-start">
         {/* CENTER COLUMN: X-STYLE OPINION FEED */}
         <div className="lg:col-span-8 space-y-4">
           {/* Header Tabs (For you / Following like X) */}
           <div className="sticky top-14 z-20 flex border-b border-[#232332] bg-[#0c0c11]/95 backdrop-blur-md rounded-t-2xl overflow-hidden">
             <button
               onClick={() => setFeedTab('for-you')}
-              className={`flex-1 py-3.5 text-center text-sm font-bold transition relative ${
+              className={`flex-1 py-3 sm:py-3.5 text-center text-xs sm:text-sm font-bold transition relative ${
                 feedTab === 'for-you' ? 'text-white' : 'text-[#8c8c9e] hover:text-white'
               }`}
             >
               <span>For you</span>
               {feedTab === 'for-you' && (
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 h-1 w-16 rounded-full bg-[#227c9d]" />
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 h-1 w-14 sm:w-16 rounded-full bg-[#227c9d]" />
               )}
             </button>
 
             <button
               onClick={() => setFeedTab('following')}
-              className={`flex-1 py-3.5 text-center text-sm font-bold transition relative ${
+              className={`flex-1 py-3 sm:py-3.5 text-center text-xs sm:text-sm font-bold transition relative ${
                 feedTab === 'following' ? 'text-white' : 'text-[#8c8c9e] hover:text-white'
               }`}
             >
               <span>Following</span>
               {feedTab === 'following' && (
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 h-1 w-16 rounded-full bg-[#227c9d]" />
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 h-1 w-14 sm:w-16 rounded-full bg-[#227c9d]" />
               )}
             </button>
           </div>
 
           {/* COMPOSE OPINION BOX (X Style) */}
-          <div className="rounded-[24px] border border-[#232332] bg-[#14141c] p-4 sm:p-5 shadow-lg">
+          <div className="rounded-[22px] sm:rounded-[24px] border border-[#232332] bg-[#14141c] p-3.5 sm:p-5 shadow-lg">
             <div className="flex gap-3.5">
               {/* User Avatar (With uploaded PFP if available) */}
               <div className="h-10 w-10 shrink-0 rounded-full overflow-hidden shadow-md ring-2 ring-[#227c9d]/30">
@@ -431,7 +431,7 @@ export const OpinionFeedView: React.FC<OpinionFeedViewProps> = ({
               return (
                 <article
                   key={market.id}
-                  className="rounded-[26px] border border-[#232332] bg-[#14141c] p-5 sm:p-6 transition-all duration-200 hover:border-[#333348] shadow-md"
+                  className="rounded-[22px] sm:rounded-[26px] border border-[#232332] bg-[#14141c] p-4 sm:p-6 transition-all duration-200 hover:border-[#333348] shadow-md"
                 >
                   {/* Author Header Row */}
                   <div className="flex items-center justify-between mb-3">
@@ -579,15 +579,15 @@ export const OpinionFeedView: React.FC<OpinionFeedViewProps> = ({
                   </div>
 
                   {/* SOCIAL ACTIONS BAR (Exact match for X: Reply, Repost, Like, Views/Analytics, Bookmark, Share) */}
-                  <div className="mt-3.5 flex items-center justify-between border-t border-[#232332] pt-3 text-xs text-[#8c8c9e]">
+                  <div className="mt-3.5 flex items-center justify-between border-t border-[#232332] pt-3 text-[11px] sm:text-xs text-[#8c8c9e]">
                     {/* Comment / Reply button */}
                     <button
                       onClick={() => toggleComments(market.id)}
-                      className="group flex items-center gap-1.5 hover:text-[#53b3d4] transition"
+                      className="group flex items-center gap-1 sm:gap-1.5 hover:text-[#53b3d4] transition shrink-0"
                       title="Replies"
                     >
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full group-hover:bg-[#227c9d]/15">
-                        <MessageCircle className="h-4 w-4" />
+                      <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full group-hover:bg-[#227c9d]/15">
+                        <MessageCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       </div>
                       <span className="font-semibold">{market.comments.length}</span>
                     </button>
@@ -595,13 +595,13 @@ export const OpinionFeedView: React.FC<OpinionFeedViewProps> = ({
                     {/* Repost button */}
                     <button
                       onClick={() => toggleRepost(market.id)}
-                      className={`group flex items-center gap-1.5 transition ${
+                      className={`group flex items-center gap-1 sm:gap-1.5 transition shrink-0 ${
                         reposts.reposted ? 'text-emerald-400' : 'hover:text-emerald-400'
                       }`}
                       title="Repost"
                     >
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full group-hover:bg-emerald-500/15">
-                        <Repeat2 className="h-4 w-4" />
+                      <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full group-hover:bg-emerald-500/15">
+                        <Repeat2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       </div>
                       <span className="font-semibold">{reposts.count}</span>
                     </button>
@@ -609,14 +609,14 @@ export const OpinionFeedView: React.FC<OpinionFeedViewProps> = ({
                     {/* Like button (Persistent in DB) */}
                     <button
                       onClick={() => toggleLike(market.id)}
-                      className={`group flex items-center gap-1.5 transition ${
+                      className={`group flex items-center gap-1 sm:gap-1.5 transition shrink-0 ${
                         likes.liked ? 'text-rose-500' : 'hover:text-rose-400'
                       }`}
                       title="Like"
                     >
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full group-hover:bg-rose-500/15">
+                      <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full group-hover:bg-rose-500/15">
                         <Heart
-                          className={`h-4 w-4 transition-transform ${
+                          className={`h-3.5 w-3.5 sm:h-4 sm:w-4 transition-transform ${
                             likes.liked ? 'fill-rose-500 text-rose-500 scale-110' : ''
                           }`}
                         />
@@ -627,11 +627,11 @@ export const OpinionFeedView: React.FC<OpinionFeedViewProps> = ({
                     {/* Views / Analytics (Like X) */}
                     <div
                       onClick={() => onSelectMarket(market)}
-                      className="group flex items-center gap-1.5 hover:text-[#53b3d4] transition cursor-pointer"
+                      className="group flex items-center gap-1 sm:gap-1.5 hover:text-[#53b3d4] transition cursor-pointer shrink-0"
                       title="Conviction Analytics & Trades"
                     >
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full group-hover:bg-[#227c9d]/15">
-                        <BarChart2 className="h-4 w-4" />
+                      <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full group-hover:bg-[#227c9d]/15">
+                        <BarChart2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       </div>
                       <span className="font-semibold">
                         {market.totalTrades}
@@ -639,7 +639,7 @@ export const OpinionFeedView: React.FC<OpinionFeedViewProps> = ({
                     </div>
 
                     {/* Bookmark & Share buttons */}
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
                       {/* Bookmark button */}
                       <button
                         onClick={() =>
@@ -648,7 +648,7 @@ export const OpinionFeedView: React.FC<OpinionFeedViewProps> = ({
                             [market.id]: !prev[market.id],
                           }))
                         }
-                        className={`group flex h-8 w-8 items-center justify-center rounded-full transition ${
+                        className={`group flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full transition ${
                           bookmarkMap[market.id]
                             ? 'text-[#53b3d4]'
                             : 'hover:text-[#53b3d4] hover:bg-[#227c9d]/15'
@@ -656,7 +656,7 @@ export const OpinionFeedView: React.FC<OpinionFeedViewProps> = ({
                         title="Bookmark"
                       >
                         <Bookmark
-                          className={`h-4 w-4 ${
+                          className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${
                             bookmarkMap[market.id] ? 'fill-[#53b3d4]' : ''
                           }`}
                         />
@@ -665,10 +665,10 @@ export const OpinionFeedView: React.FC<OpinionFeedViewProps> = ({
                       {/* Share Button */}
                       <button
                         onClick={() => handleShare(market.id)}
-                        className="group flex h-8 w-8 items-center justify-center rounded-full hover:text-[#53b3d4] hover:bg-[#227c9d]/15 transition relative"
+                        className="group flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full hover:text-[#53b3d4] hover:bg-[#227c9d]/15 transition relative"
                         title="Share"
                       >
-                        <Share className="h-4 w-4" />
+                        <Share className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         {copiedShareId === market.id && (
                           <span className="absolute -top-7 left-1/2 -translate-x-1/2 rounded bg-[#227c9d] px-1.5 py-0.5 text-[9px] font-bold text-white shadow">
                             Copied!

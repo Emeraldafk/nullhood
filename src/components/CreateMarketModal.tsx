@@ -209,71 +209,71 @@ export const CreateMarketModal: React.FC<CreateMarketModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md overflow-y-auto">
-      <div className="relative my-8 w-full max-w-xl overflow-hidden rounded-[28px] border border-[#232330] bg-[#121218] shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-2 sm:p-4 backdrop-blur-md overflow-y-auto">
+      <div className="relative my-2 sm:my-8 w-full max-w-xl overflow-hidden rounded-[24px] sm:rounded-[28px] border border-[#232330] bg-[#121218] shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-[#232330] bg-[#161620] px-6 py-4">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between border-b border-[#232330] bg-[#161620] px-4 sm:px-6 py-3.5 sm:py-4">
+          <div className="flex items-center gap-2.5 sm:gap-3">
             <div
-              className={`flex h-10 w-10 items-center justify-center rounded-2xl text-white shadow-md transition-colors ${
+              className={`flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl sm:rounded-2xl text-white shadow-md transition-colors ${
                 marketType === 'RESOLVABLE_PREDICTION'
                   ? 'bg-[#FF6B00] shadow-[#FF6B00]/30'
                   : 'bg-[#227c9d] shadow-[#227c9d]/30'
               }`}
             >
               {marketType === 'RESOLVABLE_PREDICTION' ? (
-                <Target className="h-5 w-5 fill-white/20 text-white" />
+                <Target className="h-4 w-4 sm:h-5 sm:w-5 fill-white/20 text-white" />
               ) : (
-                <Flame className="h-5 w-5 fill-white" />
+                <Flame className="h-4 w-4 sm:h-5 sm:w-5 fill-white" />
               )}
             </div>
             <div>
-              <h2 className="font-fun text-lg font-black text-white">
+              <h2 className="font-fun text-base sm:text-lg font-black text-white">
                 {marketType === 'RESOLVABLE_PREDICTION'
                   ? 'Spawn Prediction Market'
                   : 'Spawn Opinion Market'}
               </h2>
-              <p className="text-xs text-[#8c8c9e]">
+              <p className="text-[11px] sm:text-xs text-[#8c8c9e] line-clamp-1">
                 {marketType === 'RESOLVABLE_PREDICTION'
-                  ? 'Event with closing date & Pari-Mutuel settlement rewards'
-                  : 'Earn 1.00% ETH fees on continuous conviction trading forever'}
+                  ? 'Closing date & Pari-Mutuel settlement rewards'
+                  : 'Earn 1.00% ETH fees on continuous conviction'}
               </p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="rounded-full border border-[#232330] bg-[#1a1a24] p-2 text-[#8c8c9e] hover:text-white transition"
+            className="rounded-full border border-[#232330] bg-[#1a1a24] p-1.5 sm:p-2 text-[#8c8c9e] hover:text-white transition"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="max-h-[80vh] overflow-y-auto p-6 space-y-4 pr-5">
+        <form onSubmit={handleSubmit} className="max-h-[82vh] overflow-y-auto p-4 sm:p-6 space-y-3.5 sm:space-y-4">
           {/* Phase 2: Market Type Selector */}
           <div>
-            <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-300">
+            <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-300">
               Select Market Architecture
             </label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
               <button
                 type="button"
                 onClick={() => setMarketType('PERPETUAL_OPINION')}
-                className={`flex flex-col items-start rounded-2xl border p-3.5 text-left transition ${
+                className={`flex flex-col items-start rounded-2xl border p-3 sm:p-3.5 text-left transition ${
                   marketType === 'PERPETUAL_OPINION'
                     ? 'border-[#227c9d] bg-[#227c9d]/15 shadow-md shadow-[#227c9d]/10'
                     : 'border-[#232330] bg-[#0c0c11] opacity-70 hover:opacity-100'
                 }`}
               >
-                <div className="flex items-center gap-1.5 font-fun text-sm font-black text-white">
+                <div className="flex items-center gap-1.5 font-fun text-xs sm:text-sm font-black text-white">
                   <Flame className="h-4 w-4 text-[#53b3d4]" />
                   <span>Perpetual Opinion</span>
                 </div>
                 <p className="mt-1 text-[11px] leading-relaxed text-[#8c8c9e]">
                   Continuous 24/7 conviction trading. No expiry, no settlement.
                 </p>
-                <span className="mt-2 rounded-full bg-[#227c9d]/20 px-2 py-0.5 font-mono text-[10px] font-bold text-[#53b3d4]">
+                <span className="mt-2 rounded-full bg-[#227c9d]/20 px-2 py-0.5 font-mono text-[9px] sm:text-[10px] font-bold text-[#53b3d4]">
                   Type 0 • Endless Curves
                 </span>
               </button>
@@ -281,20 +281,20 @@ export const CreateMarketModal: React.FC<CreateMarketModalProps> = ({
               <button
                 type="button"
                 onClick={() => setMarketType('RESOLVABLE_PREDICTION')}
-                className={`flex flex-col items-start rounded-2xl border p-3.5 text-left transition ${
+                className={`flex flex-col items-start rounded-2xl border p-3 sm:p-3.5 text-left transition ${
                   marketType === 'RESOLVABLE_PREDICTION'
                     ? 'border-[#FF6B00] bg-[#FF6B00]/15 shadow-md shadow-[#FF6B00]/10'
                     : 'border-[#232330] bg-[#0c0c11] opacity-70 hover:opacity-100'
                 }`}
               >
-                <div className="flex items-center gap-1.5 font-fun text-sm font-black text-white">
+                <div className="flex items-center gap-1.5 font-fun text-xs sm:text-sm font-black text-white">
                   <Target className="h-4 w-4 text-[#FF6B00]" />
                   <span>Resolvable Prediction</span>
                 </div>
                 <p className="mt-1 text-[11px] leading-relaxed text-[#8c8c9e]">
                   Fixed closing date, outcome resolution & Pari-Mutuel payouts.
                 </p>
-                <span className="mt-2 rounded-full bg-[#FF6B00]/20 px-2 py-0.5 font-mono text-[10px] font-bold text-[#FF8A33]">
+                <span className="mt-2 rounded-full bg-[#FF6B00]/20 px-2 py-0.5 font-mono text-[9px] sm:text-[10px] font-bold text-[#FF8A33]">
                   Type 1 • Settlement Pool
                 </span>
               </button>

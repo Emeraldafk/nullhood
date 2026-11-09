@@ -1117,12 +1117,12 @@ export function App() {
       />
 
       {/* Main Content Area */}
-      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
+      <main className="mx-auto max-w-7xl px-3 py-4 sm:px-6 sm:py-6">
         {/* TAB 1: OPINION MARKETS FEED */}
         {activeTab === 'feed' && (
           <div className="space-y-6">
             {/* Top Category Pills Navigation (pov.co Signature Bar) */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
               <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
                 {CATEGORIES_LIST.map((cat) => {
                   const isSelected = selectedCategory === cat.id;
@@ -1163,18 +1163,18 @@ export function App() {
             {selectedCategory === 'All' ? (
               <>
                 {/* Tired.Fun Hero Banner with pov.co Styling & Spacing */}
-                <div className="relative overflow-hidden rounded-[28px] border border-[#232330] bg-gradient-to-r from-[#101a22] via-[#14141c] to-[#0f0f15] p-6 sm:p-8">
+                <div className="relative overflow-hidden rounded-[24px] sm:rounded-[28px] border border-[#232330] bg-gradient-to-r from-[#101a22] via-[#14141c] to-[#0f0f15] p-4 sm:p-8">
                   <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#227c9d]/15 blur-3xl" />
                   <div className="pointer-events-none absolute -bottom-24 left-1/3 h-56 w-56 rounded-full bg-[#FF6B00]/10 blur-3xl" />
 
                   <div className="relative grid grid-cols-1 items-center gap-6 lg:grid-cols-12">
                     <div className="lg:col-span-7">
-                      <div className="mb-2.5 inline-flex items-center gap-2 rounded-full border border-[#227c9d]/30 bg-[#227c9d]/10 px-3.5 py-1 text-xs font-bold text-[#53b3d4]">
+                      <div className="mb-2.5 inline-flex items-center gap-2 rounded-full border border-[#227c9d]/30 bg-[#227c9d]/10 px-3 py-1 text-[11px] sm:text-xs font-bold text-[#53b3d4]">
                         <Sparkles className="h-3.5 w-3.5 text-[#227c9d]" />
-                        <span>PERPETUAL OPINION MARKETS • ROBINHOOD CHAIN (46630)</span>
+                        <span>HYBRID OPINION & PREDICTION MARKETS • ROBINHOOD CHAIN (46630)</span>
                       </div>
 
-                      <h1 className="font-fun text-3xl font-black tracking-tight text-white sm:text-4xl">
+                      <h1 className="font-fun text-2xl sm:text-4xl font-black tracking-tight text-white">
                         Trade Public Conviction.{' '}
                         <span className="bg-gradient-to-r from-[#227c9d] via-[#53b3d4] to-[#FF6B00] bg-clip-text text-transparent">
                           No Oracles. No Expiry.
@@ -1182,81 +1182,81 @@ export function App() {
                       </h1>
 
                       <p className="mt-2 max-w-xl text-xs sm:text-sm leading-relaxed text-[#8c8c9e]">
-                        Tired.Fun brings perpetual opinion market dynamics to{' '}
+                        Tired.Fun brings perpetual opinion & prediction market dynamics to{' '}
                         <span className="text-white font-semibold">Robinhood Chain Testnet</span>. Every
-                        YES and NO token trades on its own independent bonding curve with 100% instant
-                        liquidity, and curators earn{' '}
-                        <span className="text-[#FF6B00] font-bold">1% creator fees</span> forever.
+                        YES and NO token trades on its own independent bonding curve with instant
+                        liquidity, and creators earn{' '}
+                        <span className="text-[#FF6B00] font-bold">1% volume fees</span> forever.
                       </p>
 
                       {/* Spawn Bar */}
-                      <div className="mt-5 flex flex-col gap-2 rounded-full border border-[#252535] bg-[#0c0c11]/90 p-1.5 sm:flex-row sm:items-center max-w-xl">
+                      <div className="mt-4 sm:mt-5 flex flex-col gap-2 rounded-2xl sm:rounded-full border border-[#252535] bg-[#0c0c11]/90 p-1.5 sm:flex-row sm:items-center max-w-xl">
                         <input
                           type="text"
                           value={quickPromptText}
                           onChange={(e) => setQuickPromptText(e.target.value)}
-                          placeholder="Ask a question or paste an @X debate to spawn a market..."
-                          className="flex-1 bg-transparent px-4 py-2 text-xs text-white placeholder-[#7a7a8c] focus:outline-none"
+                          placeholder="Ask a question or paste an @X debate to create a market..."
+                          className="flex-1 bg-transparent px-3 py-2 text-xs text-white placeholder-[#7a7a8c] focus:outline-none"
                         />
                         <button
                           onClick={() => setIsCreateModalOpen(true)}
-                          className="flex shrink-0 items-center justify-center gap-1.5 rounded-full bg-[#227c9d] px-5 py-2 text-xs font-extrabold uppercase tracking-wider text-white shadow-sm transition hover:bg-[#1a647f] active:scale-95"
+                          className="flex shrink-0 items-center justify-center gap-1.5 rounded-xl sm:rounded-full bg-[#FF6B00] px-5 py-2.5 text-xs font-extrabold uppercase tracking-wider text-black shadow-md shadow-[#FF6B00]/25 transition hover:bg-[#EA580C] active:scale-95"
                         >
-                          <Zap className="h-3.5 w-3.5 fill-white" />
-                          <span>Spawn POV</span>
+                          <Zap className="h-3.5 w-3.5 fill-black" />
+                          <span>Create Market</span>
                         </button>
                       </div>
                     </div>
 
                     {/* 4 Clean Stats Boxes */}
-                    <div className="grid grid-cols-2 gap-3 lg:col-span-5">
-                      <div className="rounded-[20px] border border-[#232330] bg-[#101a22]/80 p-4">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-[#7a7a8c]">
+                    <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:col-span-5">
+                      <div className="rounded-[18px] sm:rounded-[20px] border border-[#232330] bg-[#101a22]/80 p-3 sm:p-4">
+                        <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#7a7a8c]">
                           Cumulative Volume
                         </span>
-                        <div className="mt-1 font-mono text-xl font-black text-white">
+                        <div className="mt-1 font-mono text-lg sm:text-xl font-black text-white">
                           {globalStats.totalVolume.toFixed(1)}{' '}
                           <span className="text-xs text-[#53b3d4]">ETH</span>
                         </div>
-                        <span className="mt-0.5 inline-block font-mono text-[10px] text-[#227c9d]">
+                        <span className="mt-0.5 inline-block font-mono text-[9px] sm:text-[10px] text-[#227c9d]">
                           Chain ID 46630
                         </span>
                       </div>
 
-                      <div className="rounded-[20px] border border-[#232330] bg-[#101a22]/80 p-4">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-[#7a7a8c]">
+                      <div className="rounded-[18px] sm:rounded-[20px] border border-[#232330] bg-[#101a22]/80 p-3 sm:p-4">
+                        <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#7a7a8c]">
                           Real ETH Locked (TVL)
                         </span>
-                        <div className="mt-1 font-mono text-xl font-black text-white">
+                        <div className="mt-1 font-mono text-lg sm:text-xl font-black text-white">
                           {globalStats.totalTvl.toFixed(2)}{' '}
                           <span className="text-xs text-[#53b3d4]">ETH</span>
                         </div>
-                        <span className="mt-0.5 inline-block font-mono text-[10px] text-[#7a7a8c]">
+                        <span className="mt-0.5 inline-block font-mono text-[9px] sm:text-[10px] text-[#7a7a8c]">
                           100% Instant Exit
                         </span>
                       </div>
 
-                      <div className="rounded-[20px] border border-[#232330] bg-[#101a22]/80 p-4">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-[#7a7a8c]">
+                      <div className="rounded-[18px] sm:rounded-[20px] border border-[#232330] bg-[#101a22]/80 p-3 sm:p-4">
+                        <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#7a7a8c]">
                           Creator Fees Accrued
                         </span>
-                        <div className="mt-1 font-mono text-xl font-black text-[#FF6B00]">
+                        <div className="mt-1 font-mono text-lg sm:text-xl font-black text-[#FF6B00]">
                           {globalStats.totalCreatorFees.toFixed(3)}{' '}
                           <span className="text-xs">ETH</span>
                         </div>
-                        <span className="mt-0.5 inline-block font-mono text-[10px] text-[#7a7a8c]">
+                        <span className="mt-0.5 inline-block font-mono text-[9px] sm:text-[10px] text-[#7a7a8c]">
                           1.00% Share
                         </span>
                       </div>
 
-                      <div className="rounded-[20px] border border-[#232330] bg-[#101a22]/80 p-4">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-[#7a7a8c]">
-                          Perpetual Markets
+                      <div className="rounded-[18px] sm:rounded-[20px] border border-[#232330] bg-[#101a22]/80 p-3 sm:p-4">
+                        <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#7a7a8c]">
+                          Active Markets
                         </span>
-                        <div className="mt-1 font-mono text-xl font-black text-white">
+                        <div className="mt-1 font-mono text-lg sm:text-xl font-black text-white">
                           {globalStats.marketCount}
                         </div>
-                        <span className="mt-0.5 inline-block font-mono text-[10px] text-[#53b3d4]">
+                        <span className="mt-0.5 inline-block font-mono text-[9px] sm:text-[10px] text-[#53b3d4]">
                           Dual YES/NO Curves
                         </span>
                       </div>
