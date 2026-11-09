@@ -1092,7 +1092,7 @@ export function App() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0b0c10] text-[#f1f1f4]">
+    <div className="min-h-screen bg-[#0b0c10] text-[#f1f1f4] w-full max-w-[100vw] overflow-x-hidden">
       {/* Top Navbar */}
       <Navbar
         walletAddress={walletAddress}
@@ -1117,13 +1117,13 @@ export function App() {
       />
 
       {/* Main Content Area */}
-      <main className="mx-auto max-w-7xl px-3 py-4 sm:px-6 sm:py-6">
+      <main className="mx-auto max-w-7xl px-3 py-4 sm:px-6 sm:py-6 w-full max-w-full overflow-x-hidden">
         {/* TAB 1: OPINION MARKETS FEED */}
         {activeTab === 'feed' && (
-          <div className="space-y-6">
+          <div className="space-y-6 w-full max-w-full">
             {/* Top Category Pills Navigation (pov.co Signature Bar) */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
-              <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 w-full min-w-0 max-w-full">
+              <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0 scrollbar-none min-w-0 max-w-full">
                 {CATEGORIES_LIST.map((cat) => {
                   const isSelected = selectedCategory === cat.id;
                   return (

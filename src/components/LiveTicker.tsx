@@ -11,14 +11,14 @@ export const LiveTicker: React.FC<LiveTickerProps> = ({ activities, onSelectMark
   const items = activities.length > 0 ? [...activities, ...activities] : [];
 
   return (
-    <div className="relative overflow-hidden border-b border-[#1f1f2a] bg-[#0c0c11] py-2">
-      <div className="flex items-center">
-        <div className="z-10 flex shrink-0 items-center gap-1.5 border-r border-[#20202c] bg-[#0c0c11] px-4 py-0.5 text-xs font-bold text-[#53b3d4]">
+    <div className="relative overflow-hidden w-full max-w-[100vw] border-b border-[#1f1f2a] bg-[#0c0c11] py-2">
+      <div className="flex items-center w-full min-w-0">
+        <div className="z-10 flex shrink-0 items-center gap-1.5 border-r border-[#20202c] bg-[#0c0c11] px-3 sm:px-4 py-0.5 text-xs font-bold text-[#53b3d4]">
           <Sparkles className="h-3.5 w-3.5 text-[#227c9d]" />
-          <span>POV Tape</span>
+          <span className="hidden sm:inline">POV Tape</span>
         </div>
 
-        <div className="overflow-hidden">
+        <div className="overflow-hidden min-w-0 flex-1 w-full">
           <div className="animate-marquee flex items-center gap-6 px-4">
             {items.map((act, idx) => (
               <button
