@@ -49,15 +49,16 @@ interface NavbarProps {
 const NAV_ITEMS: {
   id: TiredFunNavTab;
   label: string;
+  shortLabel?: string;
   icon: React.ComponentType<{ className?: string }>;
   description: string;
 }[] = [
-  { id: 'feed', label: 'Markets', icon: Sparkles, description: 'Perpetual opinions & predictions' },
-  { id: 'pulse', label: 'Feed', icon: Flame, description: 'Live conviction posts & debaters' },
-  { id: 'reputation', label: 'Reputation', icon: Award, description: 'Trader ranking & track records' },
-  { id: 'portfolio', label: 'Portfolio & Fees', icon: Coins, description: 'Holdings & 1% creator earnings' },
-  { id: 'resolution', label: 'Resolutions', icon: Scale, description: 'Adjudication & Pari-Mutuel payouts' },
-  { id: 'how-it-works', label: 'Architecture', icon: Layers, description: 'Bonding curve mathematical model' },
+  { id: 'feed', label: 'Markets', shortLabel: 'Markets', icon: Sparkles, description: 'Perpetual opinions & predictions' },
+  { id: 'pulse', label: 'Feed', shortLabel: 'Feed', icon: Flame, description: 'Live conviction posts & debaters' },
+  { id: 'reputation', label: 'Reputation', shortLabel: 'Ranks', icon: Award, description: 'Trader ranking & track records' },
+  { id: 'portfolio', label: 'Portfolio & Fees', shortLabel: 'Portfolio', icon: Coins, description: 'Holdings & 1% creator earnings' },
+  { id: 'resolution', label: 'Resolutions', shortLabel: 'Resolve', icon: Scale, description: 'Adjudication & Pari-Mutuel payouts' },
+  { id: 'how-it-works', label: 'Architecture', shortLabel: 'Model', icon: Layers, description: 'Bonding curve mathematical model' },
 ];
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -84,24 +85,24 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full max-w-[100vw] overflow-x-hidden border-b border-[#21212c] bg-[#0c0c11]/95 backdrop-blur-xl">
-      <div className="flex w-full items-center justify-between px-2.5 sm:px-6 lg:px-10 xl:px-12 py-2 sm:py-3.5 max-w-7xl mx-auto">
-        {/* Left: Brand Logo */}
-        <div className="flex items-center gap-2 sm:gap-4 lg:gap-8 shrink-0">
+    <header className="sticky top-0 z-40 w-full border-b border-[#21212c] bg-[#0c0c11]/95 backdrop-blur-xl">
+      <div className="flex w-full items-center justify-between px-3 sm:px-6 py-2.5 sm:py-3 max-w-7xl mx-auto">
+        {/* Left: Brand Logo + Desktop Navigation Tabs */}
+        <div className="flex items-center gap-3 lg:gap-5 xl:gap-8 min-w-0">
           <button
             onClick={() => handleSelectTab('feed')}
             className="flex items-center gap-1.5 sm:gap-2 text-left focus:outline-none group shrink-0"
           >
             {/* Tired.Fun flame icon in signature Orange */}
-            <div className="flex h-7 w-7 sm:h-9 sm:w-9 items-center justify-center rounded-xl sm:rounded-2xl bg-[#FF6B00] text-white shadow-md shadow-[#FF6B00]/25 transition-transform group-hover:scale-105 shrink-0">
-              <Flame className="h-3.5 w-3.5 sm:h-5 sm:w-5 fill-white" />
+            <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl sm:rounded-2xl bg-[#FF6B00] text-white shadow-md shadow-[#FF6B00]/25 transition-transform group-hover:scale-105 shrink-0">
+              <Flame className="h-4 w-4 sm:h-5 sm:w-5 fill-white" />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="font-fun text-lg sm:text-2xl font-black tracking-tight text-white whitespace-nowrap">
+                <span className="font-fun text-xl sm:text-2xl font-black tracking-tight text-white whitespace-nowrap">
                   Tired<span className="text-[#FF6B00]">.Fun</span>
                 </span>
-                <span className="hidden rounded-full border border-[#FF6B00]/30 bg-[#FF6B00]/10 px-2 py-0.5 font-mono text-[9px] sm:text-[10px] font-bold text-[#FF8A33] xl:inline-block">
+                <span className="hidden rounded-full border border-[#FF6B00]/30 bg-[#FF6B00]/10 px-2 py-0.5 font-mono text-[9px] font-bold text-[#FF8A33] 2xl:inline-block">
                   ROBINHOOD CHAIN • 46630
                 </span>
               </div>
@@ -109,7 +110,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
 
           {/* Desktop Navigation Tabs */}
-          <nav className="hidden items-center gap-1 lg:gap-2 md:flex">
+          <nav className="hidden items-center gap-1 xl:gap-1.5 md:flex">
             {NAV_ITEMS.map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
@@ -117,14 +118,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <button
                   key={item.id}
                   onClick={() => handleSelectTab(item.id)}
-                  className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 lg:px-4 lg:py-2 text-xs lg:text-sm font-bold transition-all ${
+                  className={`flex items-center gap-1.5 rounded-full px-2.5 py-1.5 lg:px-3 lg:py-1.5 xl:px-3.5 xl:py-2 text-xs lg:text-[13px] font-bold transition-all whitespace-nowrap ${
                     isActive
                       ? 'bg-[#FF6B00] text-white shadow-sm shadow-[#FF6B00]/25'
                       : 'text-[#8c8c9e] hover:text-white hover:bg-[#1a1a24]'
                   }`}
                 >
-                  <Icon className="h-3.5 w-3.5" />
-                  <span>{item.label}</span>
+                  <Icon className="h-3.5 w-3.5 shrink-0" />
+                  <span className="hidden xl:inline">{item.label}</span>
+                  <span className="inline xl:hidden">{item.shortLabel || item.label}</span>
                 </button>
               );
             })}
@@ -132,21 +134,21 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
 
         {/* Right side controls: Create, Connect/Wallet, Profile, Mobile Menu Toggle */}
-        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
           {/* Create Market Button */}
           <button
             onClick={onOpenCreateModal}
-            className="flex items-center gap-1 rounded-full bg-white px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-extrabold text-[#0e0e13] shadow-sm transition hover:bg-slate-200 active:scale-95 shrink-0"
+            className="flex items-center gap-1 sm:gap-1.5 rounded-full bg-white px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-extrabold text-[#0e0e13] shadow-sm transition hover:bg-slate-200 active:scale-95 shrink-0"
           >
             <Plus className="h-3.5 w-3.5 stroke-[3]" />
-            <span className="hidden xs:inline sm:inline">Create</span>
+            <span>Create</span>
           </button>
 
           {/* Connect / Wallet Balance pill */}
           {!walletAddress ? (
             <button
               onClick={onConnectWallet}
-              className="flex items-center gap-1 rounded-full bg-[#FF6B00] px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-extrabold text-white shadow-md shadow-[#FF6B00]/25 transition hover:bg-[#EA580C] active:scale-95 shrink-0"
+              className="flex items-center gap-1 sm:gap-1.5 rounded-full bg-[#FF6B00] px-3.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-extrabold text-white shadow-md shadow-[#FF6B00]/25 transition hover:bg-[#EA580C] active:scale-95 shrink-0"
             >
               <Wallet className="h-3.5 w-3.5" />
               <span>Connect</span>
@@ -154,29 +156,29 @@ export const Navbar: React.FC<NavbarProps> = ({
           ) : !isRobinhoodChain ? (
             <button
               onClick={onSwitchNetwork}
-              className="rounded-full bg-[#FF6B00] px-2 sm:px-3 py-1.5 text-[11px] sm:text-xs font-bold text-white hover:bg-[#EA580C] transition shadow-sm shrink-0"
+              className="rounded-full bg-[#FF6B00] px-2.5 sm:px-3 py-1.5 text-xs font-bold text-white hover:bg-[#EA580C] transition shadow-sm shrink-0"
             >
-              Switch
+              Switch 46630
             </button>
           ) : (
-            <div className="flex items-center gap-1 rounded-full border border-[#232330] bg-[#171722] py-1 px-2 sm:px-2.5 shrink-0">
-              <span className="font-mono text-[11px] sm:text-xs font-bold text-emerald-400">
+            <div className="flex items-center gap-1 sm:gap-1.5 rounded-full border border-[#232330] bg-[#171722] py-1 px-2.5 sm:px-3 shrink-0">
+              <span className="font-mono text-xs font-bold text-emerald-400">
                 {parseFloat(ethBalance || '0').toFixed(3)} ETH
               </span>
-              <span className="hidden sm:inline text-[11px] text-[#7a7a8c] font-mono">
+              <span className="hidden xl:inline text-[11px] text-[#7a7a8c] font-mono">
                 (${balanceUsd})
               </span>
             </div>
           )}
 
-          {/* User Profile Avatar - hidden on narrow mobile to avoid top nav overflow, accessible in mobile drawer */}
+          {/* User Profile Avatar - always visible, clickable, and well-spaced */}
           {userProfile && (
             <button
               onClick={() => handleSelectTab('portfolio')}
-              className="hidden sm:flex items-center gap-1.5 rounded-full border border-[#232330] bg-[#14141c] p-0.5 sm:p-1 sm:pr-3 hover:border-[#38384d] transition shrink-0"
+              className="flex items-center gap-1.5 rounded-full border border-[#232330] bg-[#14141c] p-0.5 sm:p-1 pr-1.5 sm:pr-3 hover:border-[#FF6B00]/60 hover:bg-[#1a1a24] active:scale-95 transition shrink-0 cursor-pointer shadow-sm"
               title="View Profile & Settings"
             >
-              <div className="h-6 w-6 sm:h-7 sm:w-7 rounded-full overflow-hidden shrink-0">
+              <div className="h-6 w-6 sm:h-7 sm:w-7 rounded-full overflow-hidden shrink-0 ring-1 ring-white/10">
                 {userProfile.avatarUrl ? (
                   <img
                     src={userProfile.avatarUrl}
@@ -200,10 +202,10 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Mobile Hamburger Toggle Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="flex h-7 w-7 sm:h-9 sm:w-9 items-center justify-center rounded-lg sm:rounded-xl border border-[#232330] bg-[#14141c] text-[#8c8c9e] hover:text-white transition md:hidden shrink-0"
+            className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl border border-[#232330] bg-[#14141c] text-[#8c8c9e] hover:text-white transition md:hidden shrink-0"
             aria-label="Toggle navigation"
           >
-            {isMobileMenuOpen ? <X className="h-3.5 w-3.5" /> : <Menu className="h-3.5 w-3.5" />}
+            {isMobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </button>
         </div>
       </div>
