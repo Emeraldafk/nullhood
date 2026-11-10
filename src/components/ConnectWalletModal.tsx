@@ -91,10 +91,11 @@ export const ConnectWalletModal: React.FC<ConnectWalletModalProps> = ({
 
             <button
               onClick={onClose}
-              className="rounded-full border border-[#28283a] bg-[#1a1a26] p-2 text-[#8c8c9e] transition hover:text-white hover:bg-[#252538]"
+              className="flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-full border border-[#2e2e40] bg-[#1a1a26] text-white transition hover:bg-[#252538] hover:border-white/40 active:scale-95 shadow-sm shrink-0 cursor-pointer"
               title="Close"
+              aria-label="Close"
             >
-              <X className="h-4 w-4" />
+              <X className="h-5 w-5 sm:h-6 sm:w-6 stroke-[2.5]" />
             </button>
           </div>
 
