@@ -88,7 +88,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-[#21212c] bg-[#0c0c11]/95 backdrop-blur-xl">
+    <>
+      <header className="sticky top-0 z-40 w-full border-b border-[#21212c] bg-[#0c0c11]/95 backdrop-blur-xl">
       <div className="flex w-full items-center justify-between px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3 max-w-[1600px] mx-auto gap-2 sm:gap-4">
         {/* Left: Brand Logo */}
         <div className="flex items-center shrink-0">
@@ -186,10 +187,10 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Right: Actions (Create, Connect/Wallet, Profile, Mobile Menu Toggle) */}
         <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
-          {/* Create Market Button */}
+          {/* Create Market Button - Hidden on mobile as it is placed in the center of the mobile bottom nav bar */}
           <button
             onClick={onOpenCreateModal}
-            className="flex items-center gap-1 sm:gap-1.5 rounded-full bg-white px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-extrabold text-[#0e0e13] shadow-sm transition hover:bg-slate-200 active:scale-95 shrink-0"
+            className="hidden lg:flex items-center gap-1 sm:gap-1.5 rounded-full bg-white px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-extrabold text-[#0e0e13] shadow-sm transition hover:bg-slate-200 active:scale-95 shrink-0"
           >
             <Plus className="h-3.5 w-3.5 stroke-[3]" />
             <span>Create</span>
@@ -330,63 +331,233 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="text-[11px] font-bold text-[#FF6B00]">Profile ›</span>
             </div>
           )}
-          <div className="space-y-1">
-            {NAV_ITEMS.map((item) => {
-              const Icon = item.icon;
-              const isActive = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => handleSelectTab(item.id)}
-                  className={`flex w-full items-center justify-between rounded-2xl px-3.5 py-2.5 transition text-left ${
-                    isActive
-                      ? 'bg-[#FF6B00] text-white shadow-md shadow-[#FF6B00]/25 font-bold'
-                      : 'text-[#8c8c9e] hover:text-white hover:bg-[#151520]'
+          {/* Featured Settlement & Protocol Info (Resolutions & Architecture) */}
+          <div className="space-y-2 mb-3">
+            <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#7a7a8c] px-1">
+              Protocol & Settlement
+            </div>
+
+            <button
+              type="button"
+              onClick={() => handleSelectTab('resolution')}
+              className={`flex w-full items-center justify-between rounded-2xl p-3 transition text-left border ${
+                activeTab === 'resolution'
+                  ? 'bg-[#FF6B00] text-white border-[#FF6B00] shadow-md shadow-[#FF6B00]/25'
+                  : 'border-[#232330] bg-[#14141c] text-[#8c8c9e] hover:text-white hover:border-[#343446]'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className={`flex h-9 w-9 items-center justify-center rounded-xl ${
+                    activeTab === 'resolution'
+                      ? 'bg-black/25 text-white'
+                      : 'bg-[#181824] text-amber-400'
                   }`}
                 >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`flex h-8 w-8 items-center justify-center rounded-xl ${
-                        isActive
-                          ? 'bg-black/25 text-white'
-                          : 'bg-[#181824] text-[#FF6B00]'
-                      }`}
-                    >
-                      <Icon className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <div className="text-xs font-bold leading-tight">{item.label}</div>
-                      <div
-                        className={`text-[10px] leading-tight mt-0.5 ${
-                          isActive ? 'text-white/80' : 'text-[#7a7a8c]'
-                        }`}
-                      >
-                        {item.description}
-                      </div>
-                    </div>
+                  <Scale className="h-4 w-4" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-white leading-tight">Resolutions</div>
+                  <div
+                    className={`text-[10px] leading-tight mt-0.5 ${
+                      activeTab === 'resolution' ? 'text-white/80' : 'text-[#7a7a8c]'
+                    }`}
+                  >
+                    Adjudication & Pari-Mutuel payouts
                   </div>
-                  <ChevronRight
-                    className={`h-4 w-4 ${isActive ? 'text-white' : 'text-[#555566]'}`}
-                  />
-                </button>
-              );
-            })}
+                </div>
+              </div>
+              <ChevronRight
+                className={`h-4 w-4 ${activeTab === 'resolution' ? 'text-white' : 'text-[#555566]'}`}
+              />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleSelectTab('how-it-works')}
+              className={`flex w-full items-center justify-between rounded-2xl p-3 transition text-left border ${
+                activeTab === 'how-it-works'
+                  ? 'bg-[#FF6B00] text-white border-[#FF6B00] shadow-md shadow-[#FF6B00]/25'
+                  : 'border-[#232330] bg-[#14141c] text-[#8c8c9e] hover:text-white hover:border-[#343446]'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className={`flex h-9 w-9 items-center justify-center rounded-xl ${
+                    activeTab === 'how-it-works'
+                      ? 'bg-black/25 text-white'
+                      : 'bg-[#181824] text-[#53b3d4]'
+                  }`}
+                >
+                  <Layers className="h-4 w-4" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-white leading-tight">Architecture</div>
+                  <div
+                    className={`text-[10px] leading-tight mt-0.5 ${
+                      activeTab === 'how-it-works' ? 'text-white/80' : 'text-[#7a7a8c]'
+                    }`}
+                  >
+                    Bonding curve mathematical model
+                  </div>
+                </div>
+              </div>
+              <ChevronRight
+                className={`h-4 w-4 ${activeTab === 'how-it-works' ? 'text-white' : 'text-[#555566]'}`}
+              />
+            </button>
           </div>
 
-          {/* Mobile Footer Status & Quick Actions */}
+          {/* Quick Jump to Other Views */}
+          <div className="pt-2.5 border-t border-[#1f1f2c]">
+            <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#7a7a8c] px-1 mb-2">
+              All Views
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => handleSelectTab('feed')}
+                className={`flex items-center gap-2 rounded-xl p-2.5 text-xs font-bold transition ${
+                  activeTab === 'feed'
+                    ? 'bg-[#FF6B00] text-white'
+                    : 'bg-[#14141c] text-[#8c8c9e] hover:text-white'
+                }`}
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                <span>Markets</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSelectTab('pulse')}
+                className={`flex items-center gap-2 rounded-xl p-2.5 text-xs font-bold transition ${
+                  activeTab === 'pulse'
+                    ? 'bg-[#FF6B00] text-white'
+                    : 'bg-[#14141c] text-[#8c8c9e] hover:text-white'
+                }`}
+              >
+                <Flame className="h-3.5 w-3.5" />
+                <span>Feed</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSelectTab('portfolio')}
+                className={`flex items-center gap-2 rounded-xl p-2.5 text-xs font-bold transition ${
+                  activeTab === 'portfolio'
+                    ? 'bg-[#FF6B00] text-white'
+                    : 'bg-[#14141c] text-[#8c8c9e] hover:text-white'
+                }`}
+              >
+                <Coins className="h-3.5 w-3.5" />
+                <span>Portfolio</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSelectTab('reputation')}
+                className={`flex items-center gap-2 rounded-xl p-2.5 text-xs font-bold transition ${
+                  activeTab === 'reputation'
+                    ? 'bg-[#FF6B00] text-white'
+                    : 'bg-[#14141c] text-[#8c8c9e] hover:text-white'
+                }`}
+              >
+                <Award className="h-3.5 w-3.5" />
+                <span>Reputation</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Mobile Footer Status & Explorer Link */}
           <div className="mt-3 pt-3 border-t border-[#1f1f2c] flex items-center justify-between text-xs font-mono">
             <div className="flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
               <span className="text-[11px] text-slate-300">Robinhood Chain (46630)</span>
             </div>
-            {walletAddress && (
-              <span className="text-[11px] text-[#53b3d4]">
-                {shortenAddress(walletAddress)}
-              </span>
-            )}
+            <a
+              href={`${ROBINHOOD_EXPLORER_URL}/address/${contractAddress}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 text-[11px] text-[#53b3d4] hover:underline"
+            >
+              <span>Explorer</span>
+              <ExternalLink className="h-3 w-3" />
+            </a>
           </div>
         </div>
       )}
     </header>
+
+    {/* Mobile Web App Bottom Navigation Bar (Fixed bottom, Web App / X Style) */}
+    <nav className="fixed bottom-0 left-0 right-0 z-40 lg:hidden border-t border-[#21212c] bg-[#0c0c11]/95 backdrop-blur-xl px-2 py-1 pb-[calc(0.4rem+env(safe-area-inset-bottom))] shadow-2xl">
+      <div className="grid grid-cols-5 items-center max-w-md mx-auto">
+        {/* 1. Market Button */}
+        <button
+          type="button"
+          onClick={() => handleSelectTab('feed')}
+          className={`flex flex-col items-center justify-center py-1 transition-colors ${
+            activeTab === 'feed'
+              ? 'text-[#FF6B00]'
+              : 'text-[#8c8c9e] hover:text-white'
+          }`}
+        >
+          <Sparkles className="h-5 w-5" />
+          <span className="text-[10px] font-bold mt-0.5 tracking-tight">Market</span>
+        </button>
+
+        {/* 2. Feed Button */}
+        <button
+          type="button"
+          onClick={() => handleSelectTab('pulse')}
+          className={`flex flex-col items-center justify-center py-1 transition-colors ${
+            activeTab === 'pulse'
+              ? 'text-[#FF6B00]'
+              : 'text-[#8c8c9e] hover:text-white'
+          }`}
+        >
+          <Flame className="h-5 w-5" />
+          <span className="text-[10px] font-bold mt-0.5 tracking-tight">Feed</span>
+        </button>
+
+        {/* 3. Create Button (Centerpiece replacing Grok button) */}
+        <div className="flex flex-col items-center justify-center -mt-4">
+          <button
+            type="button"
+            onClick={onOpenCreateModal}
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-tr from-[#FF6B00] to-orange-500 text-white shadow-lg shadow-[#FF6B00]/40 ring-4 ring-[#0c0c11] hover:brightness-110 active:scale-90 transition-transform"
+            aria-label="Create Market"
+          >
+            <Plus className="h-6 w-6 stroke-[3]" />
+          </button>
+          <span className="text-[10px] font-extrabold text-[#FF6B00] mt-0.5 tracking-tight">Create</span>
+        </div>
+
+        {/* 4. Portfolio Button */}
+        <button
+          type="button"
+          onClick={() => handleSelectTab('portfolio')}
+          className={`flex flex-col items-center justify-center py-1 transition-colors ${
+            activeTab === 'portfolio'
+              ? 'text-[#FF6B00]'
+              : 'text-[#8c8c9e] hover:text-white'
+          }`}
+        >
+          <Coins className="h-5 w-5" />
+          <span className="text-[10px] font-bold mt-0.5 tracking-tight">Portfolio</span>
+        </button>
+
+        {/* 5. Reputation Button */}
+        <button
+          type="button"
+          onClick={() => handleSelectTab('reputation')}
+          className={`flex flex-col items-center justify-center py-1 transition-colors ${
+            activeTab === 'reputation'
+              ? 'text-[#FF6B00]'
+              : 'text-[#8c8c9e] hover:text-white'
+          }`}
+        >
+          <Award className="h-5 w-5" />
+          <span className="text-[10px] font-bold mt-0.5 tracking-tight">Reputation</span>
+        </button>
+      </div>
+    </nav>
+  </>
   );
 };

@@ -1126,7 +1126,7 @@ export function App() {
       />
 
       {/* Main Content Area */}
-      <main className="mx-auto max-w-7xl px-3 py-4 sm:px-6 sm:py-6 w-full max-w-full overflow-x-hidden">
+      <main className="mx-auto max-w-7xl px-3 py-4 sm:px-6 sm:py-6 w-full max-w-full overflow-x-hidden pb-24 lg:pb-6">
         {/* TAB 1: OPINION MARKETS FEED */}
         {activeTab === 'feed' && (
           <div className="space-y-6 w-full max-w-full">
