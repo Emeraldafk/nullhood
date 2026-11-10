@@ -1176,7 +1176,7 @@ export function App() {
 
                       <h1 className="font-fun text-2xl sm:text-4xl font-black tracking-tight text-white">
                         Trade Public Conviction.{' '}
-                        <span className="bg-gradient-to-r from-[#227c9d] via-[#53b3d4] to-[#FF6B00] bg-clip-text text-transparent">
+                        <span className="text-white">
                           No Oracles. No Expiry.
                         </span>
                       </h1>
