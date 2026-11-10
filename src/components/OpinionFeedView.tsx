@@ -274,31 +274,38 @@ export const OpinionFeedView: React.FC<OpinionFeedViewProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-8 items-start">
         {/* CENTER COLUMN: X-STYLE OPINION FEED */}
         <div className="lg:col-span-8 space-y-4">
-          {/* Header Tabs (For you / Following like X) */}
-          <div className="sticky top-14 z-20 flex border-b border-[#232332] bg-[#0c0c11]/95 backdrop-blur-md rounded-t-2xl overflow-hidden">
-            <button
-              onClick={() => setFeedTab('for-you')}
-              className={`flex-1 py-3 sm:py-3.5 text-center text-xs sm:text-sm font-bold transition relative ${
-                feedTab === 'for-you' ? 'text-white' : 'text-[#8c8c9e] hover:text-white'
-              }`}
-            >
-              <span>For you</span>
-              {feedTab === 'for-you' && (
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 h-1 w-14 sm:w-16 rounded-full bg-[#227c9d]" />
-              )}
-            </button>
+          {/* Compact Feed Switcher (Compact & non-sticky to never obscure conviction posts) */}
+          <div className="flex items-center justify-between border-b border-[#21212e] pb-2 sm:pb-3 px-1">
+            <div className="flex items-center gap-1 rounded-2xl bg-[#14141c] p-1 border border-[#232332]">
+              <button
+                type="button"
+                onClick={() => setFeedTab('for-you')}
+                className={`rounded-xl px-4 py-1.5 text-xs font-bold transition ${
+                  feedTab === 'for-you'
+                    ? 'bg-[#FF6B00] text-white shadow-sm'
+                    : 'text-[#8c8c9e] hover:text-white hover:bg-[#1a1a24]'
+                }`}
+              >
+                For you
+              </button>
+              <button
+                type="button"
+                onClick={() => setFeedTab('following')}
+                className={`rounded-xl px-4 py-1.5 text-xs font-bold transition ${
+                  feedTab === 'following'
+                    ? 'bg-[#FF6B00] text-white shadow-sm'
+                    : 'text-[#8c8c9e] hover:text-white hover:bg-[#1a1a24]'
+                }`}
+              >
+                Following
+              </button>
+            </div>
 
-            <button
-              onClick={() => setFeedTab('following')}
-              className={`flex-1 py-3 sm:py-3.5 text-center text-xs sm:text-sm font-bold transition relative ${
-                feedTab === 'following' ? 'text-white' : 'text-[#8c8c9e] hover:text-white'
-              }`}
-            >
-              <span>Following</span>
-              {feedTab === 'following' && (
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 h-1 w-14 sm:w-16 rounded-full bg-[#227c9d]" />
-              )}
-            </button>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-mono text-[#7a7a8c] hidden sm:inline">
+                {opinionStream.length} {opinionStream.length === 1 ? 'Conviction Post' : 'Conviction Posts'}
+              </span>
+            </div>
           </div>
 
           {/* COMPOSE OPINION BOX (X Style) */}
