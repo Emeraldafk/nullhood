@@ -408,63 +408,6 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
           </div>
 
-          {/* Quick Jump to Other Views */}
-          <div className="pt-2.5 border-t border-[#1f1f2c]">
-            <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#7a7a8c] px-1 mb-2">
-              All Views
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => handleSelectTab('feed')}
-                className={`flex items-center gap-2 rounded-xl p-2.5 text-xs font-bold transition ${
-                  activeTab === 'feed'
-                    ? 'bg-[#FF6B00] text-white'
-                    : 'bg-[#14141c] text-[#8c8c9e] hover:text-white'
-                }`}
-              >
-                <Sparkles className="h-3.5 w-3.5" />
-                <span>Markets</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSelectTab('pulse')}
-                className={`flex items-center gap-2 rounded-xl p-2.5 text-xs font-bold transition ${
-                  activeTab === 'pulse'
-                    ? 'bg-[#FF6B00] text-white'
-                    : 'bg-[#14141c] text-[#8c8c9e] hover:text-white'
-                }`}
-              >
-                <Flame className="h-3.5 w-3.5" />
-                <span>Feed</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSelectTab('portfolio')}
-                className={`flex items-center gap-2 rounded-xl p-2.5 text-xs font-bold transition ${
-                  activeTab === 'portfolio'
-                    ? 'bg-[#FF6B00] text-white'
-                    : 'bg-[#14141c] text-[#8c8c9e] hover:text-white'
-                }`}
-              >
-                <Coins className="h-3.5 w-3.5" />
-                <span>Portfolio</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSelectTab('reputation')}
-                className={`flex items-center gap-2 rounded-xl p-2.5 text-xs font-bold transition ${
-                  activeTab === 'reputation'
-                    ? 'bg-[#FF6B00] text-white'
-                    : 'bg-[#14141c] text-[#8c8c9e] hover:text-white'
-                }`}
-              >
-                <Award className="h-3.5 w-3.5" />
-                <span>Reputation</span>
-              </button>
-            </div>
-          </div>
-
           {/* Mobile Footer Status & Explorer Link */}
           <div className="mt-3 pt-3 border-t border-[#1f1f2c] flex items-center justify-between text-xs font-mono">
             <div className="flex items-center gap-2">
