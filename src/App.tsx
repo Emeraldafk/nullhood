@@ -103,17 +103,7 @@ export function App() {
   const [holdings, setHoldings] = useState<UserHoldings>(() => dbService.loadHoldings({}));
   const [claimableCreatorFees, setClaimableCreatorFees] = useState<number>(0);
   const [claimHistory, setClaimHistory] = useState<FeeClaimRecord[]>(() =>
-    dbService.loadClaimHistory([
-      {
-        id: 'claim-init-1',
-      timestamp: Date.now() - 1000 * 60 * 60 * 42,
-      amountEth: 0.128,
-      creator: '0x71C9...89A4',
-      status: 'CONFIRMED',
-      isOnChain: true,
-      txHash: '0x7a28e9d1bf0352c8b02da4e3b1c198f12a84b02941fa9047b11d82f801e0a811',
-      },
-    ])
+    dbService.loadClaimHistory([])
   );
 
   // Navigation & Filters
@@ -123,7 +113,7 @@ export function App() {
   const [sortBy, setSortBy] = useState<SortOption>('volume');
   const [searchQuery, setSearchQuery] = useState('');
   const [quickPromptText, setQuickPromptText] = useState('');
-  const [userProfile, setUserProfile] = useState<UserProfile>(() => getUserProfile(walletAddress));
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(() => getUserProfile(walletAddress));
 
   useEffect(() => {
     setUserProfile(getUserProfile(walletAddress));
@@ -623,7 +613,7 @@ export function App() {
             data.question,
             data.category,
             data.imageUri,
-            data.sourceHandle || `@${userProfile.username}`,
+            data.sourceHandle || (userProfile ? `@${userProfile.username}` : (walletAddress ? shortenAddress(walletAddress) : '')),
             BigInt(data.closingTime || Math.floor(Date.now() / 1000) + 7 * 86400),
             BigInt(data.resolutionDeadline || Math.floor(Date.now() / 1000) + 8 * 86400),
             data.yesCondition || '',
@@ -642,7 +632,7 @@ export function App() {
             data.question,
             data.category,
             data.imageUri,
-            data.sourceHandle || `@${userProfile.username}`,
+            data.sourceHandle || (userProfile ? `@${userProfile.username}` : (walletAddress ? shortenAddress(walletAddress) : '')),
             data.initialSideIsYes,
           ],
           value: data.initialBuyEth > 0 ? parseEther(data.initialBuyEth.toString()) : 0n,
@@ -924,7 +914,7 @@ export function App() {
       promptConnectWallet('Posting a Comment');
       return;
     }
-    const author = userProfile.displayName || (walletAddress ? shortenAddress(walletAddress) : '0x71C9...89A4');
+    const author = userProfile?.displayName || (walletAddress ? shortenAddress(walletAddress) : 'Trader');
     const userH = holdings[marketId];
     const sharesHeld =
       side === 'YES' ? userH?.yesShares || 1000 : userH?.noShares || 1000;
@@ -933,8 +923,8 @@ export function App() {
     const newComment: MarketComment = {
       id: 'cmt-' + now + '-' + Math.random().toString(36).slice(2, 7),
       author,
-      authorHandle: '@' + userProfile.username,
-      authorAvatar: userProfile.avatarUrl,
+      authorHandle: userProfile?.username ? `@${userProfile.username}` : (walletAddress ? `@${shortenAddress(walletAddress)}` : '@trader'),
+      authorAvatar: userProfile?.avatarUrl,
       side,
       sharesHeld,
       text,
@@ -1580,7 +1570,7 @@ export function App() {
                 question,
                 category: (category as any) || 'Crypto',
                 imageUri: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=600&auto=format&fit=crop&q=80',
-                sourceHandle: `@${userProfile.username}`,
+                sourceHandle: userProfile ? `@${userProfile.username}` : (walletAddress ? `@${shortenAddress(walletAddress)}` : '@trader'),
                 initialSideIsYes: isYes,
                 initialBuyEth: 0.001,
               });
@@ -1610,13 +1600,15 @@ export function App() {
               claimHistory={claimHistory}
               onClaimCreatorFees={handleClaimCreatorFees}
               onProfileUpdated={(updated: UserProfile) => setUserProfile(updated)}
+              onRequireWallet={(title) => promptConnectWallet(title || 'Viewing Portfolio & Creator Fees')}
             />
 
-            {/* User Position Holdings List */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-fun font-bold uppercase tracking-wider text-white">
-                Active Opinion Curve Positions
-              </h3>
+            {/* User Position Holdings List (Only shown when wallet is connected) */}
+            {walletAddress && (
+              <div className="space-y-4">
+                <h3 className="text-sm font-fun font-bold uppercase tracking-wider text-white">
+                  Active Opinion Curve Positions
+                </h3>
 
               <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                 {markets
@@ -1711,6 +1703,7 @@ export function App() {
                   })}
               </div>
             </div>
+            )}
           </div>
         )}
 

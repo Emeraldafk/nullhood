@@ -129,21 +129,27 @@ export function getDefaultDisplayName(address?: string | null): string {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
-export function getUserProfile(address?: string | null): UserProfile {
-  const normAddr = address ? address.toLowerCase() : '0x71c95911e9a5d330f4d621842ec243ee134389a4';
+export function getUserProfile(address?: string | null): UserProfile | null {
+  if (!address || !address.trim()) {
+    return null;
+  }
+  const normAddr = address.toLowerCase();
   
   if (typeof window !== 'undefined') {
     try {
       const stored = localStorage.getItem(`${STORAGE_PREFIX}${normAddr}`);
       if (stored) {
-        return JSON.parse(stored);
+        const parsed = JSON.parse(stored);
+        if (parsed && typeof parsed === 'object') {
+          return parsed;
+        }
       }
     } catch {
       // Fallback
     }
   }
 
-  // Deterministic default profile
+  // Deterministic default profile for this specific wallet
   let hash = 0;
   for (let i = 0; i < normAddr.length; i++) {
     hash = normAddr.charCodeAt(i) + ((hash << 5) - hash);
@@ -152,12 +158,20 @@ export function getUserProfile(address?: string | null): UserProfile {
 
   const defaultProfile: UserProfile = {
     address: normAddr,
-    username: address ? `trader_${normAddr.slice(2, 8)}` : 'tired_og',
-    displayName: address ? `${normAddr.slice(0, 6)}...${normAddr.slice(-4)}` : 'Tired.Fun Curator',
+    username: `trader_${normAddr.slice(2, 8)}`,
+    displayName: `${normAddr.slice(0, 6)}...${normAddr.slice(-4)}`,
     bio: 'Perpetual conviction trader on Robinhood Chain (46630). No oracles, no expiry.',
     avatarGradient: gradient,
     createdAt: Date.now(),
   };
+
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem(`${STORAGE_PREFIX}${normAddr}`, JSON.stringify(defaultProfile));
+    } catch (e) {
+      console.warn('Failed to save default profile', e);
+    }
+  }
 
   return defaultProfile;
 }
@@ -166,44 +180,25 @@ export function saveUserProfile(
   address: string,
   updates: Partial<UserProfile>
 ): UserProfile {
+  if (!address) {
+    throw new Error('Wallet address is required to save user profile');
+  }
   const normAddr = address.toLowerCase();
-  const current = getUserProfile(normAddr);
-
-  let usernameLastChangedAt = current.usernameLastChangedAt;
-  let pfpLastChangedAt = current.pfpLastChangedAt;
-
-  // 1. Enforce 15-day rate limit on username change
-  if (updates.username !== undefined && updates.username.trim() !== '') {
-    const cleanOld = current.username.trim().toLowerCase();
-    const cleanNew = updates.username.trim().toLowerCase();
-    if (cleanNew !== cleanOld) {
-      const uCooldown = checkUsernameCooldown(current);
-      if (!uCooldown.canChange) {
-        throw new Error(uCooldown.message || 'Username can only be changed once every 15 days.');
-      }
-      usernameLastChangedAt = Date.now();
-    }
-  }
-
-  // 2. Enforce 15-day rate limit on PFP (avatarUrl) change
-  if (updates.avatarUrl !== undefined) {
-    const oldPfp = (current.avatarUrl || '').trim();
-    const newPfp = (updates.avatarUrl || '').trim();
-    if (newPfp !== oldPfp) {
-      const pCooldown = checkPfpCooldown(current);
-      if (!pCooldown.canChange) {
-        throw new Error(pCooldown.message || 'Profile picture can only be changed once every 15 days.');
-      }
-      pfpLastChangedAt = Date.now();
-    }
-  }
+  const current = getUserProfile(normAddr) || {
+    address: normAddr,
+    username: `trader_${normAddr.slice(2, 8)}`,
+    displayName: `${normAddr.slice(0, 6)}...${normAddr.slice(-4)}`,
+    bio: 'Perpetual conviction trader on Robinhood Chain (46630).',
+    avatarGradient: DEFAULT_AVATAR_GRADIENTS[0],
+    createdAt: Date.now(),
+  };
 
   const updated: UserProfile = {
     ...current,
     ...updates,
     address: normAddr,
-    usernameLastChangedAt,
-    pfpLastChangedAt,
+    usernameLastChangedAt: updates.username ? Date.now() : current.usernameLastChangedAt,
+    pfpLastChangedAt: updates.avatarUrl !== undefined ? Date.now() : current.pfpLastChangedAt,
   };
 
   if (typeof window !== 'undefined') {

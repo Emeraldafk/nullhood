@@ -44,7 +44,7 @@ interface NavbarProps {
   onSwitchNetwork: () => void;
   onOpenCreateModal: () => void;
   onClaimCreatorFees: () => void;
-  userProfile?: UserProfile;
+  userProfile?: UserProfile | null;
 }
 
 const NAV_ITEMS: {
@@ -222,8 +222,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           )}
 
-          {/* User Profile Avatar - always visible, clickable, and well-spaced */}
-          {userProfile && (
+          {/* User Profile Avatar - only visible when wallet is connected */}
+          {walletAddress && userProfile && (
             <button
               onClick={() => handleSelectTab('portfolio')}
               className="flex items-center gap-1.5 rounded-full border border-[#232330] bg-[#14141c] p-0.5 sm:p-1 pr-1.5 sm:pr-3 hover:border-[#FF6B00]/60 hover:bg-[#1a1a24] active:scale-95 transition shrink-0 cursor-pointer shadow-sm"
@@ -302,8 +302,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           )}
 
-          {/* Mobile Profile Card */}
-          {userProfile && (
+          {/* Mobile Profile Card - only visible when wallet is connected */}
+          {walletAddress && userProfile && (
             <div
               onClick={() => handleSelectTab('portfolio')}
               className="flex items-center gap-2.5 p-2.5 rounded-xl bg-[#14141c] border border-[#232330] mb-2.5 cursor-pointer hover:border-[#38384d] transition"

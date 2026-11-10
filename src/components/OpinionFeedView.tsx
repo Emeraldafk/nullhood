@@ -29,7 +29,7 @@ import { shortenAddress } from '../config/robinhoodChain';
 interface OpinionFeedViewProps {
   markets: OpinionMarket[];
   walletAddress: string | null;
-  userProfile: UserProfile;
+  userProfile: UserProfile | null;
   onSelectMarket: (market: OpinionMarket, defaultSide?: 'YES' | 'NO') => void;
   onQuickTrade: (marketId: number, isYes: boolean, ethAmount: number) => void;
   onAddComment: (marketId: number, side: 'YES' | 'NO', text: string) => void;
@@ -254,7 +254,10 @@ export const OpinionFeedView: React.FC<OpinionFeedViewProps> = ({
       if (feedTab === 'following') {
         const creatorKey = (m.sourceHandle ? m.sourceHandle.replace('@', '') : m.creator).toLowerCase();
         const isFollowed = followingMap[creatorKey] || followingMap[m.creator.toLowerCase()];
-        const isSelf = userProfile && (creatorKey === userProfile.username.toLowerCase() || (walletAddress && m.creator.toLowerCase() === walletAddress.toLowerCase()));
+        const isSelf = userProfile && (
+          (userProfile.username && creatorKey === userProfile.username.toLowerCase()) ||
+          (walletAddress && m.creator.toLowerCase() === walletAddress.toLowerCase())
+        );
         if (!isFollowed && !isSelf) return false;
       }
 
@@ -309,95 +312,116 @@ export const OpinionFeedView: React.FC<OpinionFeedViewProps> = ({
           </div>
 
           {/* COMPOSE OPINION BOX (X Style) */}
-          <div className="rounded-[22px] sm:rounded-[24px] border border-[#232332] bg-[#14141c] p-3.5 sm:p-5 shadow-lg">
-            <div className="flex gap-3.5">
-              {/* User Avatar (With uploaded PFP if available) */}
-              <div className="h-10 w-10 shrink-0 rounded-full overflow-hidden shadow-md ring-2 ring-[#227c9d]/30">
-                {userProfile.avatarUrl ? (
-                  <img
-                    src={userProfile.avatarUrl}
-                    alt={userProfile.displayName}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <div
-                    className={`h-full w-full bg-gradient-to-tr ${userProfile.avatarGradient} flex items-center justify-center font-fun text-sm font-black text-white`}
-                  >
-                    {userProfile.displayName.charAt(0).toUpperCase()}
-                  </div>
-                )}
+          {!walletAddress || !userProfile ? (
+            <div className="rounded-[22px] sm:rounded-[24px] border border-[#232332] bg-[#14141c] p-4 sm:p-5 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3.5">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#FF6B00]/10 text-[#FF6B00] border border-[#FF6B00]/20">
+                  <Zap className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="text-sm font-black text-white">Join the Public Conviction Feed</div>
+                  <div className="text-xs text-[#8c8c9e]">Connect your wallet to challenge consensus, publish opinions, and earn creator royalties.</div>
+                </div>
               </div>
-
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="font-bold text-xs text-white">{userProfile.displayName}</span>
-                  <span className="text-[11px] font-mono text-[#8c8c9e]">@{userProfile.username}</span>
+              <button
+                type="button"
+                onClick={() => onRequireWallet?.('Publish your conviction')}
+                className="w-full sm:w-auto shrink-0 rounded-full bg-gradient-to-r from-[#FF6B00] to-orange-500 px-5 py-2.5 text-xs font-black text-white hover:opacity-95 transition shadow-lg shadow-orange-500/20 active:scale-95"
+              >
+                Connect Wallet
+              </button>
+            </div>
+          ) : (
+            <div className="rounded-[22px] sm:rounded-[24px] border border-[#232332] bg-[#14141c] p-3.5 sm:p-5 shadow-lg">
+              <div className="flex gap-3.5">
+                {/* User Avatar (With uploaded PFP if available) */}
+                <div className="h-10 w-10 shrink-0 rounded-full overflow-hidden shadow-md ring-2 ring-[#227c9d]/30">
+                  {userProfile.avatarUrl ? (
+                    <img
+                      src={userProfile.avatarUrl}
+                      alt={userProfile.displayName}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div
+                      className={`h-full w-full bg-gradient-to-tr ${userProfile.avatarGradient} flex items-center justify-center font-fun text-sm font-black text-white`}
+                    >
+                      {userProfile.displayName.charAt(0).toUpperCase()}
+                    </div>
+                  )}
                 </div>
 
-                <textarea
-                  rows={2}
-                  value={newOpinionText}
-                  onChange={(e) => setNewOpinionText(e.target.value)}
-                  placeholder="What's your conviction? Challenge public consensus on Robinhood Chain..."
-                  className="w-full resize-none bg-transparent text-sm text-white placeholder-[#7a7a8c] focus:outline-none"
-                />
-
-                <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-[#232330] pt-3">
-                  <div className="flex items-center gap-2">
-                    {/* Side Conviction Toggle */}
-                    <div className="flex rounded-full bg-[#0c0c11] p-0.5 border border-[#262638]">
-                      <button
-                        type="button"
-                        onClick={() => setNewOpinionSide('YES')}
-                        className={`rounded-full px-3 py-1 text-[11px] font-extrabold transition ${
-                          newOpinionSide === 'YES'
-                            ? 'bg-[#227c9d] text-white'
-                            : 'text-[#8c8c9e] hover:text-white'
-                        }`}
-                      >
-                        Thesis: YES
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setNewOpinionSide('NO')}
-                        className={`rounded-full px-3 py-1 text-[11px] font-extrabold transition ${
-                          newOpinionSide === 'NO'
-                            ? 'bg-[#FF6B00] text-[#111116]'
-                            : 'text-[#8c8c9e] hover:text-white'
-                        }`}
-                      >
-                        Thesis: NO
-                      </button>
-                    </div>
-
-                    {/* Category pill */}
-                    <select
-                      value={newOpinionCategory}
-                      onChange={(e) => setNewOpinionCategory(e.target.value)}
-                      className="rounded-full border border-[#262638] bg-[#0c0c11] px-3 py-1 text-[11px] font-bold text-[#8c8c9e] focus:outline-none focus:text-white"
-                    >
-                      <option value="Crypto">◎ Crypto</option>
-                      <option value="AI">✦ AI</option>
-                      <option value="Culture">⚡ Culture</option>
-                      <option value="DeFi">❖ DeFi</option>
-                      <option value="Politics">🏛 Politics</option>
-                      <option value="Sports">⚽ Sports</option>
-                      <option value="Robinhood">🏹 Robinhood</option>
-                    </select>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="font-bold text-xs text-white">{userProfile.displayName}</span>
+                    <span className="text-[11px] font-mono text-[#8c8c9e]">@{userProfile.username}</span>
                   </div>
 
-                  <button
-                    onClick={handlePostOpinion}
-                    disabled={!newOpinionText.trim()}
-                    className="flex items-center gap-1.5 rounded-full bg-[#227c9d] px-5 py-2 text-xs font-black uppercase tracking-wider text-white hover:bg-[#1a647f] transition active:scale-95 disabled:opacity-40 shadow-sm"
-                  >
-                    <Zap className="h-3.5 w-3.5" />
-                    <span>Post Opinion</span>
-                  </button>
+                  <textarea
+                    rows={2}
+                    value={newOpinionText}
+                    onChange={(e) => setNewOpinionText(e.target.value)}
+                    placeholder="What's your conviction? Challenge public consensus on Robinhood Chain..."
+                    className="w-full resize-none bg-transparent text-sm text-white placeholder-[#7a7a8c] focus:outline-none"
+                  />
+
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-[#232330] pt-3">
+                    <div className="flex items-center gap-2">
+                      {/* Side Conviction Toggle */}
+                      <div className="flex rounded-full bg-[#0c0c11] p-0.5 border border-[#262638]">
+                        <button
+                          type="button"
+                          onClick={() => setNewOpinionSide('YES')}
+                          className={`rounded-full px-3 py-1 text-[11px] font-extrabold transition ${
+                            newOpinionSide === 'YES'
+                              ? 'bg-[#227c9d] text-white'
+                              : 'text-[#8c8c9e] hover:text-white'
+                          }`}
+                        >
+                          Thesis: YES
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setNewOpinionSide('NO')}
+                          className={`rounded-full px-3 py-1 text-[11px] font-extrabold transition ${
+                            newOpinionSide === 'NO'
+                              ? 'bg-[#FF6B00] text-[#111116]'
+                              : 'text-[#8c8c9e] hover:text-white'
+                          }`}
+                        >
+                          Thesis: NO
+                        </button>
+                      </div>
+
+                      {/* Category pill */}
+                      <select
+                        value={newOpinionCategory}
+                        onChange={(e) => setNewOpinionCategory(e.target.value)}
+                        className="rounded-full border border-[#262638] bg-[#0c0c11] px-3 py-1 text-[11px] font-bold text-[#8c8c9e] focus:outline-none focus:text-white"
+                      >
+                        <option value="Crypto">◎ Crypto</option>
+                        <option value="AI">✦ AI</option>
+                        <option value="Culture">⚡ Culture</option>
+                        <option value="DeFi">❖ DeFi</option>
+                        <option value="Politics">🏛 Politics</option>
+                        <option value="Sports">⚽ Sports</option>
+                        <option value="Robinhood">🏹 Robinhood</option>
+                      </select>
+                    </div>
+
+                    <button
+                      onClick={handlePostOpinion}
+                      disabled={!newOpinionText.trim()}
+                      className="flex items-center gap-1.5 rounded-full bg-[#227c9d] px-5 py-2 text-xs font-black uppercase tracking-wider text-white hover:bg-[#1a647f] transition active:scale-95 disabled:opacity-40 shadow-sm"
+                    >
+                      <Zap className="h-3.5 w-3.5" />
+                      <span>Post Opinion</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* OPINION POSTS STREAM (Exact X style + maintained opinion box architecture) */}
           <div className="space-y-4">
@@ -439,14 +463,19 @@ export const OpinionFeedView: React.FC<OpinionFeedViewProps> = ({
                 ? market.sourceHandle.replace('@', '')
                 : market.creator;
 
-              const isUserMarket =
-                creatorDisplay.toLowerCase() === userProfile.username.toLowerCase() ||
-                creatorDisplay.toLowerCase() === userProfile.displayName.toLowerCase() ||
-                (walletAddress && market.creator.toLowerCase() === walletAddress.toLowerCase());
+              const isUserMarket = Boolean(
+                walletAddress &&
+                userProfile &&
+                (
+                  (market.creator && market.creator.toLowerCase() === walletAddress.toLowerCase()) ||
+                  (userProfile.username && creatorDisplay.toLowerCase() === userProfile.username.toLowerCase()) ||
+                  (userProfile.displayName && creatorDisplay.toLowerCase() === userProfile.displayName.toLowerCase())
+                )
+              );
 
-              const authorDisplayName = isUserMarket ? userProfile.displayName : creatorDisplay;
-              const authorHandle = isUserMarket ? `@${userProfile.username}` : `@${creatorDisplay}`;
-              const authorAvatar = isUserMarket ? userProfile.avatarUrl : market.creatorAvatar;
+              const authorDisplayName = isUserMarket && userProfile ? userProfile.displayName : (creatorDisplay.startsWith('0x') ? shortenAddress(creatorDisplay) : creatorDisplay);
+              const authorHandle = isUserMarket && userProfile ? `@${userProfile.username}` : (creatorDisplay.startsWith('@') ? creatorDisplay : `@${creatorDisplay.startsWith('0x') ? shortenAddress(creatorDisplay) : creatorDisplay}`);
+              const authorAvatar = isUserMarket && userProfile ? userProfile.avatarUrl : market.creatorAvatar;
 
               const likes = likesMap[market.id] || { count: 0, liked: false };
               const reposts = repostsMap[market.id] || { count: 0, reposted: false };
@@ -708,45 +737,58 @@ export const OpinionFeedView: React.FC<OpinionFeedViewProps> = ({
                   {isExpanded && (
                     <div className="mt-4 border-t border-[#232332] pt-4 space-y-3">
                       {/* Write a comment */}
-                      <div className="flex items-center gap-2.5">
-                        <div className="h-8 w-8 shrink-0 rounded-full overflow-hidden">
-                          {userProfile.avatarUrl ? (
-                            <img
-                              src={userProfile.avatarUrl}
-                              alt={userProfile.displayName}
-                              className="h-full w-full object-cover"
-                            />
-                          ) : (
-                            <div
-                              className={`h-full w-full bg-gradient-to-tr ${userProfile.avatarGradient} flex items-center justify-center text-xs font-black text-white`}
-                            >
-                              {userProfile.displayName.charAt(0).toUpperCase()}
-                            </div>
-                          )}
+                      {!walletAddress || !userProfile ? (
+                        <div className="flex items-center justify-between rounded-xl border border-[#262638] bg-[#0d0d13] p-3 text-xs">
+                          <span className="text-[#8c8c9e]">Connect wallet to reply to this conviction post.</span>
+                          <button
+                            type="button"
+                            onClick={() => onRequireWallet?.('Reply to conviction post')}
+                            className="rounded-full bg-[#227c9d] px-3.5 py-1.5 text-xs font-bold text-white hover:bg-[#1a647f] transition shadow"
+                          >
+                            Connect Wallet
+                          </button>
                         </div>
-                        <input
-                          type="text"
-                          value={commentText}
-                          onChange={(e) =>
-                            setCommentInputMap((prev) => ({
-                              ...prev,
-                              [market.id]: e.target.value,
-                            }))
-                          }
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') handleSendComment(market.id);
-                          }}
-                          placeholder={`Post your reply as ${userProfile.displayName}...`}
-                          className="flex-1 rounded-full border border-[#262638] bg-[#0d0d13] px-4 py-2 text-xs text-white placeholder-[#7a7a8c] focus:border-[#227c9d] focus:outline-none"
-                        />
-                        <button
-                          onClick={() => handleSendComment(market.id)}
-                          disabled={!commentText.trim()}
-                          className="flex h-8 w-8 items-center justify-center rounded-full bg-[#227c9d] text-white hover:bg-[#1a647f] disabled:opacity-30 transition"
-                        >
-                          <Send className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
+                      ) : (
+                        <div className="flex items-center gap-2.5">
+                          <div className="h-8 w-8 shrink-0 rounded-full overflow-hidden">
+                            {userProfile.avatarUrl ? (
+                              <img
+                                src={userProfile.avatarUrl}
+                                alt={userProfile.displayName}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <div
+                                className={`h-full w-full bg-gradient-to-tr ${userProfile.avatarGradient} flex items-center justify-center text-xs font-black text-white`}
+                              >
+                                {userProfile.displayName.charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                          </div>
+                          <input
+                            type="text"
+                            value={commentText}
+                            onChange={(e) =>
+                              setCommentInputMap((prev) => ({
+                                ...prev,
+                                [market.id]: e.target.value,
+                              }))
+                            }
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleSendComment(market.id);
+                            }}
+                            placeholder={`Post your reply as ${userProfile.displayName}...`}
+                            className="flex-1 rounded-full border border-[#262638] bg-[#0d0d13] px-4 py-2 text-xs text-white placeholder-[#7a7a8c] focus:border-[#227c9d] focus:outline-none"
+                          />
+                          <button
+                            onClick={() => handleSendComment(market.id)}
+                            disabled={!commentText.trim()}
+                            className="flex h-8 w-8 items-center justify-center rounded-full bg-[#227c9d] text-white hover:bg-[#1a647f] disabled:opacity-30 transition"
+                          >
+                            <Send className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      )}
 
                       {/* Comment list (Persisted in DB with like buttons) */}
                       <div className="space-y-2 pt-2 max-h-72 overflow-y-auto pr-1">

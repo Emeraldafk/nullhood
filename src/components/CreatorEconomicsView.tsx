@@ -20,6 +20,7 @@ import {
   Image as ImageIcon,
   Lock,
   AlertTriangle,
+  Wallet,
 } from 'lucide-react';
 import { OpinionMarket, getMarketPricesAndSentiment } from '../lib/bondingCurve';
 import { ROBINHOOD_EXPLORER_URL, shortenAddress } from '../config/robinhoodChain';
@@ -52,6 +53,7 @@ interface CreatorEconomicsViewProps {
   claimHistory: FeeClaimRecord[];
   onClaimCreatorFees: () => Promise<void>;
   onProfileUpdated?: (profile: UserProfile) => void;
+  onRequireWallet?: (actionTitle?: string) => void;
 }
 
 const PRESET_AVATARS = [
@@ -70,37 +72,40 @@ export const CreatorEconomicsView: React.FC<CreatorEconomicsViewProps> = ({
   claimHistory,
   onClaimCreatorFees,
   onProfileUpdated,
+  onRequireWallet,
 }) => {
   const [isClaiming, setIsClaiming] = useState(false);
   const [solvencyReport, setSolvencyReport] = useState<SolvencyReconciliationReport | null>(null);
 
-  // User Profile State bound to wallet address
-  const [profile, setProfile] = useState<UserProfile>(() => getUserProfile(walletAddress));
+  // User Profile State bound to wallet address (null when disconnected)
+  const [profile, setProfile] = useState<UserProfile | null>(() => getUserProfile(walletAddress));
   const [isEditingProfile, setIsEditingProfile] = useState(false);
-  const [editDisplayName, setEditDisplayName] = useState(profile.displayName);
-  const [editUsername, setEditUsername] = useState(profile.username);
-  const [editBio, setEditBio] = useState(profile.bio);
-  const [editAvatarUrl, setEditAvatarUrl] = useState(profile.avatarUrl || '');
+  const [editDisplayName, setEditDisplayName] = useState(profile?.displayName || '');
+  const [editUsername, setEditUsername] = useState(profile?.username || '');
+  const [editBio, setEditBio] = useState(profile?.bio || '');
+  const [editAvatarUrl, setEditAvatarUrl] = useState(profile?.avatarUrl || '');
   const [copiedAddress, setCopiedAddress] = useState(false);
   const [copiedContract, setCopiedContract] = useState(false);
   const [saveToast, setSaveToast] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // 15-day rate limit cooldown status checks
-  const usernameCooldown = checkUsernameCooldown(profile);
-  const pfpCooldown = checkPfpCooldown(profile);
-
   // Sync profile when wallet changes
   useEffect(() => {
     const p = getUserProfile(walletAddress);
     setProfile(p);
-    setEditDisplayName(p.displayName);
-    setEditUsername(p.username);
-    setEditBio(p.bio);
-    setEditAvatarUrl(p.avatarUrl || '');
+    if (p) {
+      setEditDisplayName(p.displayName);
+      setEditUsername(p.username);
+      setEditBio(p.bio);
+      setEditAvatarUrl(p.avatarUrl || '');
+    }
     setProfileError(null);
   }, [walletAddress]);
+
+  // Rate limit cooldown status checks
+  const usernameCooldown = profile ? checkUsernameCooldown(profile) : { canChange: true, remainingMs: 0, remainingDays: 0, remainingHours: 0, nextAvailableDate: null };
+  const pfpCooldown = profile ? checkPfpCooldown(profile) : { canChange: true, remainingMs: 0, remainingDays: 0, remainingHours: 0, nextAvailableDate: null };
 
   // Handle local image file upload (PNG/JPEG/GIF/WEBP)
   const handlePfpFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -147,10 +152,11 @@ export const CreatorEconomicsView: React.FC<CreatorEconomicsViewProps> = ({
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
     setProfileError(null);
+    if (!walletAddress || !profile) return;
 
     const cleanUsername = editUsername.trim().replace(/^@/, '').replace(/[^a-zA-Z0-9_]/g, '') || 'trader';
-    const cleanDisplayName = editDisplayName.trim() || 'Robinhood Trader';
-    const targetAddr = walletAddress || '0x71c95911e9a5d330f4d621842ec243ee134389a4';
+    const cleanDisplayName = editDisplayName.trim() || shortenAddress(walletAddress);
+    const targetAddr = walletAddress;
 
     // 15-day rate limit validation for username
     if (cleanUsername.toLowerCase() !== profile.username.toLowerCase()) {
@@ -199,15 +205,39 @@ export const CreatorEconomicsView: React.FC<CreatorEconomicsViewProps> = ({
     }
   };
 
-  // User creator metrics
-  const activeUser = walletAddress
-    ? shortenAddress(walletAddress)
-    : '0x71C9...89A4';
+  if (!walletAddress || !profile) {
+    return (
+      <div className="space-y-6">
+        <div className="rounded-[28px] border border-[#232332] bg-gradient-to-r from-[#14141e] via-[#161622] to-[#101018] p-8 sm:p-12 text-center shadow-xl flex flex-col items-center justify-center">
+          <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-[#FF6B00]/15 text-[#FF6B00] border border-[#FF6B00]/30 shadow-lg mb-4">
+            <Wallet className="h-8 w-8" />
+          </div>
+          <h2 className="font-fun text-xl sm:text-2xl font-black text-white">
+            Connect Wallet to View Portfolio & Creator Earnings
+          </h2>
+          <p className="mt-2 max-w-md text-xs sm:text-sm text-[#8c8c9e]">
+            Your personal holdings, 1% volume fee earnings, and custom creator profile are bound to your Robinhood Chain address. Connect your wallet to manage your identity and claim rewards.
+          </p>
+          <button
+            type="button"
+            onClick={() => onRequireWallet && onRequireWallet('Viewing Portfolio & Creator Fees')}
+            className="mt-6 flex items-center gap-2 rounded-full bg-[#FF6B00] px-6 py-3 text-sm font-extrabold text-white shadow-lg shadow-[#FF6B00]/25 transition hover:bg-[#EA580C] active:scale-95 cursor-pointer"
+          >
+            <Wallet className="h-4 w-4" />
+            <span>Connect Robinhood Wallet</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // User creator metrics bound to active wallet
+  const activeUser = shortenAddress(walletAddress);
 
   const userCreatedMarkets = markets.filter(
     (m) =>
+      m.creator.toLowerCase() === walletAddress.toLowerCase() ||
       m.creator.toLowerCase() === activeUser.toLowerCase() ||
-      (walletAddress && m.creator.toLowerCase() === walletAddress.toLowerCase()) ||
       m.sourceHandle?.toLowerCase() === `@${profile.username}`.toLowerCase()
   );
 
@@ -351,9 +381,7 @@ export const CreatorEconomicsView: React.FC<CreatorEconomicsViewProps> = ({
                 <div className="inline-flex items-center gap-1.5 rounded-full border border-[#2b2b3a] bg-[#101016] px-2.5 sm:px-3 py-1 font-mono text-[10px] sm:text-[11px] text-slate-300">
                   <span className="h-2 w-2 rounded-full bg-emerald-400" />
                   <span>
-                    {walletAddress
-                      ? shortenAddress(walletAddress)
-                      : '0x71C9...89A4 (Connected)'}
+                    {shortenAddress(walletAddress)}
                   </span>
                   <button
                     onClick={handleCopy}
