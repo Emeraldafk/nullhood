@@ -422,9 +422,9 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
         </div>
 
         {/* Modal Body */}
-        <div className="grid flex-1 grid-cols-1 gap-4 sm:gap-6 overflow-y-auto p-3.5 sm:p-6 lg:grid-cols-12">
-          {/* Left Column: Chart, Market Intelligence & Discussion (7 cols) */}
-          <div className="flex flex-col gap-5 lg:col-span-7">
+        <div className="grid flex-1 grid-cols-1 gap-4 sm:gap-6 overflow-y-auto p-3.5 sm:p-6 lg:grid-cols-12 items-start">
+          {/* Top Left Section: Chart, Live Sentiment & Market Intelligence (7 cols on desktop, 1st on mobile) */}
+          <div className="flex flex-col gap-5 order-1 lg:col-span-7 lg:col-start-1 lg:row-start-1">
             {/* Live Sentiment Banner */}
             <div className="rounded-[22px] border border-[#232330] bg-[#161620] p-4">
               <div className="mb-2 flex items-center justify-between">
@@ -932,103 +932,10 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                 )}
               </div>
             )}
-
-            {/* Conviction Feed */}
-            <div className="rounded-[22px] border border-[#232330] bg-[#161620] p-4">
-              <h4 className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-white">
-                <MessageSquare className="h-4 w-4 text-[#227c9d]" />
-                Conviction Feed ({market.comments.length})
-              </h4>
-
-              <form onSubmit={handlePostComment} className="mb-4 flex gap-2">
-                <input
-                  type="text"
-                  value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
-                  placeholder={`Share your ${selectedSide} take...`}
-                  className="flex-1 rounded-full border border-[#232330] bg-[#0e0e14] px-4 py-2 text-xs text-white placeholder-[#8c8c9e] focus:border-[#227c9d] focus:outline-none"
-                />
-                <button
-                  type="submit"
-                  className="flex items-center gap-1.5 rounded-full bg-[#227c9d] px-4 py-2 text-xs font-bold text-white transition hover:bg-[#1a647f]"
-                >
-                  <Send className="h-3.5 w-3.5" />
-                  <span>Post</span>
-                </button>
-              </form>
-
-              <div className="max-h-40 space-y-2 overflow-y-auto pr-1">
-                {market.comments.length === 0 ? (
-                  <p className="py-2 text-center text-xs text-[#8c8c9e]">
-                    No comments yet. Post your thesis and lead the debate!
-                  </p>
-                ) : (
-                  market.comments.map((c) => (
-                    <div
-                      key={c.id}
-                      className="rounded-xl border border-[#232330] bg-[#0e0e14] p-3 text-xs"
-                    >
-                      <div className="mb-1 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className="h-6 w-6 rounded-full overflow-hidden shrink-0">
-                            {c.authorAvatar ? (
-                              <img
-                                src={c.authorAvatar}
-                                alt={c.author}
-                                className="h-full w-full object-cover"
-                              />
-                            ) : (
-                              <div className="h-full w-full bg-gradient-to-tr from-[#227c9d] to-cyan-500 flex items-center justify-center text-[10px] font-bold text-white">
-                                {c.author.charAt(0).toUpperCase()}
-                              </div>
-                            )}
-                          </div>
-                          <span className="font-semibold text-white">
-                            {c.author}
-                          </span>
-                          {c.authorHandle && (
-                            <span className="text-[10px] text-[#7a7a8c]">
-                              {c.authorHandle}
-                            </span>
-                          )}
-                          <span
-                            className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                              c.side === 'YES'
-                                ? 'bg-[#227c9d]/20 text-[#53b3d4]'
-                                : 'bg-[#FF6B00]/20 text-orange-300'
-                            }`}
-                          >
-                            {c.side} ({(c.sharesHeld / 1000).toFixed(1)}k)
-                          </span>
-                        </div>
-                        <span className="text-[10px] text-[#8c8c9e]" title={formatExactDateTime(c.createdAt || c.timestamp)}>{formatTimeAgo(c.createdAt || c.timestamp)}</span>
-                      </div>
-                      <p className="text-slate-300 pl-8">{c.text}</p>
-                      <div className="mt-2 flex items-center pl-8 text-[11px] text-[#7a7a8c]">
-                        <button
-                          type="button"
-                          onClick={() => onToggleCommentLike && onToggleCommentLike(market.id, c.id)}
-                          className={`flex items-center gap-1 hover:text-rose-400 transition ${
-                            c.hasLiked ? 'text-rose-500' : ''
-                          }`}
-                        >
-                          <Heart
-                            className={`h-3 w-3 ${
-                              c.hasLiked ? 'fill-rose-500 text-rose-500' : ''
-                            }`}
-                          />
-                          <span>{c.likes || 0}</span>
-                        </button>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
           </div>
 
-          {/* Right Column: Instant Bonding Curve Trading Terminal OR Settlement Claim Terminal (5 cols) */}
-          <div className="flex flex-col justify-between rounded-[22px] sm:rounded-[24px] border border-[#232330] bg-[#161620] p-4 sm:p-5 lg:col-span-5">
+          {/* Right Column (Desktop) / 2nd Section (Mobile): Instant Bonding Curve Trading Terminal OR Settlement Claim Terminal (5 cols) */}
+          <div className="flex flex-col justify-between rounded-[22px] sm:rounded-[24px] border border-[#232330] bg-[#161620] p-4 sm:p-5 order-2 lg:col-span-5 lg:col-start-8 lg:row-start-1 lg:row-span-2">
             {tradingClosed ? (
               /* Phase 5: Pari-Mutuel Settlement & Closed Market Terminal */
               <div className="space-y-4">
@@ -1432,6 +1339,99 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
             {/* Bottom info note */}
             <div className="mt-3 text-center text-[11px] text-[#8c8c9e]">
               Instant liquidity backed by continuous on-chain bonding curves on Robinhood Chain.
+            </div>
+          </div>
+
+          {/* Conviction Feed: Positioned under Buy YES / Buy NO on mobile (order-3), and under Chart on desktop (lg:col-span-7 lg:row-start-2) */}
+          <div className="rounded-[22px] border border-[#232330] bg-[#161620] p-4 order-3 lg:col-span-7 lg:col-start-1 lg:row-start-2">
+            <h4 className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-white">
+              <MessageSquare className="h-4 w-4 text-[#227c9d]" />
+              Conviction Feed ({market.comments.length})
+            </h4>
+
+            <form onSubmit={handlePostComment} className="mb-4 flex gap-2">
+              <input
+                type="text"
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                placeholder={`Share your ${selectedSide} take...`}
+                className="flex-1 rounded-full border border-[#232330] bg-[#0e0e14] px-4 py-2 text-xs text-white placeholder-[#8c8c9e] focus:border-[#227c9d] focus:outline-none"
+              />
+              <button
+                type="submit"
+                className="flex items-center gap-1.5 rounded-full bg-[#227c9d] px-4 py-2 text-xs font-bold text-white transition hover:bg-[#1a647f]"
+              >
+                <Send className="h-3.5 w-3.5" />
+                <span>Post</span>
+              </button>
+            </form>
+
+            <div className="max-h-56 space-y-2 overflow-y-auto pr-1">
+              {market.comments.length === 0 ? (
+                <p className="py-2 text-center text-xs text-[#8c8c9e]">
+                  No comments yet. Post your thesis and lead the debate!
+                </p>
+              ) : (
+                market.comments.map((c) => (
+                  <div
+                    key={c.id}
+                    className="rounded-xl border border-[#232330] bg-[#0e0e14] p-3 text-xs"
+                  >
+                    <div className="mb-1 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="h-6 w-6 rounded-full overflow-hidden shrink-0">
+                          {c.authorAvatar ? (
+                            <img
+                              src={c.authorAvatar}
+                              alt={c.author}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <div className="h-full w-full bg-gradient-to-tr from-[#227c9d] to-cyan-500 flex items-center justify-center text-[10px] font-bold text-white">
+                              {c.author.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                        </div>
+                        <span className="font-semibold text-white">
+                          {c.author}
+                        </span>
+                        {c.authorHandle && (
+                          <span className="text-[10px] text-[#7a7a8c]">
+                            {c.authorHandle}
+                          </span>
+                        )}
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                            c.side === 'YES'
+                              ? 'bg-[#227c9d]/20 text-[#53b3d4]'
+                              : 'bg-[#FF6B00]/20 text-orange-300'
+                          }`}
+                        >
+                          {c.side} ({(c.sharesHeld / 1000).toFixed(1)}k)
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-[#8c8c9e]" title={formatExactDateTime(c.createdAt || c.timestamp)}>{formatTimeAgo(c.createdAt || c.timestamp)}</span>
+                    </div>
+                    <p className="text-slate-300 pl-8">{c.text}</p>
+                    <div className="mt-2 flex items-center pl-8 text-[11px] text-[#7a7a8c]">
+                      <button
+                        type="button"
+                        onClick={() => onToggleCommentLike && onToggleCommentLike(market.id, c.id)}
+                        className={`flex items-center gap-1 hover:text-rose-400 transition ${
+                          c.hasLiked ? 'text-rose-500' : ''
+                        }`}
+                      >
+                        <Heart
+                          className={`h-3 w-3 ${
+                            c.hasLiked ? 'fill-rose-500 text-rose-500' : ''
+                          }`}
+                        />
+                        <span>{c.likes || 0}</span>
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
