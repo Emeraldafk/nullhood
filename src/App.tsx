@@ -325,6 +325,17 @@ export function App() {
     }
   };
 
+  const handleConnectSimulatedWallet = () => {
+    const mockAddr = '0x94A1F30C863B489201D89E780283A491C783F10';
+    setWalletAddress(mockAddr);
+    setChainId(ROBINHOOD_CHAIN_ID);
+    setEthBalance('1.500');
+    pushToast(
+      'Wallet Connected (Robinhood Chain)',
+      `Connected ${shortenAddress(mockAddr)} with 1.500 test ETH on Robinhood Testnet (46630)`
+    );
+  };
+
   const handleSwitchNetwork = async () => {
     try {
       await switchOrAddRobinhoodChain();
@@ -909,6 +920,10 @@ export function App() {
   };
 
   const handleAddComment = (marketId: number, side: 'YES' | 'NO', text: string) => {
+    if (!walletAddress) {
+      promptConnectWallet('Posting a Comment');
+      return;
+    }
     const author = userProfile.displayName || (walletAddress ? shortenAddress(walletAddress) : '0x71C9...89A4');
     const userH = holdings[marketId];
     const sharesHeld =
@@ -946,6 +961,10 @@ export function App() {
   };
 
   const handleToggleCommentLike = (marketId: number, commentId: string) => {
+    if (!walletAddress) {
+      promptConnectWallet('Liking a Comment');
+      return;
+    }
     dbService.toggleCommentLike(marketId, commentId);
     setMarkets((prev) => {
       const updated = prev.map((m) => {
@@ -1900,6 +1919,7 @@ export function App() {
         isOpen={isWalletModalOpen}
         onClose={() => setIsWalletModalOpen(false)}
         onConnectWallet={handleConnectWallet}
+        onConnectSimulatedWallet={handleConnectSimulatedWallet}
         pendingActionTitle={pendingWalletActionTitle}
       />
 

@@ -19,14 +19,28 @@ const STORAGE_KEYS = {
   MARKETS: 'nullhood_db_markets_v5',
   ACTIVITIES: 'nullhood_db_activities_v3',
   COMMENTS: 'nullhood_db_comments_v3',
-  LIKES: 'nullhood_db_likes_v3',
+  LIKES: 'nullhood_db_likes_v4',
+  LEGACY_LIKES: 'nullhood_db_likes_v3',
   REPOSTS: 'nullhood_db_reposts_v3',
   CLAIMS: 'nullhood_db_claims_v3',
   HOLDINGS: 'nullhood_db_holdings_v3',
   PREFERENCES: 'nullhood_db_preferences_v3',
 };
 
-const DEFAULT_LIKES: Record<number, { count: number; liked: boolean }> = {};
+export interface MarketLikeEntry {
+  baseCount: number;
+  likedUsers: string[]; // List of user addresses/handles (lowercased)
+}
+
+const DEFAULT_LIKES_MAP: Record<number, MarketLikeEntry> = {
+  1: { baseCount: 88, likedUsers: [] },
+  2: { baseCount: 45, likedUsers: [] },
+  3: { baseCount: 62, likedUsers: [] },
+  4: { baseCount: 19, likedUsers: [] },
+  5: { baseCount: 134, likedUsers: [] },
+  6: { baseCount: 27, likedUsers: [] },
+  7: { baseCount: 71, likedUsers: [] },
+};
 
 export class TiredFunDatabaseService {
   /**
@@ -87,10 +101,10 @@ export class TiredFunDatabaseService {
               },
             };
 
-        const savedComments = commentsMap[m.id] || [];
+        const savedComments = commentsMap[m.id];
         return {
           ...sanitizedM,
-          comments: savedComments,
+          comments: savedComments && savedComments.length > 0 ? savedComments : (m.comments || []),
         };
       });
     } catch (e) {
@@ -170,49 +184,112 @@ export class TiredFunDatabaseService {
   }
 
   /**
-   * Load likes map for opinions
+   * Internal helper to load raw persistent multi-user likes store
    */
-  public loadLikes(): Record<number, { count: number; liked: boolean }> {
+  private loadRawLikesStore(): Record<number, MarketLikeEntry> {
     try {
       const data = localStorage.getItem(STORAGE_KEYS.LIKES);
       if (data) {
         const parsed = JSON.parse(data);
         if (parsed && typeof parsed === 'object') {
-          return { ...DEFAULT_LIKES, ...parsed };
+          return { ...DEFAULT_LIKES_MAP, ...parsed };
+        }
+      }
+
+      // Check legacy migration
+      const legacy = localStorage.getItem(STORAGE_KEYS.LEGACY_LIKES);
+      if (legacy) {
+        const legacyParsed = JSON.parse(legacy);
+        if (legacyParsed && typeof legacyParsed === 'object') {
+          const migrated: Record<number, MarketLikeEntry> = { ...DEFAULT_LIKES_MAP };
+          for (const [idStr, val] of Object.entries(legacyParsed)) {
+            const mId = Number(idStr);
+            const count = typeof val === 'object' && val !== null ? (val as any).count || 0 : Number(val) || 0;
+            migrated[mId] = {
+              baseCount: Math.max(migrated[mId]?.baseCount || 0, count),
+              likedUsers: [],
+            };
+          }
+          this.saveRawLikesStore(migrated);
+          return migrated;
         }
       }
     } catch (e) {
-      console.warn('Failed to load likes:', e);
+      console.warn('Failed to load raw likes store:', e);
     }
-    return { ...DEFAULT_LIKES };
+    return { ...DEFAULT_LIKES_MAP };
   }
 
   /**
-   * Save likes map
+   * Internal helper to save raw persistent multi-user likes store
    */
-  public saveLikes(likes: Record<number, { count: number; liked: boolean }>): void {
+  private saveRawLikesStore(store: Record<number, MarketLikeEntry>): void {
     try {
-      localStorage.setItem(STORAGE_KEYS.LIKES, JSON.stringify(likes));
+      localStorage.setItem(STORAGE_KEYS.LIKES, JSON.stringify(store));
     } catch (e) {
-      console.warn('Failed to save likes:', e);
+      console.warn('Failed to save raw likes store:', e);
     }
   }
 
   /**
-   * Toggle like for an opinion
+   * Load perpetual likes map tailored to the current user (if logged in)
+   * Base likes + total distinct user likes, with personalized liked boolean
    */
-  public toggleMarketLike(marketId: number): Record<number, { count: number; liked: boolean }> {
-    const all = this.loadLikes();
-    const current = all[marketId] || { count: 0, liked: false };
-    const updated = {
-      ...all,
-      [marketId]: {
-        count: current.liked ? Math.max(0, current.count - 1) : current.count + 1,
-        liked: !current.liked,
-      },
+  public loadLikes(userAddress?: string | null): Record<number, { count: number; liked: boolean }> {
+    const rawStore = this.loadRawLikesStore();
+    const normalizedUser = userAddress ? userAddress.toLowerCase() : null;
+    const result: Record<number, { count: number; liked: boolean }> = {};
+
+    for (const [idStr, entry] of Object.entries(rawStore)) {
+      const mId = Number(idStr);
+      const likedUsers = Array.isArray(entry.likedUsers) ? entry.likedUsers : [];
+      const base = typeof entry.baseCount === 'number' ? entry.baseCount : 10;
+      const count = base + likedUsers.length;
+      const liked = Boolean(normalizedUser && likedUsers.includes(normalizedUser));
+      result[mId] = { count, liked };
+    }
+
+    return result;
+  }
+
+  /**
+   * Toggle like for an opinion for a specific logged in user.
+   * If user has already liked, unlikes and decrements.
+   * If user has not liked, records their unique user address and increments.
+   */
+  public toggleMarketLike(
+    marketId: number,
+    userAddress: string
+  ): Record<number, { count: number; liked: boolean }> {
+    if (!userAddress) {
+      return this.loadLikes();
+    }
+
+    const rawStore = this.loadRawLikesStore();
+    const entry: MarketLikeEntry = rawStore[marketId] || {
+      baseCount: DEFAULT_LIKES_MAP[marketId]?.baseCount || 10,
+      likedUsers: [],
     };
-    this.saveLikes(updated);
-    return updated;
+
+    const normalizedUser = userAddress.toLowerCase();
+    const currentUsers = Array.isArray(entry.likedUsers) ? [...entry.likedUsers] : [];
+    const existingIndex = currentUsers.indexOf(normalizedUser);
+
+    if (existingIndex >= 0) {
+      // User is un-liking
+      currentUsers.splice(existingIndex, 1);
+    } else {
+      // User is liking (perpetual distinct user like)
+      currentUsers.push(normalizedUser);
+    }
+
+    rawStore[marketId] = {
+      baseCount: typeof entry.baseCount === 'number' ? entry.baseCount : 10,
+      likedUsers: currentUsers,
+    };
+
+    this.saveRawLikesStore(rawStore);
+    return this.loadLikes(userAddress);
   }
 
   /**

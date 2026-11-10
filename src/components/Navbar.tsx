@@ -264,6 +264,44 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* Responsive Mobile Drawer Menu */}
       {isMobileMenuOpen && (
         <div className="border-t border-[#21212c] bg-[#0c0c11]/98 px-3 py-3 lg:hidden shadow-2xl backdrop-blur-2xl animate-in slide-in-from-top-2 duration-150 w-full max-w-[100vw] overflow-x-hidden">
+          {/* Mobile Connect Wallet Action */}
+          {!walletAddress ? (
+            <button
+              type="button"
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                onConnectWallet();
+              }}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#FF6B00] py-3 px-4 text-sm font-extrabold text-white shadow-lg shadow-[#FF6B00]/30 hover:bg-[#EA580C] active:scale-95 transition mb-3 cursor-pointer"
+            >
+              <Wallet className="h-4 w-4" />
+              <span>Connect Robinhood Wallet</span>
+            </button>
+          ) : !isRobinhoodChain ? (
+            <button
+              type="button"
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                onSwitchNetwork();
+              }}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#FF6B00] py-2.5 px-4 text-xs font-bold text-white shadow-md hover:bg-[#EA580C] active:scale-95 transition mb-3 cursor-pointer"
+            >
+              <span>Switch to Robinhood Chain (46630)</span>
+            </button>
+          ) : (
+            <div className="flex items-center justify-between rounded-2xl border border-[#232330] bg-[#14141c] p-2.5 mb-3">
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="font-mono text-xs font-bold text-white">
+                  {shortenAddress(walletAddress)}
+                </span>
+              </div>
+              <span className="font-mono text-xs font-bold text-emerald-400">
+                {parseFloat(ethBalance || '0').toFixed(3)} ETH
+              </span>
+            </div>
+          )}
+
           {/* Mobile Profile Card */}
           {userProfile && (
             <div

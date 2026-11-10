@@ -15,6 +15,7 @@ interface ConnectWalletModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConnectWallet: () => Promise<void>;
+  onConnectSimulatedWallet?: () => void;
   pendingActionTitle?: string;
 }
 
@@ -22,6 +23,7 @@ export const ConnectWalletModal: React.FC<ConnectWalletModalProps> = ({
   isOpen,
   onClose,
   onConnectWallet,
+  onConnectSimulatedWallet,
   pendingActionTitle = 'Voting & Trading Opinions',
 }) => {
   const [isConnecting, setIsConnecting] = useState(false);
@@ -29,10 +31,32 @@ export const ConnectWalletModal: React.FC<ConnectWalletModalProps> = ({
 
   if (!isOpen) return null;
 
+  const hasInjected = typeof window !== 'undefined' && Boolean((window as any).ethereum);
+  const isMobile =
+    typeof navigator !== 'undefined' &&
+    /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
   const handleConnect = async (walletName: string) => {
     setIsConnecting(true);
     setErrorMessage(null);
     try {
+      // On mobile without an injected EVM browser, deep link directly into the wallet application
+      if (isMobile && !hasInjected) {
+        if (walletName === 'MetaMask') {
+          const targetUrl = window.location.host + window.location.pathname;
+          window.location.href = `https://metamask.app.link/dapp/${targetUrl}`;
+          return;
+        }
+        if (walletName === 'Coinbase Wallet') {
+          window.location.href = `https://go.cb-w.com/dapp?cb_url=${encodeURIComponent(window.location.href)}`;
+          return;
+        }
+        if (walletName === 'Trust Wallet') {
+          window.location.href = `https://link.trustwallet.com/open_url?coin_id=60&url=${encodeURIComponent(window.location.href)}`;
+          return;
+        }
+      }
+
       await onConnectWallet();
       onClose();
     } catch (err: unknown) {
@@ -43,12 +67,10 @@ export const ConnectWalletModal: React.FC<ConnectWalletModalProps> = ({
     }
   };
 
-  const hasInjected = typeof window !== 'undefined' && Boolean((window as any).ethereum);
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md animate-fadeIn">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-3 sm:p-4 backdrop-blur-md animate-fadeIn overflow-y-auto">
       <div
-        className="relative w-full max-w-md overflow-hidden rounded-[28px] border border-[#232332] bg-[#12121a] shadow-2xl"
+        className="relative w-full max-w-md max-h-[92vh] overflow-y-auto rounded-[28px] border border-[#232332] bg-[#12121a] shadow-2xl my-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Header */}
@@ -192,6 +214,36 @@ export const ConnectWalletModal: React.FC<ConnectWalletModalProps> = ({
 
             <ArrowRight className="h-4 w-4 text-[#7a7a8c] transition-transform group-hover:translate-x-1 group-hover:text-white" />
           </button>
+
+          {/* Option 5: Instant Testnet Demo Session (Ideal for Mobile / Quick testing) */}
+          {onConnectSimulatedWallet && (
+            <button
+              type="button"
+              disabled={isConnecting}
+              onClick={() => {
+                onConnectSimulatedWallet();
+                onClose();
+              }}
+              className="group flex w-full items-center justify-between rounded-2xl border border-[#227c9d]/40 bg-[#14232c]/50 p-3.5 transition-all hover:border-[#227c9d] hover:bg-[#182b36] active:scale-[0.99] disabled:opacity-60"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#227c9d]/20 text-[#53b3d4] font-bold text-lg">
+                  🏹
+                </div>
+                <div className="text-left">
+                  <div className="flex items-center gap-2 font-fun text-sm font-bold text-white group-hover:text-[#53b3d4]">
+                    <span>Robinhood Testnet Demo Session</span>
+                    <span className="rounded-full bg-[#227c9d]/20 border border-[#227c9d]/40 px-2 py-0.5 font-mono text-[9px] font-bold text-[#53b3d4]">
+                      Instant
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-[#7a7a8c]">Explore all features with 1.500 test ETH</p>
+                </div>
+              </div>
+
+              <ArrowRight className="h-4 w-4 text-[#53b3d4] transition-transform group-hover:translate-x-1" />
+            </button>
+          )}
         </div>
 
         {/* Footer Notes */}

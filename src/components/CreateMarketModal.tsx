@@ -13,6 +13,8 @@ import {
   Link as LinkIcon,
   HelpCircle,
   AlertCircle,
+  ChevronDown,
+  Check,
 } from 'lucide-react';
 import { MarketCategory, MarketType } from '../lib/bondingCurve';
 
@@ -48,24 +50,215 @@ const PRESET_CATEGORIES: Exclude<MarketCategory, 'All'>[] = [
   'Other',
 ];
 
-const PRESET_COVERS = [
+export interface PresetThumbnail {
+  id: string;
+  category: Exclude<MarketCategory, 'All'>;
+  label: string;
+  tag: string;
+  url: string;
+}
+
+export const PRESET_THUMBNAILS: PresetThumbnail[] = [
+  // --- SPORTS (Football, Basketball, Formula 1, Boxing, Tennis) ---
   {
-    label: 'Robinhood Chain',
-    url: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=600&auto=format&fit=crop&q=80',
+    id: 'sp-1',
+    category: 'Sports',
+    label: 'Premier League Match Stadium',
+    tag: '⚽ Football / Soccer',
+    url: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=600&auto=format&fit=crop&q=80',
   },
   {
-    label: 'AI & Robots',
-    url: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=600&auto=format&fit=crop&q=80',
+    id: 'sp-2',
+    category: 'Sports',
+    label: 'NBA Basketball Arena',
+    tag: '🏀 Basketball',
+    url: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=600&auto=format&fit=crop&q=80',
   },
   {
-    label: 'Crypto Bull',
+    id: 'sp-3',
+    category: 'Sports',
+    label: 'Formula 1 Grand Prix',
+    tag: '🏎️ Racing',
+    url: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=600&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'sp-4',
+    category: 'Sports',
+    label: 'Boxing & MMA Championship',
+    tag: '🥊 Combat Sports',
+    url: 'https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?w=600&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'sp-5',
+    category: 'Sports',
+    label: 'Tennis Grand Slam Court',
+    tag: '🎾 Tennis',
+    url: 'https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?w=600&auto=format&fit=crop&q=80',
+  },
+
+  // --- CRYPTO (Bull Market, Bitcoin, Ethereum, Web3) ---
+  {
+    id: 'cr-1',
+    category: 'Crypto',
+    label: 'Crypto Bull Market',
+    tag: '🐂 Bull Run',
     url: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=600&auto=format&fit=crop&q=80',
   },
   {
-    label: 'Global Macro',
+    id: 'cr-2',
+    category: 'Crypto',
+    label: 'Physical Bitcoin & Gold',
+    tag: '₿ Bitcoin',
+    url: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=600&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'cr-3',
+    category: 'Crypto',
+    label: 'Ethereum Virtual Machine',
+    tag: 'Ξ Ethereum',
+    url: 'https://images.unsplash.com/photo-1622979135225-d2ba269bc1df?w=600&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'cr-4',
+    category: 'Crypto',
+    label: 'Trading Desk Candlesticks',
+    tag: '📈 Trading',
+    url: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=600&auto=format&fit=crop&q=80',
+  },
+
+  // --- AI (Robots, Neural Network, Code) ---
+  {
+    id: 'ai-1',
+    category: 'AI',
+    label: 'Humanoid AI Robot',
+    tag: '🤖 Robotics',
+    url: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=600&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'ai-2',
+    category: 'AI',
+    label: 'Neural Network Synapses',
+    tag: '🧠 Deep Learning',
+    url: 'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=600&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'ai-3',
+    category: 'AI',
+    label: 'Autonomous Agent Code',
+    tag: '💻 Algorithms',
+    url: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=600&auto=format&fit=crop&q=80',
+  },
+
+  // --- DEFI (Liquidity, Staking, RWA) ---
+  {
+    id: 'df-1',
+    category: 'DeFi',
+    label: 'DeFi Liquidity Pools',
+    tag: '💧 Automated MM',
     url: 'https://images.unsplash.com/photo-1642790106117-e829e14a795f?w=600&auto=format&fit=crop&q=80',
   },
+  {
+    id: 'df-2',
+    category: 'DeFi',
+    label: 'Tokenized Real-World Assets',
+    tag: '🏛️ RWA / Gold',
+    url: 'https://images.unsplash.com/photo-1610375461246-83df859d849d?w=600&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'df-3',
+    category: 'DeFi',
+    label: 'Decentralized Staking Yield',
+    tag: '🌾 Yield Farming',
+    url: 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=600&auto=format&fit=crop&q=80',
+  },
+
+  // --- CULTURE (Festival, Cyberpunk, Memes) ---
+  {
+    id: 'cu-1',
+    category: 'Culture',
+    label: 'Music Festival Stadium',
+    tag: '🎵 Viral Event',
+    url: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'cu-2',
+    category: 'Culture',
+    label: 'Cyberpunk Neon Metropolis',
+    tag: '🌆 Pop Culture',
+    url: 'https://images.unsplash.com/photo-1514565131-fce0801e5785?w=600&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'cu-3',
+    category: 'Culture',
+    label: 'Digital Art & Streetwear',
+    tag: '🎨 Creative',
+    url: 'https://images.unsplash.com/photo-1558865869-c93f6f8482af?w=600&auto=format&fit=crop&q=80',
+  },
+
+  // --- POLITICS (Capitol, Debate, Global Summit) ---
+  {
+    id: 'po-1',
+    category: 'Politics',
+    label: 'Capitol Building & Government',
+    tag: '🏛️ Governance',
+    url: 'https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'po-2',
+    category: 'Politics',
+    label: 'Presidential Debate & Elections',
+    tag: '🗳️ Elections',
+    url: 'https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?w=600&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'po-3',
+    category: 'Politics',
+    label: 'Global Geopolitical Summit',
+    tag: '🌐 World Affairs',
+    url: 'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=600&auto=format&fit=crop&q=80',
+  },
+
+  // --- ROBINHOOD (Robinhood Bull, Stock Market Floor, App) ---
+  {
+    id: 'rh-1',
+    category: 'Robinhood',
+    label: 'Robinhood Green Candlesticks',
+    tag: '🏹 Robinhood Chain',
+    url: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=600&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'rh-2',
+    category: 'Robinhood',
+    label: 'Stock Exchange Trading Floor',
+    tag: '📊 Equities',
+    url: 'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=600&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'rh-3',
+    category: 'Robinhood',
+    label: 'Mobile Retail Trading',
+    tag: '📱 Retail SocialFi',
+    url: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?w=600&auto=format&fit=crop&q=80',
+  },
+
+  // --- OTHER (Space, Tech, Innovation) ---
+  {
+    id: 'ot-1',
+    category: 'Other',
+    label: 'Orbital Rocket Launch',
+    tag: '🚀 Aerospace',
+    url: 'https://images.unsplash.com/photo-1517976487507-5b3a4a0346a0?w=600&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'ot-2',
+    category: 'Other',
+    label: 'Electric Vehicle Tech',
+    tag: '⚡ Clean Energy',
+    url: 'https://images.unsplash.com/photo-1509391365360-2e959784a276?w=600&auto=format&fit=crop&q=80',
+  },
 ];
+
+const PRESET_COVERS = PRESET_THUMBNAILS.slice(0, 4);
 
 // Helper to format ISO string to local input format YYYY-MM-DDTHH:mm
 function getIsoDateTimeLocal(date: Date): string {
@@ -88,9 +281,13 @@ export const CreateMarketModal: React.FC<CreateMarketModalProps> = ({
   const [question, setQuestion] = useState('');
   const [category, setCategory] = useState<Exclude<MarketCategory, 'All'>>('Robinhood');
   const [sourceHandle, setSourceHandle] = useState('@TheTiredFun');
-  const [imageUri, setImageUri] = useState(PRESET_COVERS[0].url);
+  const [imageUri, setImageUri] = useState(PRESET_THUMBNAILS[0].url);
   const [initialSideIsYes, setInitialSideIsYes] = useState(true);
   const [initialBuyEth, setInitialBuyEth] = useState('0.001');
+
+  // Thumbnail Gallery Dropdown state
+  const [isThumbnailMenuOpen, setIsThumbnailMenuOpen] = useState(false);
+  const [thumbnailCategoryFilter, setThumbnailCategoryFilter] = useState<'All' | Exclude<MarketCategory, 'All'>>('All');
 
   // Prediction market specific governance states
   const now = new Date();
@@ -330,7 +527,15 @@ export const CreateMarketModal: React.FC<CreateMarketModalProps> = ({
               </label>
               <select
                 value={category}
-                onChange={(e) => setCategory(e.target.value as Exclude<MarketCategory, 'All'>)}
+                onChange={(e) => {
+                  const newCat = e.target.value as Exclude<MarketCategory, 'All'>;
+                  setCategory(newCat);
+                  setThumbnailCategoryFilter(newCat);
+                  const matchingThumbnail = PRESET_THUMBNAILS.find((t) => t.category === newCat);
+                  if (matchingThumbnail) {
+                    setImageUri(matchingThumbnail.url);
+                  }
+                }}
                 className="w-full rounded-2xl border border-[#232330] bg-[#0c0c11] px-3.5 py-2.5 text-xs font-bold text-white focus:border-[#227c9d] focus:outline-none transition"
               >
                 {PRESET_CATEGORIES.map((c) => (
@@ -461,36 +666,146 @@ export const CreateMarketModal: React.FC<CreateMarketModalProps> = ({
             </div>
           )}
 
-          {/* Cover Image */}
-          <div>
-            <label className="mb-1.5 flex items-center justify-between text-xs font-bold uppercase tracking-wider text-slate-300">
-              <span>Thumbnail URL</span>
-              <span className="font-mono text-[10px] text-[#8c8c9e]">Or choose preset</span>
+          {/* Thumbnail Image Preset Gallery & Dropdown */}
+          <div className="space-y-2">
+            <label className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-slate-300">
+              <span className="flex items-center gap-1.5">
+                <ImageIcon className="h-3.5 w-3.5 text-[#FF6B00]" />
+                <span>Market Thumbnail</span>
+              </span>
+              <span className="font-mono text-[10px] text-[#53b3d4]">Sports, Crypto, AI & more</span>
             </label>
-            <div className="relative mb-2">
+
+            {/* Selected Thumbnail Quick Preview Bar & Dropdown Toggle */}
+            <div className="flex items-center justify-between gap-3 rounded-2xl border border-[#232330] bg-[#0c0c11] p-2 pr-3">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="h-10 w-14 rounded-xl overflow-hidden bg-[#181824] shrink-0 border border-[#262638]">
+                  {imageUri ? (
+                    <img
+                      src={imageUri}
+                      alt="Thumbnail preview"
+                      className="h-full w-full object-cover"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).src = PRESET_THUMBNAILS[0].url;
+                      }}
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-[#7a7a8c]">
+                      <ImageIcon className="h-4 w-4" />
+                    </div>
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <div className="text-xs font-bold text-white truncate">
+                    {PRESET_THUMBNAILS.find((t) => t.url === imageUri)?.label || 'Custom Thumbnail Image'}
+                  </div>
+                  <div className="text-[10px] text-[#FF8A33] font-mono">
+                    {PRESET_THUMBNAILS.find((t) => t.url === imageUri)?.tag || 'Web Image Link'}
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsThumbnailMenuOpen(!isThumbnailMenuOpen)}
+                className="flex items-center gap-1 rounded-xl bg-[#181824] hover:bg-[#202030] border border-[#2d2d40] px-3 py-1.5 text-xs font-bold text-white transition active:scale-95 shrink-0"
+              >
+                <span>{isThumbnailMenuOpen ? 'Close Gallery' : 'Select Thumbnail'}</span>
+                <ChevronDown className={`h-3.5 w-3.5 text-[#FF6B00] transition-transform ${isThumbnailMenuOpen ? 'rotate-180' : ''}`} />
+              </button>
+            </div>
+
+            {/* Interactive Thumbnail Gallery Dropdown Menu */}
+            {isThumbnailMenuOpen && (
+              <div className="rounded-2xl border border-[#28283a] bg-[#12121b] p-3 shadow-2xl animate-in fade-in zoom-in-95 duration-150 space-y-3">
+                <div className="flex items-center justify-between border-b border-[#20202e] pb-2">
+                  <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                    <Sparkles className="h-3.5 w-3.5 text-[#FF6B00]" />
+                    <span>Choose from Category Thumbnails</span>
+                  </span>
+                  <span className="text-[10px] font-mono text-[#8c8c9e]">
+                    {PRESET_THUMBNAILS.length} Presets Available
+                  </span>
+                </div>
+
+                {/* Category Filter Tabs */}
+                <div className="flex gap-1 overflow-x-auto pb-1 scrollbar-none">
+                  {(['All', 'Sports', 'Crypto', 'AI', 'DeFi', 'Culture', 'Politics', 'Robinhood', 'Other'] as const).map(
+                    (cat) => (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => setThumbnailCategoryFilter(cat)}
+                        className={`rounded-full px-2.5 py-1 text-[11px] font-bold whitespace-nowrap transition ${
+                          thumbnailCategoryFilter === cat
+                            ? 'bg-[#FF6B00] text-white shadow-sm'
+                            : 'bg-[#181824] text-[#8c8c9e] hover:text-white hover:bg-[#222232]'
+                        }`}
+                      >
+                        {cat === 'Sports' ? '⚽ Sports' : cat === 'Crypto' ? '⚡ Crypto' : cat === 'AI' ? '🤖 AI' : cat === 'DeFi' ? '🏦 DeFi' : cat === 'Culture' ? '🎭 Culture' : cat === 'Politics' ? '🏛️ Politics' : cat === 'Robinhood' ? '🏹 Robinhood' : cat === 'Other' ? '🚀 Tech' : 'All'}
+                      </button>
+                    )
+                  )}
+                </div>
+
+                {/* Thumbnails Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-56 overflow-y-auto pr-1">
+                  {(thumbnailCategoryFilter === 'All'
+                    ? PRESET_THUMBNAILS
+                    : PRESET_THUMBNAILS.filter((t) => t.category === thumbnailCategoryFilter)
+                  ).map((preset) => {
+                    const isSelected = imageUri === preset.url;
+                    return (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        onClick={() => {
+                          setImageUri(preset.url);
+                          setIsThumbnailMenuOpen(false);
+                        }}
+                        className={`group relative overflow-hidden rounded-xl border text-left transition-all ${
+                          isSelected
+                            ? 'border-[#FF6B00] ring-1 ring-[#FF6B00] bg-[#FF6B00]/10'
+                            : 'border-[#232332] bg-[#161622] hover:border-[#3a3a52] hover:bg-[#1b1c2b]'
+                        }`}
+                      >
+                        <div className="aspect-[16/10] w-full overflow-hidden bg-black/40 relative">
+                          <img
+                            src={preset.url}
+                            alt={preset.label}
+                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          />
+                          {isSelected && (
+                            <div className="absolute top-1.5 right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-[#FF6B00] text-white shadow">
+                              <Check className="h-3 w-3 stroke-[3]" />
+                            </div>
+                          )}
+                          <span className="absolute bottom-1 left-1 rounded bg-black/70 px-1.5 py-0.5 font-mono text-[9px] font-bold text-white backdrop-blur-sm">
+                            {preset.tag}
+                          </span>
+                        </div>
+                        <div className="p-1.5">
+                          <div className="text-[11px] font-bold text-white truncate leading-tight group-hover:text-[#FF8A33]">
+                            {preset.label}
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Custom URL Input Field */}
+            <div className="relative">
               <ImageIcon className="absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#7a7a8c]" />
               <input
                 type="url"
                 value={imageUri}
                 onChange={(e) => setImageUri(e.target.value)}
-                className="w-full rounded-2xl border border-[#232330] bg-[#0c0c11] pl-9 pr-3 py-2 font-mono text-xs text-white focus:border-[#227c9d] focus:outline-none transition"
+                placeholder="Or paste custom image URL..."
+                className="w-full rounded-2xl border border-[#232330] bg-[#0c0c11] pl-9 pr-3 py-2 font-mono text-xs text-white placeholder-[#5a5a6e] focus:border-[#227c9d] focus:outline-none transition"
               />
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {PRESET_COVERS.map((preset) => (
-                <button
-                  key={preset.label}
-                  type="button"
-                  onClick={() => setImageUri(preset.url)}
-                  className={`rounded-full border px-3 py-1 text-[11px] font-bold transition ${
-                    imageUri === preset.url
-                      ? 'border-[#227c9d] bg-[#227c9d]/20 text-[#53b3d4]'
-                      : 'border-[#232330] bg-[#0c0c11] text-[#8c8c9e] hover:text-white'
-                  }`}
-                >
-                  {preset.label}
-                </button>
-              ))}
             </div>
           </div>
 

@@ -74,7 +74,7 @@ export const OpinionFeedView: React.FC<OpinionFeedViewProps> = ({
 
   // Load persistent likes from Database
   const [likesMap, setLikesMap] = useState<Record<number, { count: number; liked: boolean }>>(() =>
-    dbService.loadLikes()
+    dbService.loadLikes(walletAddress)
   );
 
   const [repostsMap, setRepostsMap] = useState<Record<number, { count: number; reposted: boolean }>>(() =>
@@ -94,16 +94,35 @@ export const OpinionFeedView: React.FC<OpinionFeedViewProps> = ({
   const [searchFilter, setSearchFilter] = useState('');
   const [copiedShareId, setCopiedShareId] = useState<number | null>(null);
 
-  // Sync likes and reposts from real database
+  // Sync likes and reposts from real database when user connects or switches wallet
   useEffect(() => {
-    setLikesMap(dbService.loadLikes());
+    setLikesMap(dbService.loadLikes(walletAddress));
     setRepostsMap(dbService.loadReposts());
-  }, []);
+  }, [walletAddress]);
 
   const toggleLike = (marketId: number) => {
-    // Persist like to database
-    const updated = dbService.toggleMarketLike(marketId);
+    // Unauthenticated users are redirected to login / connect wallet
+    if (!walletAddress) {
+      if (onRequireWallet) {
+        onRequireWallet('Liking an Opinion Post');
+      }
+      return;
+    }
+    // Persist perpetual like to database for this user
+    const updated = dbService.toggleMarketLike(marketId, walletAddress);
     setLikesMap(updated);
+  };
+
+  const handleCommentLike = (marketId: number, commentId: string) => {
+    if (!walletAddress) {
+      if (onRequireWallet) {
+        onRequireWallet('Liking a Comment');
+      }
+      return;
+    }
+    if (onToggleCommentLike) {
+      onToggleCommentLike(marketId, commentId);
+    }
   };
 
   const toggleRepost = (marketId: number) => {
@@ -783,9 +802,7 @@ export const OpinionFeedView: React.FC<OpinionFeedViewProps> = ({
                                   {/* Comment interaction: Like */}
                                   <div className="mt-2 flex items-center gap-4 text-[11px] text-[#7a7a8c]">
                                     <button
-                                      onClick={() =>
-                                        onToggleCommentLike && onToggleCommentLike(market.id, c.id)
-                                      }
+                                      onClick={() => handleCommentLike(market.id, c.id)}
                                       className={`flex items-center gap-1 hover:text-rose-400 transition ${
                                         c.hasLiked ? 'text-rose-500' : ''
                                       }`}
