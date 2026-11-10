@@ -12,6 +12,7 @@ import {
   X,
   ExternalLink,
   ChevronRight,
+  ChevronDown,
 } from 'lucide-react';
 import {
   ROBINHOOD_CHAIN_ID,
@@ -76,12 +77,14 @@ export const Navbar: React.FC<NavbarProps> = ({
   userProfile,
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   const isRobinhoodChain = chainId === ROBINHOOD_CHAIN_ID;
   const balanceUsd = walletAddress ? (Number(ethBalance) * 2800).toFixed(2) : '0.00';
 
   const handleSelectTab = (tab: TiredFunNavTab) => {
     setActiveTab(tab);
     setIsMobileMenuOpen(false);
+    setIsMoreMenuOpen(false);
   };
 
   return (
@@ -109,27 +112,82 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           </button>
 
-          {/* Desktop Navigation Tabs */}
-          <nav className="hidden items-center gap-1 xl:gap-1.5 md:flex">
-            {NAV_ITEMS.map((item) => {
+          {/* Desktop Navigation Tabs (Primary 4 on lg+, all 6 on xl+, More dropdown on lg-xl) */}
+          <nav className="hidden items-center gap-1 xl:gap-1.5 lg:flex">
+            {NAV_ITEMS.map((item, idx) => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
+              // Secondary items (Resolutions & Architecture) only direct-show on xl+ to guarantee zero overlap on laptops
+              const isSecondary = idx >= 4;
               return (
                 <button
                   key={item.id}
                   onClick={() => handleSelectTab(item.id)}
-                  className={`flex items-center gap-1.5 rounded-full px-2.5 py-1.5 lg:px-3 lg:py-1.5 xl:px-3.5 xl:py-2 text-xs lg:text-[13px] font-bold transition-all whitespace-nowrap ${
+                  className={`items-center gap-1.5 rounded-full px-2.5 py-1.5 lg:px-3 lg:py-1.5 xl:px-3.5 xl:py-2 text-xs lg:text-[13px] font-bold transition-all whitespace-nowrap ${
+                    isSecondary ? 'hidden xl:flex' : 'flex'
+                  } ${
                     isActive
                       ? 'bg-[#FF6B00] text-white shadow-sm shadow-[#FF6B00]/25'
                       : 'text-[#8c8c9e] hover:text-white hover:bg-[#1a1a24]'
                   }`}
                 >
                   <Icon className="h-3.5 w-3.5 shrink-0" />
-                  <span className="hidden xl:inline">{item.label}</span>
-                  <span className="inline xl:hidden">{item.shortLabel || item.label}</span>
+                  <span className="hidden 2xl:inline">{item.label}</span>
+                  <span className="inline 2xl:hidden">{item.shortLabel || item.label}</span>
                 </button>
               );
             })}
+
+            {/* Compact More Dropdown for Resolutions & Architecture on lg-xl laptops */}
+            <div className="relative hidden lg:block xl:hidden">
+              <button
+                type="button"
+                onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
+                className={`flex items-center gap-1 rounded-full px-2.5 py-1.5 text-xs font-bold transition-all ${
+                  activeTab === 'resolution' || activeTab === 'how-it-works'
+                    ? 'bg-[#FF6B00] text-white shadow-sm'
+                    : 'text-[#8c8c9e] hover:text-white hover:bg-[#1a1a24]'
+                }`}
+              >
+                <span>More</span>
+                <ChevronDown className={`h-3 w-3 transition-transform ${isMoreMenuOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {isMoreMenuOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setIsMoreMenuOpen(false)}
+                  />
+                  <div className="absolute left-0 top-full mt-2 w-48 rounded-2xl border border-[#232330] bg-[#14141c] p-1.5 shadow-2xl z-50 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-100">
+                    <button
+                      type="button"
+                      onClick={() => handleSelectTab('resolution')}
+                      className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold transition ${
+                        activeTab === 'resolution'
+                          ? 'bg-[#FF6B00] text-white'
+                          : 'text-[#8c8c9e] hover:text-white hover:bg-[#1f1f2c]'
+                      }`}
+                    >
+                      <Scale className="h-3.5 w-3.5 text-[#FF6B00]" />
+                      <span>Resolutions</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSelectTab('how-it-works')}
+                      className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold transition ${
+                        activeTab === 'how-it-works'
+                          ? 'bg-[#FF6B00] text-white'
+                          : 'text-[#8c8c9e] hover:text-white hover:bg-[#1f1f2c]'
+                      }`}
+                    >
+                      <Layers className="h-3.5 w-3.5 text-[#53b3d4]" />
+                      <span>Architecture</span>
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </nav>
         </div>
 
@@ -202,7 +260,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Mobile Hamburger Toggle Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl border border-[#232330] bg-[#14141c] text-[#8c8c9e] hover:text-white transition md:hidden shrink-0"
+            className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl border border-[#232330] bg-[#14141c] text-[#8c8c9e] hover:text-white transition lg:hidden shrink-0"
             aria-label="Toggle navigation"
           >
             {isMobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
@@ -212,7 +270,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Responsive Mobile Drawer Menu */}
       {isMobileMenuOpen && (
-        <div className="border-t border-[#21212c] bg-[#0c0c11]/98 px-3 py-3 md:hidden shadow-2xl backdrop-blur-2xl animate-in slide-in-from-top-2 duration-150 w-full max-w-[100vw] overflow-x-hidden">
+        <div className="border-t border-[#21212c] bg-[#0c0c11]/98 px-3 py-3 lg:hidden shadow-2xl backdrop-blur-2xl animate-in slide-in-from-top-2 duration-150 w-full max-w-[100vw] overflow-x-hidden">
           {/* Mobile Profile Card */}
           {userProfile && (
             <div
