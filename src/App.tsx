@@ -326,6 +326,13 @@ export function App() {
     );
   };
 
+  const handleDisconnectWallet = () => {
+    setWalletAddress(null);
+    setUserProfile(null);
+    setEthBalance('0.00');
+    pushToast('Wallet Disconnected', 'Disconnected Robinhood Chain session');
+  };
+
   const handleSwitchNetwork = async () => {
     try {
       await switchOrAddRobinhoodChain();
@@ -1114,6 +1121,7 @@ export function App() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         onConnectWallet={() => promptConnectWallet('Connecting Robinhood Chain Wallet')}
+        onDisconnectWallet={handleDisconnectWallet}
         onSwitchNetwork={handleSwitchNetwork}
         onOpenCreateModal={() => setIsCreateModalOpen(true)}
         onClaimCreatorFees={handleClaimCreatorFees}

@@ -41,6 +41,7 @@ interface NavbarProps {
   activeTab: TiredFunNavTab;
   setActiveTab: (tab: TiredFunNavTab) => void;
   onConnectWallet: () => void;
+  onDisconnectWallet?: () => void;
   onSwitchNetwork: () => void;
   onOpenCreateModal: () => void;
   onClaimCreatorFees: () => void;
@@ -72,6 +73,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   activeTab,
   setActiveTab,
   onConnectWallet,
+  onDisconnectWallet,
   onSwitchNetwork,
   onOpenCreateModal,
   userProfile,
@@ -89,7 +91,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <>
-      <header className="sticky top-0 z-40 w-full border-b border-[#21212c] bg-[#0c0c11]/95 backdrop-blur-xl">
+      <header className="fixed top-0 left-0 right-0 z-50 w-full border-b border-[#21212c] bg-[#0c0c11]/95 backdrop-blur-xl">
       <div className="flex w-full items-center justify-between px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3 max-w-[1600px] mx-auto gap-2 sm:gap-4">
         {/* Left: Brand Logo */}
         <div className="flex items-center shrink-0">
@@ -220,6 +222,16 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="hidden xl:inline text-[11px] text-[#7a7a8c] font-mono">
                 (${balanceUsd})
               </span>
+              {onDisconnectWallet && (
+                <button
+                  type="button"
+                  onClick={onDisconnectWallet}
+                  title="Disconnect Wallet"
+                  className="ml-1 rounded px-1 text-[10px] text-[#7a7a8c] hover:text-red-400 hover:bg-red-500/10 transition cursor-pointer"
+                >
+                  ✕
+                </button>
+              )}
             </div>
           )}
 
@@ -297,9 +309,23 @@ export const Navbar: React.FC<NavbarProps> = ({
                   {shortenAddress(walletAddress)}
                 </span>
               </div>
-              <span className="font-mono text-xs font-bold text-emerald-400">
-                {parseFloat(ethBalance || '0').toFixed(3)} ETH
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-xs font-bold text-emerald-400">
+                  {parseFloat(ethBalance || '0').toFixed(3)} ETH
+                </span>
+                {onDisconnectWallet && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      onDisconnectWallet();
+                    }}
+                    className="rounded-lg bg-red-500/15 border border-red-500/30 px-2.5 py-1 text-[11px] font-bold text-red-400 hover:bg-red-500/25 active:scale-95 transition"
+                  >
+                    Disconnect
+                  </button>
+                )}
+              </div>
             </div>
           )}
 
@@ -427,6 +453,9 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       )}
     </header>
+
+    {/* Top Navbar Spacer to prevent layout shift under fixed top navbar */}
+    <div className="h-[53px] sm:h-[61px] w-full shrink-0" aria-hidden="true" />
 
     {/* Mobile Web App Bottom Navigation Bar (Fixed bottom, Web App / X Style) */}
     <nav className="fixed bottom-0 left-0 right-0 z-40 lg:hidden border-t border-[#21212c] bg-[#0c0c11]/95 backdrop-blur-xl px-2 py-1 pb-[calc(0.4rem+env(safe-area-inset-bottom))] shadow-2xl">
