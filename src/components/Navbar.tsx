@@ -89,109 +89,102 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-[#21212c] bg-[#0c0c11]/95 backdrop-blur-xl">
-      <div className="flex w-full items-center justify-between px-3 sm:px-6 py-2.5 sm:py-3 max-w-7xl mx-auto">
-        {/* Left: Brand Logo + Desktop Navigation Tabs */}
-        <div className="flex items-center gap-3 lg:gap-5 xl:gap-8 min-w-0">
+      <div className="flex w-full items-center justify-between px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3 max-w-[1600px] mx-auto gap-2 sm:gap-4">
+        {/* Left: Brand Logo */}
+        <div className="flex items-center shrink-0">
           <button
             onClick={() => handleSelectTab('feed')}
             className="flex items-center gap-1.5 sm:gap-2 text-left focus:outline-none group shrink-0"
           >
             {/* Tired.Fun flame icon in signature Orange */}
-            <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl sm:rounded-2xl bg-[#FF6B00] text-white shadow-md shadow-[#FF6B00]/25 transition-transform group-hover:scale-105 shrink-0">
+            <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-[#FF6B00] text-white shadow-md shadow-[#FF6B00]/25 transition-transform group-hover:scale-105 shrink-0">
               <Flame className="h-4 w-4 sm:h-5 sm:w-5 fill-white" />
             </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="font-fun text-xl sm:text-2xl font-black tracking-tight text-white whitespace-nowrap">
-                  Tired<span className="text-[#FF6B00]">.Fun</span>
-                </span>
-                <span className="hidden rounded-full border border-[#FF6B00]/30 bg-[#FF6B00]/10 px-2 py-0.5 font-mono text-[9px] font-bold text-[#FF8A33] 2xl:inline-block">
-                  ROBINHOOD CHAIN • 46630
-                </span>
-              </div>
-            </div>
+            <span className="font-fun text-xl sm:text-2xl font-black tracking-tight text-white whitespace-nowrap">
+              Tired<span className="text-[#FF6B00]">.Fun</span>
+            </span>
           </button>
+        </div>
 
-          {/* Desktop Navigation Tabs (Primary 4 on lg+, all 6 on xl+, More dropdown on lg-xl) */}
-          <nav className="hidden items-center gap-1 xl:gap-1.5 lg:flex">
-            {NAV_ITEMS.map((item, idx) => {
-              const Icon = item.icon;
-              const isActive = activeTab === item.id;
-              // Secondary items (Resolutions & Architecture) only direct-show on xl+ to guarantee zero overlap on laptops
-              const isSecondary = idx >= 4;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => handleSelectTab(item.id)}
-                  className={`items-center gap-1.5 rounded-full px-2.5 py-1.5 lg:px-3 lg:py-1.5 xl:px-3.5 xl:py-2 text-xs lg:text-[13px] font-bold transition-all whitespace-nowrap ${
-                    isSecondary ? 'hidden xl:flex' : 'flex'
-                  } ${
-                    isActive
-                      ? 'bg-[#FF6B00] text-white shadow-sm shadow-[#FF6B00]/25'
-                      : 'text-[#8c8c9e] hover:text-white hover:bg-[#1a1a24]'
-                  }`}
-                >
-                  <Icon className="h-3.5 w-3.5 shrink-0" />
-                  <span className="hidden 2xl:inline">{item.label}</span>
-                  <span className="inline 2xl:hidden">{item.shortLabel || item.label}</span>
-                </button>
-              );
-            })}
-
-            {/* Compact More Dropdown for Resolutions & Architecture on lg-xl laptops */}
-            <div className="relative hidden lg:block xl:hidden">
+        {/* Center: Desktop Navigation Tabs (Primary 4 on lg+, all 6 on 2xl+, More dropdown on lg-xl) */}
+        <nav className="hidden lg:flex items-center justify-center gap-1 xl:gap-2 flex-1 min-w-0 px-2">
+          {NAV_ITEMS.map((item, idx) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+            // Secondary items (Resolutions & Architecture) only direct-show on 2xl+ (1536px+)
+            const isSecondary = idx >= 4;
+            return (
               <button
-                type="button"
-                onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
-                className={`flex items-center gap-1 rounded-full px-2.5 py-1.5 text-xs font-bold transition-all ${
-                  activeTab === 'resolution' || activeTab === 'how-it-works'
-                    ? 'bg-[#FF6B00] text-white shadow-sm'
+                key={item.id}
+                onClick={() => handleSelectTab(item.id)}
+                className={`items-center gap-1.5 rounded-full px-2.5 py-1.5 xl:px-3.5 xl:py-2 text-xs xl:text-[13px] font-bold transition-all whitespace-nowrap shrink-0 ${
+                  isSecondary ? 'hidden 2xl:flex' : 'flex'
+                } ${
+                  isActive
+                    ? 'bg-[#FF6B00] text-white shadow-sm shadow-[#FF6B00]/25'
                     : 'text-[#8c8c9e] hover:text-white hover:bg-[#1a1a24]'
                 }`}
               >
-                <span>More</span>
-                <ChevronDown className={`h-3 w-3 transition-transform ${isMoreMenuOpen ? 'rotate-180' : ''}`} />
+                <Icon className="h-3.5 w-3.5 shrink-0" />
+                <span className="hidden xl:inline">{item.label}</span>
+                <span className="inline xl:hidden">{item.shortLabel || item.label}</span>
               </button>
+            );
+          })}
 
-              {isMoreMenuOpen && (
-                <>
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setIsMoreMenuOpen(false)}
-                  />
-                  <div className="absolute left-0 top-full mt-2 w-48 rounded-2xl border border-[#232330] bg-[#14141c] p-1.5 shadow-2xl z-50 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-100">
-                    <button
-                      type="button"
-                      onClick={() => handleSelectTab('resolution')}
-                      className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold transition ${
-                        activeTab === 'resolution'
-                          ? 'bg-[#FF6B00] text-white'
-                          : 'text-[#8c8c9e] hover:text-white hover:bg-[#1f1f2c]'
-                      }`}
-                    >
-                      <Scale className="h-3.5 w-3.5 text-[#FF6B00]" />
-                      <span>Resolutions</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleSelectTab('how-it-works')}
-                      className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold transition ${
-                        activeTab === 'how-it-works'
-                          ? 'bg-[#FF6B00] text-white'
-                          : 'text-[#8c8c9e] hover:text-white hover:bg-[#1f1f2c]'
-                      }`}
-                    >
-                      <Layers className="h-3.5 w-3.5 text-[#53b3d4]" />
-                      <span>Architecture</span>
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          </nav>
-        </div>
+          {/* Compact More Dropdown for Resolutions & Architecture on lg to 2xl */}
+          <div className="relative hidden lg:block 2xl:hidden shrink-0">
+            <button
+              type="button"
+              onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
+              className={`flex items-center gap-1 rounded-full px-2.5 py-1.5 xl:px-3 xl:py-2 text-xs xl:text-[13px] font-bold transition-all ${
+                activeTab === 'resolution' || activeTab === 'how-it-works'
+                  ? 'bg-[#FF6B00] text-white shadow-sm'
+                  : 'text-[#8c8c9e] hover:text-white hover:bg-[#1a1a24]'
+              }`}
+            >
+              <span>More</span>
+              <ChevronDown className={`h-3 w-3 transition-transform ${isMoreMenuOpen ? 'rotate-180' : ''}`} />
+            </button>
 
-        {/* Right side controls: Create, Connect/Wallet, Profile, Mobile Menu Toggle */}
+            {isMoreMenuOpen && (
+              <>
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setIsMoreMenuOpen(false)}
+                />
+                <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-48 rounded-2xl border border-[#232330] bg-[#14141c] p-1.5 shadow-2xl z-50 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-100">
+                  <button
+                    type="button"
+                    onClick={() => handleSelectTab('resolution')}
+                    className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold transition ${
+                      activeTab === 'resolution'
+                        ? 'bg-[#FF6B00] text-white'
+                        : 'text-[#8c8c9e] hover:text-white hover:bg-[#1f1f2c]'
+                    }`}
+                  >
+                    <Scale className="h-3.5 w-3.5 text-[#FF6B00]" />
+                    <span>Resolutions</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSelectTab('how-it-works')}
+                    className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold transition ${
+                      activeTab === 'how-it-works'
+                        ? 'bg-[#FF6B00] text-white'
+                        : 'text-[#8c8c9e] hover:text-white hover:bg-[#1f1f2c]'
+                    }`}
+                  >
+                    <Layers className="h-3.5 w-3.5 text-[#53b3d4]" />
+                    <span>Architecture</span>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </nav>
+
+        {/* Right: Actions (Create, Connect/Wallet, Profile, Mobile Menu Toggle) */}
         <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
           {/* Create Market Button */}
           <button
@@ -251,7 +244,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   </div>
                 )}
               </div>
-              <span className="text-xs font-bold text-white max-w-[85px] truncate hidden md:inline-block">
+              <span className="text-xs font-bold text-white max-w-[75px] truncate hidden xl:inline-block">
                 {userProfile.displayName}
               </span>
             </button>
