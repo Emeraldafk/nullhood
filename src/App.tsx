@@ -1989,6 +1989,9 @@ export function App() {
         onToggleCommentLike={handleToggleCommentLike}
         onClaimSettlement={handleClaimSettlement}
         onClaimVoidRefund={handleClaimVoidRefund}
+        allMarkets={markets}
+        onSelectMarket={(marketId) => setSelectedMarketId(marketId)}
+        onTopUpWallet={() => promptConnectWallet('Funding Wallet with Robinhood Testnet ETH')}
       />
       )}
 
