@@ -66,44 +66,18 @@ export class TiredFunDatabaseService {
       if (data) {
         const parsed = JSON.parse(data);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          loadedMarkets = parsed;
+          // Merge newly added fallback markets that aren't yet in saved database
+          const existingIds = new Set(parsed.map((m: any) => m.id));
+          const missingFallback = fallback.filter((f) => !existingIds.has(f.id));
+          loadedMarkets = [...parsed, ...missingFallback];
         }
       }
 
-      // Load real comments and sanitize unvoted opinions to ensure zero mock pool/volume
+      // Preserve actual curve reserves, trades count, and load user comments
       return loadedMarkets.map((m) => {
-        const isVoted =
-          (m.totalTrades || 0) > 1 ||
-          ((m.totalTrades || 0) === 1 && (m.creatorFeesEarned || 0) > 0) ||
-          m.id === 1;
-
-        const sanitizedM: OpinionMarket = isVoted
-          ? m
-          : {
-              ...m,
-              totalTrades: 0,
-              creatorFeesEarned: 0,
-              yesCurve: {
-                ...m.yesCurve,
-                realEth: 0,
-                volumeEth: 0,
-                buyVolumeEth: 0,
-                sellVolumeEth: 0,
-                tradeCount: 0,
-              },
-              noCurve: {
-                ...m.noCurve,
-                realEth: 0,
-                volumeEth: 0,
-                buyVolumeEth: 0,
-                sellVolumeEth: 0,
-                tradeCount: 0,
-              },
-            };
-
         const savedComments = commentsMap[m.id];
         return {
-          ...sanitizedM,
+          ...m,
           comments: savedComments && savedComments.length > 0 ? savedComments : (m.comments || []),
         };
       });
@@ -442,7 +416,17 @@ export class TiredFunDatabaseService {
       const data = localStorage.getItem(STORAGE_KEYS.ACTIVITIES);
       if (data) {
         const parsed = JSON.parse(data);
-        if (Array.isArray(parsed)) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Remove old mock activities that had hardcoded fake IDs or hashes
+          const realActs = parsed.filter(
+            (a: any) =>
+              !['a1', 'a2', 'a3', 'a4'].includes(a.id) &&
+              !a.txHash?.startsWith('0xa498f8b01c34a') &&
+              !a.txHash?.startsWith('0x8849b01a83dfa') &&
+              !a.txHash?.startsWith('0x39f018a47b192')
+          );
+          if (realActs.length > 0) return realActs;
+        }
       }
     } catch (e) {
       console.warn('Failed to load activities:', e);
