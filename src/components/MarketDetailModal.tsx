@@ -714,77 +714,83 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                   </span>
                 </div>
 
-                {/* SVG Visual Plot matching app theme */}
-                <div className="relative h-64 sm:h-72 w-full rounded-xl bg-[#0c0c11] p-3 border border-[#232330] overflow-hidden">
-                  <svg viewBox="0 0 700 240" className="h-full w-full overflow-visible">
-                    {/* Horizontal Grid lines */}
-                    {[35, 80, 125, 170, 210].map((y) => (
+                {/* SVG Visual Plot matching app theme & extending edge-to-edge */}
+                <div className="relative h-72 sm:h-80 md:h-96 w-full rounded-2xl bg-[#0c0c11] p-3 sm:p-4 border border-[#232330] overflow-hidden flex flex-col justify-between">
+                  <svg
+                    viewBox="0 0 700 280"
+                    preserveAspectRatio="none"
+                    className="h-full w-full overflow-visible"
+                  >
+                    {/* Horizontal Grid lines extending edge to edge */}
+                    {[40, 85, 130, 175, 220, 255].map((y) => (
                       <line
                         key={y}
-                        x1="20"
+                        x1="0"
                         y1={y}
-                        x2="630"
+                        x2="640"
                         y2={y}
-                        stroke="#1f1f2b"
+                        stroke="#1c1c28"
                         strokeDasharray="4 4"
                       />
                     ))}
 
                     {/* Y-Axis Price Labels on Right side */}
-                    <text x="640" y="38" fill="#525266" fontSize="10" fontFamily="monospace">$14.00</text>
-                    <text x="640" y="83" fill="#525266" fontSize="10" fontFamily="monospace">$12.00</text>
-                    <text x="640" y="128" fill="#525266" fontSize="10" fontFamily="monospace">$10.00</text>
-                    <text x="640" y="173" fill="#525266" fontSize="10" fontFamily="monospace">$8.00</text>
-                    <text x="640" y="213" fill="#525266" fontSize="10" fontFamily="monospace">$4.00</text>
+                    <text x="695" y="44" textAnchor="end" fill="#525266" fontSize="11" fontFamily="monospace">$14.00</text>
+                    <text x="695" y="89" textAnchor="end" fill="#525266" fontSize="11" fontFamily="monospace">$12.00</text>
+                    <text x="695" y="134" textAnchor="end" fill="#525266" fontSize="11" fontFamily="monospace">$10.00</text>
+                    <text x="695" y="179" textAnchor="end" fill="#525266" fontSize="11" fontFamily="monospace">$8.00</text>
+                    <text x="695" y="224" textAnchor="end" fill="#525266" fontSize="11" fontFamily="monospace">$6.00</text>
+                    <text x="695" y="259" textAnchor="end" fill="#525266" fontSize="11" fontFamily="monospace">$4.00</text>
 
-                    {/* Curves */}
+                    {/* Curves extending to both ends of the container */}
                     {chartMode === 'price' ? (
                       <>
-                        {/* Blue YES Curve */}
+                        {/* Blue YES Curve (extending edge to edge, matching reference peak) */}
                         <path
-                          d="M 40 215 C 180 210, 260 210, 310 110 C 350 110, 360 85, 380 85 C 420 110, 480 115, 520 125 L 560 135"
+                          d="M 0 240 L 40 238 C 90 238, 120 236, 170 236 C 190 236, 205 220, 225 180 C 235 200, 245 228, 270 234 C 320 240, 360 238, 400 235 C 410 220, 420 205, 450 202 C 470 202, 480 80, 490 60 C 510 52, 525 55, 535 70 C 545 100, 550 230, 570 240 L 640 240"
                           fill="none"
                           stroke="#227c9d"
+                          strokeWidth="3.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        <circle cx="570" cy="240" r="5" fill="#227c9d" stroke="#0c0c11" strokeWidth="2" />
+
+                        {/* Orange NO Curve (extending edge to edge) */}
+                        <path
+                          d="M 0 248 L 100 248 C 180 248, 250 246, 320 246 C 400 246, 450 247, 520 246 C 550 247, 590 248, 640 248"
+                          fill="none"
+                          stroke="#FF6B00"
                           strokeWidth="3"
                           strokeLinecap="round"
                         />
-                        <circle cx="560" cy="135" r="5" fill="#227c9d" stroke="#0c0c11" strokeWidth="2" />
-
-                        {/* Orange NO Curve */}
-                        <path
-                          d="M 40 205 C 180 205, 300 205, 400 205 C 470 208, 510 212, 560 210"
-                          fill="none"
-                          stroke="#FF6B00"
-                          strokeWidth="2.5"
-                          strokeLinecap="round"
-                        />
-                        <circle cx="560" cy="210" r="5" fill="#FF6B00" stroke="#0c0c11" strokeWidth="2" />
+                        <circle cx="640" cy="248" r="5" fill="#FF6B00" stroke="#0c0c11" strokeWidth="2" />
                       </>
                     ) : (
                       <>
-                        {/* Continuous Bonding Curve Formula V_E+R */}
+                        {/* Continuous Bonding Curve Formula V_E+R extending to both ends */}
                         <path
-                          d="M 40 220 Q 300 210, 600 30"
+                          d="M 0 255 Q 350 240, 640 35"
                           fill="none"
                           stroke="#227c9d"
-                          strokeWidth="3"
+                          strokeWidth="3.5"
                         />
-                        <circle cx="480" cy="80" r="6" fill="#227c9d" stroke="#fff" strokeWidth="2" />
-                        <text x="495" y="85" fill="#53b3d4" fontSize="11" fontWeight="bold" fontFamily="monospace">
+                        <circle cx="520" cy="85" r="7" fill="#227c9d" stroke="#fff" strokeWidth="2" />
+                        <text x="500" y="70" textAnchor="middle" fill="#53b3d4" fontSize="12" fontWeight="bold" fontFamily="monospace">
                           YES ({market.yesCurve.realEth.toFixed(2)}Ξ)
                         </text>
-                        <circle cx="180" cy="200" r="6" fill="#FF6B00" stroke="#fff" strokeWidth="2" />
-                        <text x="195" y="205" fill="#FF8A33" fontSize="11" fontWeight="bold" fontFamily="monospace">
+                        <circle cx="180" cy="235" r="7" fill="#FF6B00" stroke="#fff" strokeWidth="2" />
+                        <text x="180" y="220" textAnchor="middle" fill="#FF8A33" fontSize="12" fontWeight="bold" fontFamily="monospace">
                           NO ({market.noCurve.realEth.toFixed(2)}Ξ)
                         </text>
                       </>
                     )}
 
                     {/* Bottom Date labels */}
-                    <text x="110" y="235" fill="#525266" fontSize="10" fontFamily="sans-serif">Oct 19</text>
-                    <text x="250" y="235" fill="#525266" fontSize="10" fontFamily="sans-serif">Oct 26</text>
-                    <text x="390" y="235" fill="#525266" fontSize="10" fontFamily="sans-serif">Nov 2</text>
-                    <text x="520" y="235" fill="#525266" fontSize="10" fontFamily="sans-serif">Nov 9</text>
+                    <text x="20" y="275" fill="#525266" fontSize="10" fontFamily="sans-serif">Oct 19</text>
+                    <text x="180" y="275" fill="#525266" fontSize="10" fontFamily="sans-serif">Oct 26</text>
+                    <text x="360" y="275" fill="#525266" fontSize="10" fontFamily="sans-serif">Nov 2</text>
+                    <text x="540" y="275" fill="#525266" fontSize="10" fontFamily="sans-serif">Nov 9</text>
                   </svg>
                 </div>
               </div>
