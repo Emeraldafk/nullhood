@@ -125,7 +125,6 @@ export function App() {
 
   // Feed Recommendation Randomization Session & Realtime Likes
   const [feedSessionSeed, setFeedSessionSeed] = useState(() => Date.now());
-  const [showRefreshPill, setShowRefreshPill] = useState(false);
   const [likesMap, setLikesMap] = useState<Record<number, { count: number; liked: boolean }>>(() =>
     dbService.loadLikes(walletAddress)
   );
@@ -156,23 +155,9 @@ export function App() {
     };
   }, [walletAddress]);
 
-  // Floating refresh suggestion button when user scrolls for a while
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 400) {
-        setShowRefreshPill(true);
-      } else if (window.scrollY < 150) {
-        setShowRefreshPill(false);
-      }
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
   const handleRefreshFeed = () => {
     setFeedSessionSeed(Date.now());
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    setShowRefreshPill(false);
     pushToast('Feed Refreshed', 'Surfaced latest conviction & interactive opinions');
   };
 
@@ -1194,18 +1179,6 @@ export function App() {
         onOpenCreateModal={() => setIsCreateModalOpen(true)}
         onClaimCreatorFees={handleClaimCreatorFees}
       />
-
-      {/* Floating Refresh Suggestion Pill (X Style) */}
-      {showRefreshPill && (
-        <button
-          type="button"
-          onClick={handleRefreshFeed}
-          className="fixed top-16 sm:top-20 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 rounded-full bg-gradient-to-r from-[#FF6B00] to-orange-500 px-4 sm:px-5 py-2 sm:py-2.5 text-xs font-black text-white shadow-2xl shadow-[#FF6B00]/40 backdrop-blur-md border border-white/20 hover:scale-105 active:scale-95 transition-all animate-bounce cursor-pointer"
-        >
-          <ArrowUp className="h-3.5 w-3.5 stroke-[3]" />
-          <span>Fresh Conviction Available • Tap to Refresh</span>
-        </button>
-      )}
 
       {/* Live POV Activity Tape */}
       <LiveTicker

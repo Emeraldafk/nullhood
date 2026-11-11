@@ -98,7 +98,6 @@ export const OpinionFeedView: React.FC<OpinionFeedViewProps> = ({
   const [copiedShareId, setCopiedShareId] = useState<number | null>(null);
 
   const [sessionSeed, setSessionSeed] = useState(() => Date.now());
-  const [showRefreshPill, setShowRefreshPill] = useState(false);
 
   // Sync likes and reposts from real database when user connects or switches wallet,
   // and listen for real-time cross-device likes (phone <-> PC)
@@ -114,19 +113,6 @@ export const OpinionFeedView: React.FC<OpinionFeedViewProps> = ({
       unsubLike();
     };
   }, [walletAddress]);
-
-  // Floating refresh suggestion button when user scrolls for a while
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 400) {
-        setShowRefreshPill(true);
-      } else if (window.scrollY < 150) {
-        setShowRefreshPill(false);
-      }
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   const toggleLike = (marketId: number) => {
     // Unauthenticated users are redirected to login / connect wallet
@@ -317,22 +303,6 @@ export const OpinionFeedView: React.FC<OpinionFeedViewProps> = ({
 
   return (
     <div className="mx-auto max-w-7xl relative">
-      {/* Floating Refresh Suggestion Pill (X Style) */}
-      {showRefreshPill && (
-        <button
-          type="button"
-          onClick={() => {
-            setSessionSeed(Date.now());
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            setShowRefreshPill(false);
-          }}
-          className="fixed top-16 sm:top-20 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 rounded-full bg-gradient-to-r from-[#FF6B00] to-orange-500 px-4 sm:px-5 py-2 text-xs font-black text-white shadow-2xl shadow-[#FF6B00]/40 backdrop-blur-md border border-white/20 hover:scale-105 active:scale-95 transition-all animate-bounce cursor-pointer"
-        >
-          <ArrowUp className="h-3.5 w-3.5 stroke-[3]" />
-          <span>Fresh Conviction Available • Tap to Refresh</span>
-        </button>
-      )}
-
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-8 items-start">
         {/* CENTER COLUMN: X-STYLE OPINION FEED */}
         <div className="lg:col-span-8 space-y-4">
