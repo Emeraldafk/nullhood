@@ -209,7 +209,7 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
   const userEthBalanceNum = parseFloat(ethBalance || '0');
   const userUsdBalanceNum = userEthBalanceNum * ETH_PRICE_USD;
 
-  // USD values for presentation matching pov.co
+  // USD values for presentation
   const totalPoolUsd = (metrics.totalPoolEth * ETH_PRICE_USD).toFixed(2);
   const totalVolumeUsd = (metrics.totalVolumeEth * ETH_PRICE_USD >= 1000)
     ? `${(metrics.totalVolumeEth * ETH_PRICE_USD / 1000).toFixed(2)}k`
@@ -314,7 +314,7 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
 
   const activeHolders = holdersSideTab === 'YES' ? defaultYesHolders : defaultNoHolders;
 
-  // Recent transactions list from activities or realistic fallbacks matching pov.co
+  // Recent transactions list from activities or realistic fallbacks
   const recentTransactions = useMemo(() => {
     if (marketActivities.length > 0) {
       return marketActivities.slice(0, 8).map((act) => ({
@@ -380,33 +380,33 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-0 sm:p-4 backdrop-blur-md overflow-hidden">
-      {/* Insufficient ETH Balance Modal Dialog (Screenshot 5) */}
+      {/* Insufficient ETH Balance Modal Dialog (Consistent with App Theme) */}
       {showInsufficientBalanceModal && (
         <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
-          <div className="relative w-full max-w-sm rounded-[24px] border border-[#2a2a3c] bg-[#12121a] p-6 text-center shadow-2xl animate-in fade-in zoom-in-95">
+          <div className="relative w-full max-w-sm rounded-[24px] border border-[#232330] bg-[#121218] p-6 text-center shadow-2xl animate-in fade-in zoom-in-95">
             <button
               onClick={() => setShowInsufficientBalanceModal(false)}
-              className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-[#1e1e2c] text-zinc-400 hover:text-white"
+              className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-[#1a1a26] border border-[#2e2e40] text-zinc-400 hover:text-white"
             >
               <X className="h-4 w-4" />
             </button>
 
-            <h3 className="text-lg font-bold text-[#f27474] mb-2 font-fun">
+            <h3 className="text-lg font-bold text-[#FF8A33] mb-2 font-fun">
               Insufficient ETH balance
             </h3>
             <p className="text-xs text-zinc-400 leading-relaxed mb-6 font-sans">
               In order to trade this market you need to have ${rawInput.toFixed(2)} on your Robinhood Chain wallet
             </p>
 
-            <div className="grid grid-cols-2 rounded-2xl border border-[#232332] bg-[#0c0c12] p-4 mb-6">
-              <div className="text-left border-r border-[#232332] pr-3">
-                <span className="block text-[11px] text-zinc-500 font-medium">Required</span>
+            <div className="grid grid-cols-2 rounded-2xl border border-[#232330] bg-[#0c0c11] p-4 mb-6">
+              <div className="text-left border-r border-[#232330] pr-3">
+                <span className="block text-[11px] text-[#8c8c9e] font-medium">Required</span>
                 <span className="text-base font-bold text-white font-mono">
                   ${rawInput.toFixed(2)}
                 </span>
               </div>
               <div className="text-left pl-4">
-                <span className="block text-[11px] text-zinc-500 font-medium">Your balance</span>
+                <span className="block text-[11px] text-[#8c8c9e] font-medium">Your balance</span>
                 <span className="text-base font-bold text-white font-mono">
                   ${userUsdBalanceNum.toFixed(2)}
                 </span>
@@ -420,14 +420,14 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                   setShowInsufficientBalanceModal(false);
                   if (onTopUpWallet) onTopUpWallet();
                 }}
-                className="w-full rounded-2xl bg-[#d2c4ff] py-3 text-sm font-bold text-[#140e2d] hover:bg-[#c2b0ff] transition active:scale-98 shadow-md"
+                className="w-full rounded-2xl bg-[#FF6B00] py-3 text-sm font-bold text-black hover:bg-[#EA580C] transition active:scale-98 shadow-md"
               >
                 Top Up my Wallet
               </button>
               <button
                 type="button"
                 onClick={() => setShowInsufficientBalanceModal(false)}
-                className="w-full rounded-2xl bg-[#1c1c28] py-3 text-sm font-semibold text-zinc-300 hover:text-white hover:bg-[#252536] transition"
+                className="w-full rounded-2xl bg-[#1a1a26] border border-[#2e2e40] py-3 text-sm font-semibold text-zinc-300 hover:text-white hover:bg-[#252538] transition"
               >
                 Cancel
               </button>
@@ -437,28 +437,28 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
       )}
 
       {/* Main Container Window */}
-      <div className="relative flex h-full sm:h-[94vh] w-full max-w-[1280px] flex-col overflow-hidden rounded-none sm:rounded-[24px] border border-[#232332] bg-[#0c0c11] text-white shadow-2xl">
-        {/* Top Header Row matching pov.co */}
-        <div className="border-b border-[#20202c] bg-[#121219] px-4 sm:px-8 py-3.5 sm:py-4">
+      <div className="relative flex h-full sm:h-[94vh] w-full max-w-[1280px] flex-col overflow-hidden rounded-none sm:rounded-[24px] border border-[#232330] bg-[#121218] text-white shadow-2xl">
+        {/* Top Header Row */}
+        <div className="border-b border-[#232330] bg-[#161620] px-4 sm:px-8 py-3.5 sm:py-4">
           <div className="flex items-center justify-between">
             {/* Left buttons: Back, Mobile Trade toggle, Boost */}
             <div className="flex items-center gap-2 sm:gap-3">
               <button
                 onClick={onClose}
-                className="flex items-center gap-1.5 rounded-full border border-[#2e2e42] bg-[#181824] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#222232] transition active:scale-95 cursor-pointer shadow-sm"
+                className="flex items-center gap-1.5 rounded-full border border-[#2e2e40] bg-[#1a1a26] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#252538] transition active:scale-95 cursor-pointer shadow-sm"
               >
                 <ArrowLeft className="h-3.5 w-3.5 stroke-[2.5]" />
                 <span>Back</span>
               </button>
 
               {/* Mobile View Switcher: Overview vs Trade */}
-              <div className="flex lg:hidden items-center rounded-full border border-[#2e2e42] bg-[#181824] p-0.5">
+              <div className="flex lg:hidden items-center rounded-full border border-[#2e2e40] bg-[#1a1a26] p-0.5">
                 <button
                   type="button"
                   onClick={() => setMobileTab('overview')}
                   className={`rounded-full px-3 py-1 text-xs font-bold transition ${
                     mobileTab === 'overview'
-                      ? 'bg-[#2b2b3d] text-white'
+                      ? 'bg-[#252538] text-white'
                       : 'text-zinc-400 hover:text-white'
                   }`}
                 >
@@ -469,7 +469,7 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                   onClick={() => setMobileTab('trade')}
                   className={`rounded-full px-3 py-1 text-xs font-bold transition ${
                     mobileTab === 'trade'
-                      ? 'bg-[#8a3ffc] text-white shadow-md'
+                      ? 'bg-[#227c9d] text-white shadow-md'
                       : 'text-zinc-400 hover:text-white'
                   }`}
                 >
@@ -480,9 +480,9 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
               <button
                 type="button"
                 onClick={handleBoostMarket}
-                className="flex items-center gap-1.5 rounded-full border border-[#2e2e42] bg-[#181824] px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-[#222232] transition active:scale-95 cursor-pointer shadow-sm"
+                className="flex items-center gap-1.5 rounded-full border border-[#2e2e40] bg-[#1a1a26] px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-[#252538] transition active:scale-95 cursor-pointer shadow-sm"
               >
-                <Zap className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />
+                <Zap className="h-3.5 w-3.5 text-[#FF6B00] fill-[#FF6B00]" />
                 <span>Boost Market</span>
               </button>
 
@@ -495,12 +495,12 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
 
             {/* Right: Currency Indicator & Desktop Close */}
             <div className="flex items-center gap-2.5">
-              <div className="hidden sm:flex items-center rounded-full border border-[#2e2e42] bg-[#181824] p-1 font-mono text-xs">
+              <div className="hidden sm:flex items-center rounded-full border border-[#2e2e40] bg-[#1a1a26] p-1 font-mono text-xs">
                 <button
                   type="button"
                   onClick={() => setInputCurrency('USD')}
                   className={`px-2.5 py-0.5 rounded-full font-bold transition ${
-                    inputCurrency === 'USD' ? 'bg-[#8a3ffc] text-white' : 'text-zinc-400'
+                    inputCurrency === 'USD' ? 'bg-[#227c9d] text-white' : 'text-zinc-400'
                   }`}
                 >
                   USD
@@ -509,7 +509,7 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                   type="button"
                   onClick={() => setInputCurrency('ETH')}
                   className={`px-2.5 py-0.5 rounded-full font-bold transition ${
-                    inputCurrency === 'ETH' ? 'bg-[#8a3ffc] text-white' : 'text-zinc-400'
+                    inputCurrency === 'ETH' ? 'bg-[#227c9d] text-white' : 'text-zinc-400'
                   }`}
                 >
                   ETH
@@ -519,7 +519,7 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
               <button
                 onClick={onClose}
                 aria-label="Close"
-                className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full border border-[#2e2e42] bg-[#181824] text-zinc-300 hover:text-white hover:bg-[#252538] transition cursor-pointer"
+                className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full border border-[#2e2e40] bg-[#1a1a26] text-white hover:bg-[#252538] hover:border-white/40 active:scale-95 transition cursor-pointer"
               >
                 <X className="h-4 w-4 sm:h-5 sm:w-5 stroke-[2.5]" />
               </button>
@@ -543,7 +543,7 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                   <button
                     onClick={handleCopyLink}
                     title="Share market link"
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#2b2b3b] bg-[#161622] text-zinc-300 hover:bg-[#222234] hover:text-white transition cursor-pointer"
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#2e2e40] bg-[#1a1a26] text-zinc-300 hover:bg-[#252538] hover:text-white transition cursor-pointer"
                   >
                     {copiedShareLink ? (
                       <Check className="h-4 w-4 text-emerald-400 stroke-[2.5]" />
@@ -553,25 +553,25 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                   </button>
                 </div>
 
-                {/* Metadata Row matching pov.co: • TIME AGO | CATEGORY | BY CREATOR | ENTERED | POOL & TOTAL VOLUME */}
-                <div className="mt-2.5 flex flex-wrap items-center justify-between gap-y-2 gap-x-4 border-b border-[#20202c] pb-4 text-xs font-medium text-zinc-400">
+                {/* Metadata Row: • TIME AGO | CATEGORY | BY CREATOR | ENTERED | POOL & TOTAL VOLUME */}
+                <div className="mt-2.5 flex flex-wrap items-center justify-between gap-y-2 gap-x-4 border-b border-[#232330] pb-4 text-xs font-medium text-zinc-400">
                   <div className="flex flex-wrap items-center gap-2.5">
                     <span className="flex items-center gap-1.5 text-pink-400 font-bold uppercase tracking-wider text-[11px]">
                       <span className="h-2 w-2 rounded-full bg-pink-500 animate-pulse" />
                       {formatTimeAgo(market.createdAt).toUpperCase()}
                     </span>
-                    <span className="rounded-full bg-[#1e1e2b] px-2.5 py-0.5 text-[11px] font-bold text-zinc-300 border border-[#2e2e40]">
+                    <span className="rounded-full bg-[#20202c] px-2.5 py-0.5 text-[11px] font-bold text-slate-300 border border-[#2e2e40]">
                       {market.category}
                     </span>
-                    <span className="flex items-center gap-1 text-zinc-300 font-mono text-[11px]">
+                    <span className="flex items-center gap-1 text-slate-300 font-mono text-[11px]">
                       BY <strong className="text-white">{market.sourceHandle || (market.creator.slice(0, 6) + '...' + market.creator.slice(-4))}</strong>
                     </span>
-                    <span className="flex items-center gap-1 text-zinc-400">
+                    <span className="flex items-center gap-1 text-[#8c8c9e]">
                       👥 {market.totalTrades || 26} Entered
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-3 font-mono text-xs text-zinc-300">
+                  <div className="flex items-center gap-3 font-mono text-xs text-slate-300">
                     <span>
                       Pool: <strong className="text-white">${totalPoolUsd}</strong> ({metrics.totalPoolEth.toFixed(3)} ETH)
                     </span>
@@ -582,7 +582,7 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                 </div>
               </div>
 
-              {/* Dual Stacked Conviction Bars (Exact signature pov.co layout) */}
+              {/* Dual Stacked Conviction Bars (App Theme YES: #227c9d, NO: #FF6B00) */}
               <div className="space-y-2.5">
                 {/* YES BAR */}
                 <div
@@ -594,13 +594,13 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                   tabIndex={0}
                   className={`group relative h-13 sm:h-14 w-full cursor-pointer overflow-hidden rounded-2xl border transition-all duration-200 ${
                     selectedSide === 'YES'
-                      ? 'border-[#8a3ffc] shadow-lg shadow-[#8a3ffc]/15 ring-2 ring-[#8a3ffc]/30'
-                      : 'border-[#262638] bg-[#14141d] hover:border-[#8a3ffc]/50'
+                      ? 'border-[#227c9d] shadow-lg shadow-[#227c9d]/20 ring-2 ring-[#227c9d]/40'
+                      : 'border-[#232330] bg-[#161620] hover:border-[#227c9d]/50'
                   }`}
                 >
                   <div
                     style={{ width: `${Math.max(12, metrics.yesSentimentPct)}%` }}
-                    className="absolute inset-y-0 left-0 bg-[#8a3ffc] transition-all duration-500 rounded-2xl"
+                    className="absolute inset-y-0 left-0 bg-[#227c9d] transition-all duration-500 rounded-2xl"
                   />
                   <div className="relative z-10 flex h-full items-center justify-between px-5">
                     <span className="text-base sm:text-lg font-bold text-white drop-shadow-sm flex items-center gap-2">
@@ -627,19 +627,19 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                   tabIndex={0}
                   className={`group relative h-13 sm:h-14 w-full cursor-pointer overflow-hidden rounded-2xl border transition-all duration-200 ${
                     selectedSide === 'NO'
-                      ? 'border-[#FF6B00] shadow-lg shadow-[#FF6B00]/15 ring-2 ring-[#FF6B00]/30'
-                      : 'border-[#262638] bg-[#14141d] hover:border-[#FF6B00]/50'
+                      ? 'border-[#FF6B00] shadow-lg shadow-[#FF6B00]/20 ring-2 ring-[#FF6B00]/40'
+                      : 'border-[#232330] bg-[#161620] hover:border-[#FF6B00]/50'
                   }`}
                 >
                   <div
                     style={{ width: `${Math.max(8, metrics.noSentimentPct)}%` }}
-                    className="absolute inset-y-0 left-0 bg-[#f59e0b] transition-all duration-500 rounded-2xl"
+                    className="absolute inset-y-0 left-0 bg-[#FF6B00] transition-all duration-500 rounded-2xl"
                   />
                   <div className="relative z-10 flex h-full items-center justify-between px-5">
                     <span className="text-base sm:text-lg font-bold text-white drop-shadow-sm flex items-center gap-2">
                       No
                       {selectedSide === 'NO' && (
-                        <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] uppercase font-bold text-black">
+                        <span className="rounded-full bg-black/30 px-2 py-0.5 text-[10px] uppercase font-bold text-white">
                           Selected
                         </span>
                       )}
@@ -652,12 +652,12 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
               </div>
 
               {/* Chart Controls & Interactive Canvas */}
-              <div className="rounded-[22px] border border-[#222230] bg-[#121219] p-4 sm:p-5">
+              <div className="rounded-[22px] border border-[#232330] bg-[#161620] p-4 sm:p-5">
                 {/* Control bar */}
                 <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                   {/* Left: Timeframe pills & Legend */}
                   <div className="flex flex-wrap items-center gap-3">
-                    <div className="flex items-center rounded-xl bg-[#1a1a24] p-1 border border-[#2a2a3a]">
+                    <div className="flex items-center rounded-xl bg-[#0c0c11] p-1 border border-[#232330]">
                       {(['1D', '1W', '1M', 'MAX'] as const).map((tf) => (
                         <button
                           key={tf}
@@ -665,8 +665,8 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                           onClick={() => setTimeframe(tf)}
                           className={`rounded-lg px-2.5 py-1 text-xs font-bold transition ${
                             timeframe === tf
-                              ? 'bg-[#2b2b3d] text-white shadow-sm'
-                              : 'text-zinc-400 hover:text-white'
+                              ? 'bg-[#227c9d] text-white shadow-sm'
+                              : 'text-[#8c8c9e] hover:text-white'
                           }`}
                         >
                           {tf}
@@ -675,12 +675,12 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                     </div>
 
                     <div className="flex items-center gap-3 font-mono text-xs">
-                      <span className="flex items-center gap-1.5 text-[#a855f7] font-bold">
-                        <span className="h-2 w-2 rounded-full bg-[#8a3ffc]" />
+                      <span className="flex items-center gap-1.5 text-[#53b3d4] font-bold">
+                        <span className="h-2 w-2 rounded-full bg-[#227c9d]" />
                         Yes +{metrics.yesSentimentPct.toFixed(1)}%
                       </span>
-                      <span className="flex items-center gap-1.5 text-amber-400 font-bold">
-                        <span className="h-2 w-2 rounded-full bg-[#f59e0b]" />
+                      <span className="flex items-center gap-1.5 text-[#FF8A33] font-bold">
+                        <span className="h-2 w-2 rounded-full bg-[#FF6B00]" />
                         No +{metrics.noSentimentPct.toFixed(1)}%
                       </span>
                     </div>
@@ -688,8 +688,8 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
 
                   {/* Right: Buyers filter and Price/Bonding mode */}
                   <div className="flex items-center gap-2.5">
-                    <div className="hidden sm:flex items-center gap-1 rounded-xl bg-[#1a1a24] p-1 border border-[#2a2a3a] text-xs">
-                      <span className="text-zinc-500 px-1 font-medium">Buyers</span>
+                    <div className="hidden sm:flex items-center gap-1 rounded-xl bg-[#0c0c11] p-1 border border-[#232330] text-xs">
+                      <span className="text-[#8c8c9e] px-1 font-medium">Buyers</span>
                       {(['Off', 'Yes', 'No'] as const).map((b) => (
                         <button
                           key={b}
@@ -697,8 +697,8 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                           onClick={() => setBuyersFilter(b)}
                           className={`rounded-lg px-2 py-0.5 font-bold transition ${
                             buyersFilter === b
-                              ? 'bg-[#2b2b3d] text-white'
-                              : 'text-zinc-400 hover:text-white'
+                              ? 'bg-[#227c9d] text-white'
+                              : 'text-[#8c8c9e] hover:text-white'
                           }`}
                         >
                           {b}
@@ -706,14 +706,14 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                       ))}
                     </div>
 
-                    <div className="flex items-center rounded-xl bg-[#1a1a24] p-1 border border-[#2a2a3a] text-xs">
+                    <div className="flex items-center rounded-xl bg-[#0c0c11] p-1 border border-[#232330] text-xs">
                       <button
                         type="button"
                         onClick={() => setChartMode('price')}
                         className={`rounded-lg px-2.5 py-0.5 font-bold transition ${
                           chartMode === 'price'
-                            ? 'bg-[#2b2b3d] text-white'
-                            : 'text-zinc-400 hover:text-white'
+                            ? 'bg-[#227c9d] text-white'
+                            : 'text-[#8c8c9e] hover:text-white'
                         }`}
                       >
                         Price
@@ -723,8 +723,8 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                         onClick={() => setChartMode('bonding')}
                         className={`rounded-lg px-2.5 py-0.5 font-bold transition ${
                           chartMode === 'bonding'
-                            ? 'bg-[#2b2b3d] text-white'
-                            : 'text-zinc-400 hover:text-white'
+                            ? 'bg-[#227c9d] text-white'
+                            : 'text-[#8c8c9e] hover:text-white'
                         }`}
                       >
                         Bonding
@@ -733,8 +733,8 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                   </div>
                 </div>
 
-                {/* SVG Visual Plot matching pov.co */}
-                <div className="relative h-64 sm:h-72 w-full rounded-xl bg-[#0e0e15] p-3 border border-[#1e1e2a] overflow-hidden">
+                {/* SVG Visual Plot matching app theme */}
+                <div className="relative h-64 sm:h-72 w-full rounded-xl bg-[#0c0c11] p-3 border border-[#232330] overflow-hidden">
                   <svg viewBox="0 0 700 240" className="h-full w-full overflow-visible">
                     {/* Horizontal Grid lines */}
                     {[35, 80, 125, 170, 210].map((y) => (
@@ -744,7 +744,7 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                         y1={y}
                         x2="630"
                         y2={y}
-                        stroke="#1c1c28"
+                        stroke="#1f1f2b"
                         strokeDasharray="4 4"
                       />
                     ))}
@@ -759,25 +759,25 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                     {/* Curves */}
                     {chartMode === 'price' ? (
                       <>
-                        {/* Purple YES Curve */}
+                        {/* Blue YES Curve */}
                         <path
                           d="M 40 215 C 180 210, 260 210, 310 110 C 350 110, 360 85, 380 85 C 420 110, 480 115, 520 125 L 560 135"
                           fill="none"
-                          stroke="#8a3ffc"
+                          stroke="#227c9d"
                           strokeWidth="3"
                           strokeLinecap="round"
                         />
-                        <circle cx="560" cy="135" r="5" fill="#8a3ffc" stroke="#0e0e15" strokeWidth="2" />
+                        <circle cx="560" cy="135" r="5" fill="#227c9d" stroke="#0c0c11" strokeWidth="2" />
 
                         {/* Orange NO Curve */}
                         <path
                           d="M 40 205 C 180 205, 300 205, 400 205 C 470 208, 510 212, 560 210"
                           fill="none"
-                          stroke="#f59e0b"
+                          stroke="#FF6B00"
                           strokeWidth="2.5"
                           strokeLinecap="round"
                         />
-                        <circle cx="560" cy="210" r="5" fill="#f59e0b" stroke="#0e0e15" strokeWidth="2" />
+                        <circle cx="560" cy="210" r="5" fill="#FF6B00" stroke="#0c0c11" strokeWidth="2" />
                       </>
                     ) : (
                       <>
@@ -785,15 +785,15 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                         <path
                           d="M 40 220 Q 300 210, 600 30"
                           fill="none"
-                          stroke="#8a3ffc"
+                          stroke="#227c9d"
                           strokeWidth="3"
                         />
-                        <circle cx="480" cy="80" r="6" fill="#8a3ffc" stroke="#fff" strokeWidth="2" />
-                        <text x="495" y="85" fill="#a855f7" fontSize="11" fontWeight="bold" fontFamily="monospace">
+                        <circle cx="480" cy="80" r="6" fill="#227c9d" stroke="#fff" strokeWidth="2" />
+                        <text x="495" y="85" fill="#53b3d4" fontSize="11" fontWeight="bold" fontFamily="monospace">
                           YES ({market.yesCurve.realEth.toFixed(2)}Ξ)
                         </text>
-                        <circle cx="180" cy="200" r="6" fill="#f59e0b" stroke="#fff" strokeWidth="2" />
-                        <text x="195" y="205" fill="#f59e0b" fontSize="11" fontWeight="bold" fontFamily="monospace">
+                        <circle cx="180" cy="200" r="6" fill="#FF6B00" stroke="#fff" strokeWidth="2" />
+                        <text x="195" y="205" fill="#FF8A33" fontSize="11" fontWeight="bold" fontFamily="monospace">
                           NO ({market.noCurve.realEth.toFixed(2)}Ξ)
                         </text>
                       </>
@@ -809,15 +809,15 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
               </div>
 
               {/* Description & Rules Tabs */}
-              <div className="rounded-[22px] border border-[#222230] bg-[#121219] p-5">
-                <div className="flex items-center gap-6 border-b border-[#20202c] pb-3 mb-4">
+              <div className="rounded-[22px] border border-[#232330] bg-[#161620] p-5">
+                <div className="flex items-center gap-6 border-b border-[#232330] pb-3 mb-4">
                   <button
                     type="button"
                     onClick={() => setInfoTab('description')}
                     className={`text-sm font-bold transition pb-1 relative cursor-pointer ${
                       infoTab === 'description'
-                        ? 'text-white border-b-2 border-white'
-                        : 'text-zinc-500 hover:text-zinc-300'
+                        ? 'text-white border-b-2 border-[#227c9d]'
+                        : 'text-[#8c8c9e] hover:text-white'
                     }`}
                   >
                     Description
@@ -827,8 +827,8 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                     onClick={() => setInfoTab('rules')}
                     className={`text-sm font-bold transition pb-1 relative cursor-pointer ${
                       infoTab === 'rules'
-                        ? 'text-white border-b-2 border-white'
-                        : 'text-zinc-500 hover:text-zinc-300'
+                        ? 'text-white border-b-2 border-[#227c9d]'
+                        : 'text-[#8c8c9e] hover:text-white'
                     }`}
                   >
                     Rules
@@ -836,7 +836,7 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                 </div>
 
                 {infoTab === 'description' ? (
-                  <div className="space-y-3 text-xs sm:text-sm text-zinc-300 leading-relaxed font-sans">
+                  <div className="space-y-3 text-xs sm:text-sm text-slate-300 leading-relaxed font-sans">
                     <p>
                       This market explores the complex and often debated question of whether true justice exists in the world. Justice can mean different things to different people, encompassing legal fairness, moral righteousness, and social equity. Discussions surrounding justice frequently involve topics like systemic inequality, the rule of law, and the effectiveness of institutions designed to uphold rights and accountability.
                     </p>
@@ -845,18 +845,18 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                     </p>
                   </div>
                 ) : (
-                  <div className="space-y-3 text-xs sm:text-sm text-zinc-300 leading-relaxed font-sans">
-                    <div className="rounded-xl border border-[#2a2a3c] bg-[#0c0c12] p-3 space-y-1.5 font-mono text-xs">
+                  <div className="space-y-3 text-xs sm:text-sm text-slate-300 leading-relaxed font-sans">
+                    <div className="rounded-xl border border-[#232330] bg-[#0c0c11] p-3 space-y-1.5 font-mono text-xs">
                       <div className="flex justify-between">
-                        <span className="text-zinc-500">Contract Model:</span>
+                        <span className="text-[#8c8c9e]">Contract Model:</span>
                         <span className="text-white font-bold">Dual Independent Bonding Curves (Robinhood Chain)</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-zinc-500">Invariant:</span>
+                        <span className="text-[#8c8c9e]">Invariant:</span>
                         <span className="text-emerald-400 font-bold">V_E × V_S = K (250,000 ETH·Shares)</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-zinc-500">Anti-Dust Minimum:</span>
+                        <span className="text-[#8c8c9e]">Anti-Dust Minimum:</span>
                         <span className="text-white">0.0001 ETH (~$0.26)</span>
                       </div>
                     </div>
@@ -864,11 +864,11 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                       <div className="space-y-2 pt-2">
                         <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 p-2.5">
                           <strong className="text-emerald-300 block mb-0.5 text-xs">YES Resolution Criteria:</strong>
-                          <p className="text-zinc-300 text-xs">{market.prediction.yesCondition}</p>
+                          <p className="text-slate-300 text-xs">{market.prediction.yesCondition}</p>
                         </div>
-                        <div className="rounded-lg bg-amber-500/10 border border-amber-500/20 p-2.5">
-                          <strong className="text-amber-300 block mb-0.5 text-xs">NO Resolution Criteria:</strong>
-                          <p className="text-zinc-300 text-xs">{market.prediction.noCondition}</p>
+                        <div className="rounded-lg bg-orange-500/10 border border-orange-500/20 p-2.5">
+                          <strong className="text-orange-300 block mb-0.5 text-xs">NO Resolution Criteria:</strong>
+                          <p className="text-slate-300 text-xs">{market.prediction.noCondition}</p>
                         </div>
                       </div>
                     )}
@@ -876,56 +876,56 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                 )}
               </div>
 
-              {/* AI Agent Opinions (Debate Quotes Cards side-by-side) */}
-              <div className="rounded-[22px] border border-[#222230] bg-[#121219] p-5">
+              {/* AI Agent Opinions (App Theme Yes: #227c9d, No: #FF6B00) */}
+              <div className="rounded-[22px] border border-[#232330] bg-[#161620] p-5">
                 <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-white mb-4">
                   <span>AI Agent Opinions</span>
-                  <Info className="h-3.5 w-3.5 text-zinc-500" />
+                  <Info className="h-3.5 w-3.5 text-[#8c8c9e]" />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Yes Quote Card */}
-                  <div className="flex flex-col justify-between rounded-2xl border border-[#8a3ffc]/30 bg-[#161226] p-4 shadow-sm">
+                  <div className="flex flex-col justify-between rounded-2xl border border-[#227c9d]/30 bg-[#227c9d]/5 p-4 shadow-sm">
                     <div>
-                      <span className="text-sm font-black text-[#8a3ffc] block mb-2 font-fun">
+                      <span className="text-sm font-black text-[#53b3d4] block mb-2 font-fun">
                         Yes
                       </span>
-                      <p className="text-xs text-zinc-200 leading-relaxed italic">
+                      <p className="text-xs text-slate-200 leading-relaxed italic font-sans">
                         {aiOpinions.yes.quote}
                       </p>
                     </div>
-                    <div className="mt-4 flex items-center gap-2 pt-2 border-t border-[#8a3ffc]/20">
-                      <div className="h-6 w-6 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-400 flex items-center justify-center text-[10px] font-bold text-white">
+                    <div className="mt-4 flex items-center gap-2 pt-2 border-t border-[#227c9d]/20">
+                      <div className="h-6 w-6 rounded-full bg-gradient-to-tr from-[#227c9d] to-cyan-500 flex items-center justify-center text-[10px] font-bold text-white">
                         AI
                       </div>
-                      <span className="text-xs font-semibold text-zinc-300">{aiOpinions.yes.author}</span>
-                      <span className="rounded bg-[#8a3ffc]/30 px-1 py-0.2 text-[9px] font-bold text-purple-200">AI</span>
+                      <span className="text-xs font-semibold text-slate-300">{aiOpinions.yes.author}</span>
+                      <span className="rounded bg-[#227c9d]/20 px-1.5 py-0.2 text-[9px] font-bold text-[#53b3d4]">AI</span>
                     </div>
                   </div>
 
                   {/* No Quote Card */}
-                  <div className="flex flex-col justify-between rounded-2xl border border-[#f59e0b]/30 bg-[#211a12] p-4 shadow-sm">
+                  <div className="flex flex-col justify-between rounded-2xl border border-[#FF6B00]/30 bg-[#FF6B00]/5 p-4 shadow-sm">
                     <div>
-                      <span className="text-sm font-black text-[#f59e0b] block mb-2 font-fun">
+                      <span className="text-sm font-black text-[#FF8A33] block mb-2 font-fun">
                         No
                       </span>
-                      <p className="text-xs text-zinc-200 leading-relaxed italic">
+                      <p className="text-xs text-slate-200 leading-relaxed italic font-sans">
                         {aiOpinions.no.quote}
                       </p>
                     </div>
-                    <div className="mt-4 flex items-center gap-2 pt-2 border-t border-[#f59e0b]/20">
-                      <div className="h-6 w-6 rounded-full bg-gradient-to-tr from-amber-500 to-orange-400 flex items-center justify-center text-[10px] font-bold text-black">
+                    <div className="mt-4 flex items-center gap-2 pt-2 border-t border-[#FF6B00]/20">
+                      <div className="h-6 w-6 rounded-full bg-gradient-to-tr from-[#FF6B00] to-amber-500 flex items-center justify-center text-[10px] font-bold text-black">
                         AI
                       </div>
-                      <span className="text-xs font-semibold text-zinc-300">{aiOpinions.no.author}</span>
-                      <span className="rounded bg-[#f59e0b]/30 px-1 py-0.2 text-[9px] font-bold text-amber-200">AI</span>
+                      <span className="text-xs font-semibold text-slate-300">{aiOpinions.no.author}</span>
+                      <span className="rounded bg-[#FF6B00]/20 px-1.5 py-0.2 text-[9px] font-bold text-[#FF8A33]">AI</span>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Comments Section */}
-              <div className="rounded-[22px] border border-[#222230] bg-[#121219] p-5">
+              <div className="rounded-[22px] border border-[#232330] bg-[#161620] p-5">
                 <h3 className="text-sm font-bold text-white mb-3">
                   Comments ({market.comments.length})
                 </h3>
@@ -937,12 +937,12 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                     value={commentText}
                     onChange={(e) => setCommentText(e.target.value)}
                     placeholder="Add a comment..."
-                    className="w-full rounded-2xl border border-[#2a2a3a] bg-[#0e0e15] py-3 pl-4 pr-12 text-xs text-white placeholder-zinc-500 focus:border-[#8a3ffc] focus:outline-none"
+                    className="w-full rounded-2xl border border-[#232330] bg-[#0c0c11] py-3 pl-4 pr-12 text-xs text-white placeholder-[#8c8c9e] focus:border-[#227c9d] focus:outline-none"
                   />
                   <button
                     type="submit"
                     disabled={!commentText.trim()}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-xl bg-[#8a3ffc] text-white hover:bg-[#7828f0] transition disabled:opacity-40 cursor-pointer"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-xl bg-[#227c9d] text-white hover:bg-[#1a647f] transition disabled:opacity-40 cursor-pointer"
                   >
                     <Send className="h-3.5 w-3.5" />
                   </button>
@@ -951,17 +951,17 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                 {/* Comments List */}
                 <div className="space-y-4">
                   {market.comments.length === 0 ? (
-                    <p className="text-center py-4 text-xs text-zinc-500">
+                    <p className="text-center py-4 text-xs text-[#8c8c9e]">
                       No comments yet. Share your thesis and lead the debate!
                     </p>
                   ) : (
                     market.comments.map((c) => (
-                      <div key={c.id} className="flex items-start gap-3 border-b border-[#1c1c28] pb-4 last:border-b-0 last:pb-0">
-                        <div className="h-8 w-8 rounded-full overflow-hidden shrink-0 border border-[#2e2e40] bg-[#1a1a24]">
+                      <div key={c.id} className="flex items-start gap-3 border-b border-[#232330]/60 pb-4 last:border-b-0 last:pb-0">
+                        <div className="h-8 w-8 rounded-full overflow-hidden shrink-0 border border-[#2e2e40] bg-[#1a1a26]">
                           {c.authorAvatar ? (
                             <img src={c.authorAvatar} alt="" className="h-full w-full object-cover" />
                           ) : (
-                            <div className="h-full w-full flex items-center justify-center text-xs font-bold text-white bg-gradient-to-tr from-purple-600 to-indigo-500">
+                            <div className="h-full w-full flex items-center justify-center text-xs font-bold text-white bg-gradient-to-tr from-[#227c9d] to-cyan-500">
                               {c.author.slice(0, 1).toUpperCase()}
                             </div>
                           )}
@@ -971,14 +971,14 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                             <span className="text-xs font-bold text-white">
                               {c.authorHandle ? `@${c.authorHandle.replace(/^@/, '')}` : `@${c.author}`}
                             </span>
-                            <span className="text-[10px] text-zinc-500">
+                            <span className="text-[10px] text-[#8c8c9e]">
                               {formatTimeAgo(c.createdAt || c.timestamp)}
                             </span>
                           </div>
-                          <p className="text-xs text-zinc-300 leading-relaxed font-sans">
+                          <p className="text-xs text-slate-300 leading-relaxed font-sans">
                             {c.text}
                           </p>
-                          <div className="mt-2 flex items-center gap-4 text-xs text-zinc-500">
+                          <div className="mt-2 flex items-center gap-4 text-xs text-[#8c8c9e]">
                             <button
                               type="button"
                               onClick={() => onToggleCommentLike && onToggleCommentLike(market.id, c.id)}
@@ -1006,21 +1006,21 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
 
             </div>
 
-            {/* RIGHT COLUMN: Desktop Sidebar / Mobile 'Trade' View (Trading Terminal, Holders, Transactions, Related Markets) */}
+            {/* RIGHT COLUMN: Desktop Sidebar / Mobile 'Trade' View */}
             <div className={`space-y-6 lg:col-span-5 xl:col-span-4 ${mobileTab === 'overview' ? 'hidden lg:block' : 'block'}`}>
 
-              {/* Trading Box Card (Buy/Sell, Side pill, Balance, Amount, Big CTA) */}
-              <div className="rounded-[24px] border border-[#242436] bg-[#12121a] p-5 shadow-xl">
+              {/* Trading Box Card (App Theme colors) */}
+              <div className="rounded-[24px] border border-[#232330] bg-[#161620] p-5 shadow-xl">
                 {/* Buy vs Sell Top Switcher */}
-                <div className="flex items-center justify-between border-b border-[#20202e] pb-3 mb-4">
+                <div className="flex items-center justify-between border-b border-[#232330] pb-3 mb-4">
                   <div className="flex items-center gap-4">
                     <button
                       type="button"
                       onClick={() => setTradeMode('BUY')}
                       className={`text-sm font-bold transition pb-1 relative cursor-pointer ${
                         tradeMode === 'BUY'
-                          ? 'text-white border-b-2 border-white'
-                          : 'text-zinc-500 hover:text-zinc-300'
+                          ? 'text-white border-b-2 border-[#227c9d]'
+                          : 'text-[#8c8c9e] hover:text-white'
                       }`}
                     >
                       Buy
@@ -1031,7 +1031,7 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                       className={`text-sm font-bold transition pb-1 relative cursor-pointer ${
                         tradeMode === 'SELL'
                           ? 'text-white border-b-2 border-white'
-                          : 'text-zinc-500 hover:text-zinc-300'
+                          : 'text-[#8c8c9e] hover:text-white'
                       }`}
                     >
                       Sell
@@ -1041,17 +1041,17 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setShowSlippageConfig(!showSlippageConfig)}
-                    className="flex items-center gap-1 rounded-full border border-[#2a2a3c] bg-[#181824] px-2.5 py-1 text-[11px] text-zinc-400 hover:text-white transition"
+                    className="flex items-center gap-1 rounded-full border border-[#2e2e40] bg-[#1a1a26] px-2.5 py-1 text-[11px] text-[#8c8c9e] hover:text-white transition"
                   >
-                    <Sliders className="h-3 w-3 text-[#8a3ffc]" />
+                    <Sliders className="h-3 w-3 text-[#227c9d]" />
                     <span>{slippagePct}%</span>
                   </button>
                 </div>
 
                 {/* Slippage Drawer */}
                 {showSlippageConfig && (
-                  <div className="mb-4 rounded-xl border border-[#242436] bg-[#0c0c12] p-2.5">
-                    <div className="flex items-center justify-between text-[11px] text-zinc-400 mb-1.5">
+                  <div className="mb-4 rounded-xl border border-[#232330] bg-[#0c0c11] p-2.5">
+                    <div className="flex items-center justify-between text-[11px] text-[#8c8c9e] mb-1.5">
                       <span>Max Slippage Tolerance</span>
                     </div>
                     <div className="grid grid-cols-4 gap-1.5">
@@ -1062,8 +1062,8 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                           onClick={() => setSlippagePct(val)}
                           className={`rounded-lg py-1 text-xs font-bold transition ${
                             slippagePct === val
-                              ? 'bg-[#8a3ffc] text-white'
-                              : 'bg-[#181824] text-zinc-400 hover:text-white'
+                              ? 'bg-[#227c9d] text-white'
+                              : 'bg-[#1a1a26] text-[#8c8c9e] hover:text-white'
                           }`}
                         >
                           {val}%
@@ -1073,7 +1073,7 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                   </div>
                 )}
 
-                {/* Side Selector Pills: [ Yes $11.05 ] vs [ No $2.24 ] */}
+                {/* Side Selector Pills: [ Yes $XX ] vs [ No $XX ] */}
                 <div className="grid grid-cols-2 gap-2.5 mb-4">
                   <button
                     type="button"
@@ -1083,8 +1083,8 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                     }}
                     className={`flex items-center justify-between rounded-xl px-4 py-3 text-sm font-bold transition-all duration-200 cursor-pointer ${
                       selectedSide === 'YES'
-                        ? 'bg-[#8a3ffc] text-white shadow-md'
-                        : 'bg-[#1c1c28] text-zinc-400 hover:text-white hover:bg-[#222232]'
+                        ? 'bg-[#227c9d] text-white shadow-md'
+                        : 'bg-[#0c0c11] border border-[#232330] text-[#8c8c9e] hover:text-white hover:border-[#227c9d]/40'
                     }`}
                   >
                     <span>Yes</span>
@@ -1099,8 +1099,8 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                     }}
                     className={`flex items-center justify-between rounded-xl px-4 py-3 text-sm font-bold transition-all duration-200 cursor-pointer ${
                       selectedSide === 'NO'
-                        ? 'bg-[#f59e0b] text-black shadow-md'
-                        : 'bg-[#1c1c28] text-zinc-400 hover:text-white hover:bg-[#222232]'
+                        ? 'bg-[#FF6B00] text-black shadow-md'
+                        : 'bg-[#0c0c11] border border-[#232330] text-[#8c8c9e] hover:text-white hover:border-[#FF6B00]/40'
                     }`}
                   >
                     <span>No</span>
@@ -1109,10 +1109,10 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                 </div>
 
                 {/* Balance Row */}
-                <div className="flex items-center justify-between text-xs text-zinc-400 mb-2">
+                <div className="flex items-center justify-between text-xs text-[#8c8c9e] mb-2">
                   <span>Balance</span>
                   <div className="flex items-center gap-1.5 font-mono font-bold text-white">
-                    <Wallet className="h-3.5 w-3.5 text-zinc-400" />
+                    <Wallet className="h-3.5 w-3.5 text-[#8c8c9e]" />
                     <span>
                       {tradeMode === 'BUY'
                         ? inputCurrency === 'USD'
@@ -1125,7 +1125,7 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
 
                 {/* Big Number Input */}
                 <div className="relative mb-3">
-                  <div className="flex items-center justify-between rounded-2xl border border-[#26263a] bg-[#0c0c12] px-4 py-3.5 focus-within:border-[#8a3ffc]">
+                  <div className="flex items-center justify-between rounded-2xl border border-[#232330] bg-[#0c0c11] px-4 py-3.5 focus-within:border-[#227c9d]">
                     <input
                       type="number"
                       step="any"
@@ -1140,7 +1140,7 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                     <button
                       type="button"
                       onClick={() => setInputCurrency(inputCurrency === 'USD' ? 'ETH' : 'USD')}
-                      className="ml-2 rounded-lg bg-[#1a1a26] px-2.5 py-1 font-mono text-xs font-bold text-zinc-300 hover:text-white border border-[#2a2a3e] shrink-0"
+                      className="ml-2 rounded-lg bg-[#1a1a26] px-2.5 py-1 font-mono text-xs font-bold text-slate-300 hover:text-white border border-[#2e2e40] shrink-0"
                     >
                       {tradeMode === 'BUY' ? inputCurrency : 'SHARES'}
                     </button>
@@ -1156,7 +1156,7 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                           key={inc}
                           type="button"
                           onClick={() => setInputAmount(String(inc))}
-                          className="flex-1 rounded-xl border border-[#26263a] bg-[#161622] py-1.5 text-center font-mono text-xs font-semibold text-zinc-300 hover:border-[#8a3ffc] hover:text-white transition"
+                          className="flex-1 rounded-xl border border-[#232330] bg-[#0c0c11] py-1.5 text-center font-mono text-xs font-semibold text-slate-300 hover:border-[#227c9d] hover:text-[#53b3d4] transition"
                         >
                           +${inc}
                         </button>
@@ -1167,7 +1167,7 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                           key={inc}
                           type="button"
                           onClick={() => setInputAmount(String(inc))}
-                          className="flex-1 rounded-xl border border-[#26263a] bg-[#161622] py-1.5 text-center font-mono text-xs font-semibold text-zinc-300 hover:border-[#8a3ffc] hover:text-white transition"
+                          className="flex-1 rounded-xl border border-[#232330] bg-[#0c0c11] py-1.5 text-center font-mono text-xs font-semibold text-slate-300 hover:border-[#227c9d] hover:text-[#53b3d4] transition"
                         >
                           +{inc}
                         </button>
@@ -1183,7 +1183,7 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                             Math.max(10, Math.floor(userSideShares * pct)).toString()
                           )
                         }
-                        className="flex-1 rounded-xl border border-[#26263a] bg-[#161622] py-1.5 text-center font-mono text-xs font-semibold text-zinc-300 hover:border-[#8a3ffc] hover:text-white transition"
+                        className="flex-1 rounded-xl border border-[#232330] bg-[#0c0c11] py-1.5 text-center font-mono text-xs font-semibold text-slate-300 hover:border-[#227c9d] hover:text-[#53b3d4] transition"
                       >
                         {pct * 100}%
                       </button>
@@ -1205,8 +1205,8 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                   disabled={txStatus === 'SIMULATING' || txStatus === 'SIGNING' || rawInput <= 0}
                   className={`w-full rounded-2xl py-4 text-base font-black transition-all active:scale-98 shadow-lg cursor-pointer ${
                     selectedSide === 'YES'
-                      ? 'bg-[#8a3ffc] text-white hover:bg-[#792cf0] shadow-[#8a3ffc]/25'
-                      : 'bg-[#f59e0b] text-black hover:bg-[#e08e08] shadow-[#f59e0b]/25'
+                      ? 'bg-[#227c9d] text-white hover:bg-[#1a647f] shadow-[#227c9d]/25'
+                      : 'bg-[#FF6B00] text-black hover:bg-[#EA580C] shadow-[#FF6B00]/25'
                   }`}
                 >
                   {txStatus === 'SIMULATING' || txStatus === 'SIGNING' ? (
@@ -1220,7 +1220,7 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                 </button>
 
                 {/* Trade Quote Details */}
-                <div className="mt-4 space-y-1.5 border-t border-[#20202e] pt-3 font-mono text-[11px] text-zinc-400">
+                <div className="mt-4 space-y-1.5 border-t border-[#232330] pt-3 font-mono text-[11px] text-[#8c8c9e]">
                   <div className="flex justify-between">
                     <span>Expected Output:</span>
                     <span className="text-white font-bold">
@@ -1231,29 +1231,29 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                   </div>
                   <div className="flex justify-between">
                     <span>Price Impact:</span>
-                    <span className={quote.priceImpactPct >= 0 ? 'text-emerald-400' : 'text-amber-400'}>
+                    <span className={quote.priceImpactPct >= 0 ? 'text-[#53b3d4]' : 'text-[#FF8A33]'}>
                       {quote.priceImpactPct.toFixed(2)}%
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Creator / Protocol Fee (2%):</span>
-                    <span className="text-zinc-300">{quote.totalFeeEth.toFixed(5)} ETH</span>
+                    <span className="text-orange-300">{quote.totalFeeEth.toFixed(5)} ETH</span>
                   </div>
                 </div>
               </div>
 
-              {/* Holders Table Card matching pov.co */}
-              <div className="rounded-[24px] border border-[#242436] bg-[#12121a] p-5 shadow-xl">
+              {/* Holders Table Card */}
+              <div className="rounded-[24px] border border-[#232330] bg-[#161620] p-5 shadow-xl">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-sm font-bold text-white">Holders</h3>
-                  <div className="flex items-center rounded-xl bg-[#1a1a24] p-1 border border-[#2a2a3a] text-xs">
+                  <div className="flex items-center rounded-xl bg-[#0c0c11] p-1 border border-[#232330] text-xs">
                     <button
                       type="button"
                       onClick={() => setHoldersSideTab('YES')}
                       className={`rounded-lg px-2.5 py-0.5 font-bold transition ${
                         holdersSideTab === 'YES'
-                          ? 'bg-[#8a3ffc] text-white shadow-sm'
-                          : 'text-zinc-400 hover:text-white'
+                          ? 'bg-[#227c9d] text-white shadow-sm'
+                          : 'text-[#8c8c9e] hover:text-white'
                       }`}
                     >
                       Yes
@@ -1263,8 +1263,8 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                       onClick={() => setHoldersSideTab('NO')}
                       className={`rounded-lg px-2.5 py-0.5 font-bold transition ${
                         holdersSideTab === 'NO'
-                          ? 'bg-[#f59e0b] text-black shadow-sm'
-                          : 'text-zinc-400 hover:text-white'
+                          ? 'bg-[#FF6B00] text-black shadow-sm'
+                          : 'text-[#8c8c9e] hover:text-white'
                       }`}
                     >
                       No
@@ -1273,7 +1273,7 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                 </div>
 
                 {/* Table Header */}
-                <div className="grid grid-cols-12 text-[11px] font-bold text-zinc-500 border-b border-[#20202e] pb-2 mb-2">
+                <div className="grid grid-cols-12 text-[11px] font-bold text-[#8c8c9e] border-b border-[#232330] pb-2 mb-2">
                   <span className="col-span-6">Holder</span>
                   <span className="col-span-3 text-right">Shares</span>
                   <span className="col-span-3 text-right">Supply</span>
@@ -1284,10 +1284,10 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                   {activeHolders.map((h, idx) => (
                     <div
                       key={idx}
-                      className="grid grid-cols-12 items-center text-xs font-mono py-1 text-zinc-300"
+                      className="grid grid-cols-12 items-center text-xs font-mono py-1 text-slate-300"
                     >
                       <div className="col-span-6 flex items-center gap-2 min-w-0 pr-2">
-                        <div className="h-5 w-5 rounded-full bg-gradient-to-tr from-purple-500 to-indigo-600 flex items-center justify-center text-[9px] font-bold text-white shrink-0">
+                        <div className="h-5 w-5 rounded-full bg-gradient-to-tr from-[#227c9d] to-cyan-500 flex items-center justify-center text-[9px] font-bold text-white shrink-0">
                           {h.address.slice(0, 1).toUpperCase()}
                         </div>
                         <span className="truncate text-white font-sans text-xs">{h.handle}</span>
@@ -1295,7 +1295,7 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                       <span className="col-span-3 text-right font-bold text-white">
                         {h.shares >= 1000 ? `${(h.shares / 1000).toFixed(2)}k` : h.shares}
                       </span>
-                      <span className="col-span-3 text-right text-zinc-400">
+                      <span className="col-span-3 text-right text-[#8c8c9e]">
                         {h.supplyPct.toFixed(2)}%
                       </span>
                     </div>
@@ -1303,47 +1303,47 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                 </div>
 
                 {/* Pagination `< 1 2 >` */}
-                <div className="mt-4 flex items-center justify-center gap-2 pt-2 border-t border-[#20202e] text-xs">
+                <div className="mt-4 flex items-center justify-center gap-2 pt-2 border-t border-[#232330] text-xs">
                   <button
                     type="button"
                     onClick={() => setHoldersPage(Math.max(1, holdersPage - 1))}
                     disabled={holdersPage === 1}
-                    className="flex h-6 w-6 items-center justify-center rounded text-zinc-500 hover:text-white disabled:opacity-30"
+                    className="flex h-6 w-6 items-center justify-center rounded text-[#8c8c9e] hover:text-white disabled:opacity-30"
                   >
                     <ChevronLeft className="h-3.5 w-3.5" />
                   </button>
-                  <span className="rounded bg-[#222232] px-2 py-0.5 font-bold text-white text-[11px]">
+                  <span className="rounded bg-[#20202c] px-2 py-0.5 font-bold text-white text-[11px]">
                     {holdersPage}
                   </span>
                   <button
                     type="button"
                     onClick={() => setHoldersPage(holdersPage + 1)}
-                    className="flex h-6 w-6 items-center justify-center rounded text-zinc-400 hover:text-white"
+                    className="flex h-6 w-6 items-center justify-center rounded text-[#8c8c9e] hover:text-white"
                   >
                     <ChevronRight className="h-3.5 w-3.5" />
                   </button>
                 </div>
               </div>
 
-              {/* Recent Transactions Card matching pov.co */}
-              <div className="rounded-[24px] border border-[#242436] bg-[#12121a] p-5 shadow-xl">
+              {/* Recent Transactions Card */}
+              <div className="rounded-[24px] border border-[#232330] bg-[#161620] p-5 shadow-xl">
                 <h3 className="text-sm font-bold text-white mb-3">Recent Transactions</h3>
                 <div className="space-y-2.5 max-h-56 overflow-y-auto pr-1">
                   {recentTransactions.map((tx) => (
                     <div
                       key={tx.id}
-                      className="flex items-center justify-between text-xs py-1 border-b border-[#1c1c28] last:border-b-0"
+                      className="flex items-center justify-between text-xs py-1 border-b border-[#232330]/60 last:border-b-0"
                     >
                       <div className="flex items-center gap-2">
-                        <div className="h-5 w-5 rounded-full bg-gradient-to-tr from-pink-500 to-rose-600 flex items-center justify-center text-[9px] font-bold text-white">
+                        <div className="h-5 w-5 rounded-full bg-gradient-to-tr from-[#227c9d] to-cyan-500 flex items-center justify-center text-[9px] font-bold text-white">
                           {tx.trader.slice(0, 1).toUpperCase()}
                         </div>
                         <span className="font-semibold text-white">{tx.trader}</span>
                         <span
                           className={`rounded px-1.5 py-0.2 text-[9px] font-bold ${
                             tx.isYes
-                              ? 'bg-[#8a3ffc]/20 text-[#a855f7]'
-                              : 'bg-[#f59e0b]/20 text-amber-400'
+                              ? 'bg-[#227c9d]/20 text-[#53b3d4]'
+                              : 'bg-[#FF6B00]/20 text-[#FF8A33]'
                           }`}
                         >
                           {tx.isYes ? 'Yes' : 'No'}
@@ -1358,16 +1358,16 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                         >
                           {tx.isBuy ? '+' : '-'} {Math.round(tx.shares)} Shares
                         </span>
-                        <span className="block text-[9px] text-zinc-500">{tx.time}</span>
+                        <span className="block text-[9px] text-[#8c8c9e]">{tx.time}</span>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* Related Markets Card matching pov.co */}
+              {/* Related Markets Card */}
               {relatedMarkets.length > 0 && (
-                <div className="rounded-[24px] border border-[#242436] bg-[#12121a] p-5 shadow-xl">
+                <div className="rounded-[24px] border border-[#232330] bg-[#161620] p-5 shadow-xl">
                   <h3 className="text-sm font-bold text-white mb-3">Related Markets</h3>
                   <div className="space-y-2.5">
                     {relatedMarkets.map((rm) => {
@@ -1376,12 +1376,12 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
                         <div
                           key={rm.id}
                           onClick={() => onSelectMarket && onSelectMarket(rm.id)}
-                          className="flex items-center justify-between gap-3 rounded-2xl border border-[#242436] bg-[#0e0e15] p-3.5 hover:border-[#8a3ffc]/60 hover:bg-[#161622] transition cursor-pointer group"
+                          className="flex items-center justify-between gap-3 rounded-2xl border border-[#232330] bg-[#0c0c11] p-3.5 hover:border-[#227c9d]/60 hover:bg-[#161620] transition cursor-pointer group"
                         >
-                          <span className="text-xs font-semibold text-zinc-300 group-hover:text-white line-clamp-2">
+                          <span className="text-xs font-semibold text-slate-300 group-hover:text-white line-clamp-2">
                             {rm.question}
                           </span>
-                          <span className="rounded-full bg-[#8a3ffc]/20 border border-[#8a3ffc]/30 px-2.5 py-1 font-mono text-xs font-bold text-[#a855f7] shrink-0">
+                          <span className="rounded-full bg-[#227c9d]/20 border border-[#227c9d]/30 px-2.5 py-1 font-mono text-xs font-bold text-[#53b3d4] shrink-0">
                             {rmPrices.yesSentimentPct.toFixed(0)}%
                           </span>
                         </div>
@@ -1395,12 +1395,12 @@ export const MarketDetailModal: React.FC<MarketDetailModalProps> = ({
           </div>
         </div>
 
-        {/* Floating Action Button for quick trade / action on mobile (Screenshot 4) */}
+        {/* Floating Action Button for mobile view switch */}
         <div className="lg:hidden fixed bottom-6 right-6 z-40">
           <button
             type="button"
             onClick={() => setMobileTab(mobileTab === 'trade' ? 'overview' : 'trade')}
-            className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-black shadow-2xl hover:scale-105 active:scale-95 transition"
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-[#227c9d] hover:bg-[#1a647f] text-white shadow-2xl hover:scale-105 active:scale-95 transition"
           >
             {mobileTab === 'trade' ? (
               <X className="h-6 w-6 stroke-[2.5]" />
