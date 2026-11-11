@@ -26,6 +26,7 @@ import {
   LayoutGrid,
   List,
   ChevronDown,
+  ArrowUp,
 } from 'lucide-react';
 import {
   ROBINHOOD_CHAIN_ID,
@@ -66,6 +67,8 @@ import { CreatorEconomicsView, FeeClaimRecord } from './components/CreatorEconom
 import { AdminResolutionDashboard } from './components/AdminResolutionDashboard';
 import { infraManager } from './lib/indexerService';
 import { dbService } from './lib/databaseService';
+import { realtimeSync } from './lib/realtimeSyncService';
+import { calculateXScore, getTopTrendingMarket } from './lib/feedAlgorithm';
 
 type SortOption = 'volume' | 'conviction' | 'controversial' | 'newest';
 
@@ -117,7 +120,61 @@ export function App() {
 
   useEffect(() => {
     setUserProfile(getUserProfile(walletAddress));
+    setLikesMap(dbService.loadLikes(walletAddress));
   }, [walletAddress]);
+
+  // Feed Recommendation Randomization Session & Realtime Likes
+  const [feedSessionSeed, setFeedSessionSeed] = useState(() => Date.now());
+  const [showRefreshPill, setShowRefreshPill] = useState(false);
+  const [likesMap, setLikesMap] = useState<Record<number, { count: number; liked: boolean }>>(() =>
+    dbService.loadLikes(walletAddress)
+  );
+
+  // Global Realtime Synchronization (Phone <-> PC)
+  useEffect(() => {
+    const unsubComment = realtimeSync.onComment((marketId, remoteComment) => {
+      setMarkets((prev) => {
+        const target = prev.find((m) => m.id === marketId);
+        if (!target) return prev;
+        if (target.comments.some((c) => c.id === remoteComment.id)) return prev;
+
+        return prev.map((m) =>
+          m.id === marketId
+            ? { ...m, comments: [remoteComment, ...m.comments] }
+            : m
+        );
+      });
+    });
+
+    const unsubLike = realtimeSync.onLike(() => {
+      setLikesMap(dbService.loadLikes(walletAddress));
+    });
+
+    return () => {
+      unsubComment();
+      unsubLike();
+    };
+  }, [walletAddress]);
+
+  // Floating refresh suggestion button when user scrolls for a while
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 400) {
+        setShowRefreshPill(true);
+      } else if (window.scrollY < 150) {
+        setShowRefreshPill(false);
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const handleRefreshFeed = () => {
+    setFeedSessionSeed(Date.now());
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setShowRefreshPill(false);
+    pushToast('Feed Refreshed', 'Surfaced latest conviction & interactive opinions');
+  };
 
   // Modals
   const [selectedMarketId, setSelectedMarketId] = useState<number | null>(null);
@@ -942,6 +999,7 @@ export function App() {
     };
 
     dbService.addComment(marketId, newComment);
+    realtimeSync.broadcastComment(marketId, newComment);
 
     setMarkets((prev) => {
       const updated = prev.map((m) =>
@@ -1037,45 +1095,55 @@ export function App() {
     );
   };
 
-  // Filtered & Sorted Markets
+  // Filtered & Sorted Markets with X-Style Recommendation & Controlled Randomization
   const filteredMarkets = useMemo(() => {
-    return markets
-      .filter((m) => {
-        if (selectedCategory !== 'All') {
-          if (selectedCategory === 'AI') {
-            if (m.category !== 'AI' && m.category !== 'AI & Tech') return false;
-          } else if (selectedCategory === 'DeFi') {
-            if (m.category !== 'DeFi' && m.category !== 'Markets') return false;
-          } else if (m.category !== selectedCategory) {
-            return false;
-          }
-        }
-        if (
-          searchQuery.trim() &&
-          !m.question.toLowerCase().includes(searchQuery.toLowerCase()) &&
-          !m.creator.toLowerCase().includes(searchQuery.toLowerCase()) &&
-          !m.sourceHandle.toLowerCase().includes(searchQuery.toLowerCase())
-        ) {
+    const list = markets.filter((m) => {
+      if (selectedCategory !== 'All') {
+        if (selectedCategory === 'AI') {
+          if (m.category !== 'AI' && m.category !== 'AI & Tech') return false;
+        } else if (selectedCategory === 'DeFi') {
+          if (m.category !== 'DeFi' && m.category !== 'Markets') return false;
+        } else if (m.category !== selectedCategory) {
           return false;
         }
-        return true;
-      })
-      .sort((a, b) => {
-        const ma = getMarketPricesAndSentiment(a);
-        const mb = getMarketPricesAndSentiment(b);
-        if (sortBy === 'volume') return mb.totalVolumeEth - ma.totalVolumeEth;
-        if (sortBy === 'conviction') {
-          return (
-            Math.max(mb.yesSentimentPct, mb.noSentimentPct) -
-            Math.max(ma.yesSentimentPct, ma.noSentimentPct)
-          );
-        }
-        if (sortBy === 'controversial') {
-          return mb.controversyScore - ma.controversyScore;
-        }
-        return b.createdAt - a.createdAt;
-      });
-  }, [markets, selectedCategory, searchQuery, sortBy]);
+      }
+      if (
+        searchQuery.trim() &&
+        !m.question.toLowerCase().includes(searchQuery.toLowerCase()) &&
+        !m.creator.toLowerCase().includes(searchQuery.toLowerCase()) &&
+        !m.sourceHandle.toLowerCase().includes(searchQuery.toLowerCase())
+      ) {
+        return false;
+      }
+      return true;
+    });
+
+    return [...list].sort((a, b) => {
+      if (sortBy === 'volume') {
+        // X recommendation algorithm: interactive, debates, volume, and randomized discovery
+        const scoreA = calculateXScore(a, likesMap[a.id]?.count || 0, feedSessionSeed);
+        const scoreB = calculateXScore(b, likesMap[b.id]?.count || 0, feedSessionSeed);
+        return scoreB - scoreA;
+      }
+      const ma = getMarketPricesAndSentiment(a);
+      const mb = getMarketPricesAndSentiment(b);
+      if (sortBy === 'conviction') {
+        return (
+          Math.max(mb.yesSentimentPct, mb.noSentimentPct) -
+          Math.max(ma.yesSentimentPct, ma.noSentimentPct)
+        );
+      }
+      if (sortBy === 'controversial') {
+        return mb.controversyScore - ma.controversyScore;
+      }
+      return b.createdAt - a.createdAt;
+    });
+  }, [markets, selectedCategory, searchQuery, sortBy, likesMap, feedSessionSeed]);
+
+  // The most interactive / trending hero market brought up to trending
+  const topTrendingHero = useMemo(() => {
+    return getTopTrendingMarket(filteredMarkets.length > 0 ? filteredMarkets : markets, likesMap);
+  }, [filteredMarkets, markets, likesMap]);
 
   // Global Protocol Aggregates
   const globalStats = useMemo(() => {
@@ -1126,6 +1194,18 @@ export function App() {
         onOpenCreateModal={() => setIsCreateModalOpen(true)}
         onClaimCreatorFees={handleClaimCreatorFees}
       />
+
+      {/* Floating Refresh Suggestion Pill (X Style) */}
+      {showRefreshPill && (
+        <button
+          type="button"
+          onClick={handleRefreshFeed}
+          className="fixed top-16 sm:top-20 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 rounded-full bg-gradient-to-r from-[#FF6B00] to-orange-500 px-4 sm:px-5 py-2 sm:py-2.5 text-xs font-black text-white shadow-2xl shadow-[#FF6B00]/40 backdrop-blur-md border border-white/20 hover:scale-105 active:scale-95 transition-all animate-bounce cursor-pointer"
+        >
+          <ArrowUp className="h-3.5 w-3.5 stroke-[3]" />
+          <span>Fresh Conviction Available • Tap to Refresh</span>
+        </button>
+      )}
 
       {/* Live POV Activity Tape */}
       <LiveTicker
@@ -1303,15 +1383,15 @@ export function App() {
                   </div>
 
                   <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-                    {/* The Highlight Market (First 2 opinions space merged into ONE with image, most trending/interactive) */}
-                    {filteredMarkets.length > 0 && (
+                    {/* The Highlight Market (Most interactive / trending hero market brought up to trending) */}
+                    {topTrendingHero && (
                       <div className="md:col-span-2 lg:col-span-2">
                         <MarketCard
-                          key={`highlight-${filteredMarkets[0].id}`}
-                          market={filteredMarkets[0]}
+                          key={`highlight-${topTrendingHero.id}`}
+                          market={topTrendingHero}
                           variant="highlight"
-                          userYesShares={holdings[filteredMarkets[0].id]?.yesShares || 0}
-                          userNoShares={holdings[filteredMarkets[0].id]?.noShares || 0}
+                          userYesShares={holdings[topTrendingHero.id]?.yesShares || 0}
+                          userNoShares={holdings[topTrendingHero.id]?.noShares || 0}
                           onSelect={(m, side) => {
                             if (side) setDetailInitialSide(side);
                             setSelectedMarketId(m.id);
@@ -1324,33 +1404,13 @@ export function App() {
                     )}
 
                     {/* Second Opinion (Occupies the 3rd column in that top row, as regular vertical card) */}
-                    {filteredMarkets.length > 1 && (
-                      <div className="md:col-span-1 lg:col-span-1">
+                    {filteredMarkets.filter((m) => m.id !== topTrendingHero?.id).slice(0, 1).map((secondMarket) => (
+                      <div key={`second-${secondMarket.id}`} className="md:col-span-1 lg:col-span-1">
                         <MarketCard
-                          key={`second-${filteredMarkets[1].id}`}
-                          market={filteredMarkets[1]}
+                          market={secondMarket}
                           variant="vertical"
-                          userYesShares={holdings[filteredMarkets[1].id]?.yesShares || 0}
-                          userNoShares={holdings[filteredMarkets[1].id]?.noShares || 0}
-                          onSelect={(m, side) => {
-                            if (side) setDetailInitialSide(side);
-                            setSelectedMarketId(m.id);
-                          }}
-                          onQuickTrade={(marketId, isYes, ethAmt) =>
-                            handleExecuteTrade(marketId, isYes, true, ethAmt)
-                          }
-                        />
-                      </div>
-                    )}
-
-                    {/* Other Opinions (Rendered as they are in standard vertical cards) */}
-                    {filteredMarkets.slice(2, 6).map((market) => (
-                      <div key={market.id} className="md:col-span-1 lg:col-span-1">
-                        <MarketCard
-                          market={market}
-                          variant="vertical"
-                          userYesShares={holdings[market.id]?.yesShares || 0}
-                          userNoShares={holdings[market.id]?.noShares || 0}
+                          userYesShares={holdings[secondMarket.id]?.yesShares || 0}
+                          userNoShares={holdings[secondMarket.id]?.noShares || 0}
                           onSelect={(m, side) => {
                             if (side) setDetailInitialSide(side);
                             setSelectedMarketId(m.id);
@@ -1361,6 +1421,28 @@ export function App() {
                         />
                       </div>
                     ))}
+
+                    {/* Other Opinions (Rendered as they are in standard vertical cards) */}
+                    {filteredMarkets
+                      .filter((m) => m.id !== topTrendingHero?.id)
+                      .slice(1, 5)
+                      .map((market) => (
+                        <div key={market.id} className="md:col-span-1 lg:col-span-1">
+                          <MarketCard
+                            market={market}
+                            variant="vertical"
+                            userYesShares={holdings[market.id]?.yesShares || 0}
+                            userNoShares={holdings[market.id]?.noShares || 0}
+                            onSelect={(m, side) => {
+                              if (side) setDetailInitialSide(side);
+                              setSelectedMarketId(m.id);
+                            }}
+                            onQuickTrade={(marketId, isYes, ethAmt) =>
+                              handleExecuteTrade(marketId, isYes, true, ethAmt)
+                            }
+                          />
+                        </div>
+                      ))}
                   </div>
                 </div>
 
@@ -1609,6 +1691,10 @@ export function App() {
               onClaimCreatorFees={handleClaimCreatorFees}
               onProfileUpdated={(updated: UserProfile) => setUserProfile(updated)}
               onRequireWallet={(title) => promptConnectWallet(title || 'Viewing Portfolio & Creator Fees')}
+              holdings={holdings}
+              activities={activities}
+              onSelectMarket={(m) => setSelectedMarketId(m.id)}
+              onOpenCreateModal={() => setIsCreateModalOpen(true)}
             />
 
             {/* User Position Holdings List (Only shown when wallet is connected) */}

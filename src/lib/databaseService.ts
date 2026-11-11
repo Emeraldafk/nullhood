@@ -156,6 +156,22 @@ export class TiredFunDatabaseService {
   }
 
   /**
+   * Apply a remote comment received from cloud sync (e.g. phone to PC)
+   */
+  public applyRemoteComment(marketId: number, comment: MarketComment): void {
+    const all = this.loadAllComments();
+    const existing = all[marketId] || [];
+    if (!existing.some((c) => c.id === comment.id)) {
+      all[marketId] = [comment, ...existing];
+      try {
+        localStorage.setItem(STORAGE_KEYS.COMMENTS, JSON.stringify(all));
+      } catch (e) {
+        console.warn('Failed to save remote comment:', e);
+      }
+    }
+  }
+
+  /**
    * Like or unlike a specific comment
    */
   public toggleCommentLike(marketId: number, commentId: string): MarketComment[] {
@@ -229,6 +245,34 @@ export class TiredFunDatabaseService {
     } catch (e) {
       console.warn('Failed to save raw likes store:', e);
     }
+  }
+
+  /**
+   * Get raw persistent like entry for a market
+   */
+  public getRawLikeEntry(marketId: number): MarketLikeEntry {
+    const rawStore = this.loadRawLikesStore();
+    return rawStore[marketId] || { baseCount: DEFAULT_LIKES_MAP[marketId]?.baseCount || 10, likedUsers: [] };
+  }
+
+  /**
+   * Apply remote likes received from cloud sync (e.g. phone to PC)
+   */
+  public applyRemoteLike(marketId: number, remoteEntry: MarketLikeEntry): void {
+    const rawStore = this.loadRawLikesStore();
+    const current = rawStore[marketId] || {
+      baseCount: DEFAULT_LIKES_MAP[marketId]?.baseCount || 10,
+      likedUsers: [],
+    };
+
+    const userSet = new Set([...current.likedUsers, ...remoteEntry.likedUsers]);
+    const merged: MarketLikeEntry = {
+      baseCount: Math.max(current.baseCount, remoteEntry.baseCount),
+      likedUsers: Array.from(userSet),
+    };
+
+    rawStore[marketId] = merged;
+    this.saveRawLikesStore(rawStore);
   }
 
   /**

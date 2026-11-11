@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   Coins,
   Cpu,
@@ -22,7 +22,7 @@ import {
   AlertTriangle,
   Wallet,
 } from 'lucide-react';
-import { OpinionMarket, getMarketPricesAndSentiment } from '../lib/bondingCurve';
+import { OpinionMarket, TradeActivity, getMarketPricesAndSentiment } from '../lib/bondingCurve';
 import { ROBINHOOD_EXPLORER_URL, shortenAddress } from '../config/robinhoodChain';
 import { infraManager, SolvencyReconciliationReport } from '../lib/indexerService';
 import {
@@ -54,6 +54,10 @@ interface CreatorEconomicsViewProps {
   onClaimCreatorFees: () => Promise<void>;
   onProfileUpdated?: (profile: UserProfile) => void;
   onRequireWallet?: (actionTitle?: string) => void;
+  holdings?: Record<number, { yesShares: number; noShares: number }>;
+  activities?: TradeActivity[];
+  onSelectMarket?: (market: OpinionMarket) => void;
+  onOpenCreateModal?: () => void;
 }
 
 const PRESET_AVATARS = [
@@ -73,6 +77,10 @@ export const CreatorEconomicsView: React.FC<CreatorEconomicsViewProps> = ({
   onClaimCreatorFees,
   onProfileUpdated,
   onRequireWallet,
+  holdings,
+  activities,
+  onSelectMarket,
+  onOpenCreateModal,
 }) => {
   const [isClaiming, setIsClaiming] = useState(false);
   const [solvencyReport, setSolvencyReport] = useState<SolvencyReconciliationReport | null>(null);
@@ -240,6 +248,64 @@ export const CreatorEconomicsView: React.FC<CreatorEconomicsViewProps> = ({
       m.creator.toLowerCase() === activeUser.toLowerCase() ||
       m.sourceHandle?.toLowerCase() === `@${profile.username}`.toLowerCase()
   );
+
+  // User's personalized opinion markets:
+  // 1. Markets created by the user (Top Priority)
+  // 2. Markets user voted on / holds shares in
+  // 3. Markets user commented on
+  const userPersonalizedMarkets = useMemo(() => {
+    if (!walletAddress) return [];
+
+    const normWallet = walletAddress.toLowerCase();
+    const normUsername = profile?.username ? `@${profile.username.toLowerCase()}` : '';
+
+    const created: { market: OpinionMarket; role: 'CREATED'; badge: string }[] = [];
+    const voted: { market: OpinionMarket; role: 'VOTED'; badge: string }[] = [];
+    const commented: { market: OpinionMarket; role: 'COMMENTED'; badge: string }[] = [];
+    const seenIds = new Set<number>();
+
+    for (const m of markets) {
+      const isCreator =
+        m.creator.toLowerCase() === normWallet ||
+        (normUsername && m.sourceHandle?.toLowerCase() === normUsername);
+
+      if (isCreator) {
+        created.push({ market: m, role: 'CREATED', badge: '👑 Created by You' });
+        seenIds.add(m.id);
+      }
+    }
+
+    for (const m of markets) {
+      if (seenIds.has(m.id)) continue;
+
+      const userHolding = holdings ? holdings[m.id] : null;
+      const hasShares = userHolding && (userHolding.yesShares > 0 || userHolding.noShares > 0);
+      const hasTraded = activities && activities.some((a) => a.marketId === m.id && a.trader.toLowerCase() === normWallet);
+
+      if (hasShares || hasTraded) {
+        const sideText = userHolding?.yesShares && userHolding.yesShares > 0 ? 'YES' : 'NO';
+        voted.push({ market: m, role: 'VOTED', badge: `⚡ Voted ${sideText}` });
+        seenIds.add(m.id);
+      }
+    }
+
+    for (const m of markets) {
+      if (seenIds.has(m.id)) continue;
+
+      const hasCommented = m.comments && m.comments.some((c) =>
+        (c.author && c.author.toLowerCase() === normWallet) ||
+        (normUsername && c.authorHandle && c.authorHandle.toLowerCase() === normUsername)
+      );
+
+      if (hasCommented) {
+        commented.push({ market: m, role: 'COMMENTED', badge: '💬 You Commented' });
+        seenIds.add(m.id);
+      }
+    }
+
+    // Created by user at the top, then voted, then commented
+    return [...created, ...voted, ...commented];
+  }, [markets, walletAddress, profile, holdings, activities]);
 
   const opinionCount = userCreatedMarkets.filter((m) => m.marketType !== 'RESOLVABLE_PREDICTION').length;
   const predictionCount = userCreatedMarkets.filter((m) => m.marketType === 'RESOLVABLE_PREDICTION').length;
@@ -808,61 +874,86 @@ export const CreatorEconomicsView: React.FC<CreatorEconomicsViewProps> = ({
         </div>
       </div>
 
-      {/* CURATED OPINIONS & LIVE CONVICTION PERCENTAGES */}
+      {/* USER'S PERSONALIZED OPINION MARKETS */}
       <div className="rounded-[28px] border border-[#232330] bg-[#161620] p-6 shadow-xl">
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="flex items-center gap-2 text-sm font-fun font-bold uppercase tracking-wider text-white">
-            <Sparkles className="h-4 w-4 text-[#FF6B00]" />
-            <span>Curated Opinion Markets & Live Conviction</span>
-          </h3>
-          <span className="font-mono text-xs text-[#8c8c9e]">
-            1.00% Creator Fee On Every Trade
+        <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h3 className="flex items-center gap-2 text-sm font-fun font-bold uppercase tracking-wider text-white">
+              <Sparkles className="h-4 w-4 text-[#FF6B00]" />
+              <span>Your Opinion Markets & Portfolio Conviction</span>
+            </h3>
+            <p className="text-xs text-[#8c8c9e] mt-0.5">
+              Markets created by you, followed by markets where you cast votes or engaged in debates.
+            </p>
+          </div>
+          <span className="font-mono text-xs text-[#FF6B00] font-bold">
+            {userPersonalizedMarkets.length} {userPersonalizedMarkets.length === 1 ? 'Market' : 'Markets'}
           </span>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {(userCreatedMarkets.length > 0 ? userCreatedMarkets : markets.slice(0, 3)).map((m) => {
-            const { yesSentimentPct, noSentimentPct, totalPoolEth, totalVolumeEth } = getMarketPricesAndSentiment(m);
-            return (
-              <div
-                key={m.id}
-                className="rounded-[20px] border border-[#262638] bg-[#111118] p-4 flex flex-col justify-between hover:border-[#383850] transition"
+        {userPersonalizedMarkets.length === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-[20px] border border-dashed border-[#262638] bg-[#111118] p-8 text-center">
+            <Sparkles className="h-8 w-8 text-[#FF6B00] mb-2 opacity-60" />
+            <h4 className="font-bold text-white text-sm">No Opinion Market History Yet</h4>
+            <p className="text-xs text-[#8c8c9e] max-w-sm mt-1 mb-4">
+              You haven't created, voted on, or commented on any opinion markets yet. Spawn your own market or trade public conviction to populate your personal portfolio!
+            </p>
+            {onOpenCreateModal && (
+              <button
+                type="button"
+                onClick={onOpenCreateModal}
+                className="rounded-full bg-gradient-to-r from-[#FF6B00] to-orange-500 px-5 py-2 text-xs font-black text-white hover:opacity-95 shadow-lg shadow-[#FF6B00]/25 transition active:scale-95 cursor-pointer"
               >
-                <div>
-                  <div className="mb-2 flex items-center justify-between">
-                    <span className="rounded-full bg-[#227c9d]/20 px-2.5 py-0.5 text-[10px] font-fun font-bold text-[#53b3d4]">
-                      {m.category}
-                    </span>
-                    <span className="font-mono text-[11px] font-bold text-[#FF6B00]">
-                      +{m.creatorFeesEarned.toFixed(4)} ETH Fees
-                    </span>
+                + Create Your First Market
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {userPersonalizedMarkets.map(({ market: m, badge }) => {
+              const { yesSentimentPct, noSentimentPct, totalPoolEth, totalVolumeEth } = getMarketPricesAndSentiment(m);
+              return (
+                <div
+                  key={m.id}
+                  onClick={() => onSelectMarket && onSelectMarket(m)}
+                  className="rounded-[20px] border border-[#262638] bg-[#111118] p-4 flex flex-col justify-between hover:border-[#FF6B00]/60 transition cursor-pointer group shadow-sm"
+                >
+                  <div>
+                    <div className="mb-2 flex items-center justify-between">
+                      <span className="rounded-full bg-[#FF6B00]/15 border border-[#FF6B00]/30 px-2.5 py-0.5 text-[10px] font-mono font-bold text-[#FF8A33]">
+                        {badge}
+                      </span>
+                      <span className="font-mono text-[11px] font-bold text-emerald-400">
+                        {m.category}
+                      </span>
+                    </div>
+                    <h4 className="font-fun font-bold text-sm text-white line-clamp-2 mb-3 group-hover:text-[#53b3d4] transition">
+                      {m.question}
+                    </h4>
                   </div>
-                  <h4 className="font-fun font-bold text-sm text-white line-clamp-2 mb-3">
-                    {m.question}
-                  </h4>
-                </div>
 
-                <div>
-                  {/* Real Dynamic Conviction Dual Bar */}
-                  <div className="relative h-2 w-full overflow-hidden rounded-full bg-[#252533]">
-                    <div
-                      style={{ width: `${Math.max(0, Math.min(100, yesSentimentPct))}%` }}
-                      className="h-full rounded-full bg-[#227c9d] transition-all duration-300"
-                    />
-                  </div>
-                  <div className="mt-1.5 flex items-center justify-between font-mono text-[11px] font-semibold">
-                    <span className="text-[#53b3d4]">{yesSentimentPct.toFixed(1)}% YES</span>
-                    <span className="text-[#FF6B00]">{noSentimentPct.toFixed(1)}% NO</span>
-                  </div>
-                  <div className="mt-2 flex items-center justify-between border-t border-[#1f1f2c] pt-2 text-[10px] text-slate-400 font-mono">
-                    <span>Pool: {totalPoolEth.toFixed(3)} ETH</span>
-                    <span>Vol: {totalVolumeEth.toFixed(3)} ETH</span>
+                  <div>
+                    {/* Real Dynamic Conviction Dual Bar */}
+                    <div className="relative h-2 w-full overflow-hidden rounded-full bg-[#252533]">
+                      <div
+                        style={{ width: `${Math.max(0, Math.min(100, yesSentimentPct))}%` }}
+                        className="h-full rounded-full bg-[#227c9d] transition-all duration-300"
+                      />
+                    </div>
+                    <div className="mt-1.5 flex items-center justify-between font-mono text-[11px] font-semibold">
+                      <span className="text-[#53b3d4]">{yesSentimentPct.toFixed(1)}% YES</span>
+                      <span className="text-[#FF6B00]">{noSentimentPct.toFixed(1)}% NO</span>
+                    </div>
+                    <div className="mt-2 flex items-center justify-between border-t border-[#1f1f2c] pt-2 text-[10px] text-slate-400 font-mono">
+                      <span>Pool: {totalPoolEth.toFixed(3)} ETH</span>
+                      <span>Vol: {totalVolumeEth.toFixed(3)} ETH</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* 4. FEE CALCULATION SPECIFICATION & CLAIM HISTORY */}
