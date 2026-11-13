@@ -912,7 +912,7 @@ export const INITIAL_OPINION_MARKETS: OpinionMarket[] = [
   {
     id: 16,
     creator: '0xa58dc16645b481D8AF2f095613944C2254311972',
-    question: 'Will Tired Genesis 5,555 digital collectibles maintain a floor price above 0.5 ETH on Robinhood Chain?',
+    question: 'Will Tired Genesis 1,234 digital collectibles maintain a floor price above 0.5 ETH on Robinhood Chain?',
     category: 'Culture',
     imageUri: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=600&auto=format&fit=crop&q=80',
     sourceHandle: '@TheTiredFun',
